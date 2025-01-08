@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "111485486546",
+    "project_id": "donornet-flutter-application",
+    "storage_bucket": "donornet-flutter-application.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:111485486546:android:5fe8a6152f80ca12d4740b",
+        "android_client_info": {
+          "package_name": "com.example.donornet"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBGVQ_pkAvvIhN1xRIB6LT8QEDxjscrbhI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
