@@ -1,10 +1,15 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/materials/app_colors.dart';
-import 'package:donornet/views/login_page.dart';
+import 'package:donornet/utilities/OTP_service.dart';
+import 'package:donornet/utilities/loading_indicator.dart';
+import 'package:donornet/utilities/show_error_dialog.dart';
 import 'package:donornet/views/otp_verification_page.dart';
 import 'package:donornet/views/registration_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'dart:developer' as devtools show log;
+
 
 class EmailVerificationPage extends StatefulWidget {
   const EmailVerificationPage({super.key});
@@ -14,29 +19,58 @@ class EmailVerificationPage extends StatefulWidget {
 }
 
 class _EmailVerificationPageState extends State<EmailVerificationPage> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final OTPService _otpService = OTPService();
   late final TextEditingController emailController;  
   bool isLoading = false;
 
-  Future<void> sendLink() async{
+  Future<void> isEmailRegister() async{
     String email = emailController.text.trim();
+    if(email.isEmpty){
+      showerrorDialog(context,"Please Enter your email");
+      return;
+    }
     setState(() {
       isLoading = true;
     });
-    try{
-      final currentUser = _auth.currentUser;
-      if(currentUser?.emailVerified ?? false){
-        
+
+     try {
+      final querySnapshot = await _firestore.collection('users').where('email', isEqualTo: email).get();
+
+       bool isRegistered = querySnapshot.docs.isNotEmpty;
+
+      if (isRegistered) {
+        devtools.log("registed");
+        bool isSent = await _otpService.sendOtp(email);
+        if(isSent){
+          //Fluttertoast.showToast(msg: "OTP sent successfully to $email");
+          // ignore: use_build_context_synchronously
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("OTP sent successfully to $email")),);
+
+            // ignore: use_build_context_synchronously
+            Navigator.push(context,MaterialPageRoute(builder: (context) => OTPVerificationPage(email: email)),);
+            //Navigator.push(context, MaterialPageRoute(builder: (context) => OTPVerificationPage()));
+        }else{
+          // ignore: use_build_context_synchronously
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to send OTP. Try again.")));
+        }
       }else{
-        await currentUser?.sendEmailVerification();
-        Navigator.of(context).pushNamedAndRemoveUntil('verificationRoute', (route) => false,);
+        devtools.log("No account found");
+        showerrorDialog(context, "No account found associated with this email address.");
       }
 
-    }on FirebaseAuthException catch(e){
-
-    }catch(e){
-
-    }finally {
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') {
+        showerrorDialog(context, "You don't have permission to access Firestore.");
+      } else if (e.code == 'unavailable') {
+        showerrorDialog(context, "Firestore service is temporarily unavailable.");
+      } else {
+        showerrorDialog(context, "Firestore error: ${e.message}");
+      }
+    } catch (e) {
+      devtools.log("An unexpected error occurred: ${e.toString()}");
+      showerrorDialog(context, "An unexpected error occurred: ${e.toString()}");
+    } finally {
       setState(() {
         isLoading = false;
       });
@@ -153,7 +187,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                           child: Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Text('Please enter the verified email address associated with your account. A password reset link will be sent to you shortly.',
+                                Text('Please enter your verified email address, and we will send you an OTP to proceed with resetting your password.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 14,
@@ -207,17 +241,18 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                                 Center(
                                   child: ElevatedButton(
                                     onPressed: () {
-                                      sendLink();                                      
+                                      // Navigator.push(context, MaterialPageRoute(builder: (context) => OTPVerificationPage()));
+                                       isEmailRegister();                                      
                                     },
-                                    child: Text(
-                                      "Send Link",
-                                      style: TextStyle(fontSize: 18,
-                                      color: Colors.white,
-                                      ),
-                                    ),
                                     style: ElevatedButton.styleFrom(
                                       minimumSize: Size(240, 50),
                                       backgroundColor:  AppColors.primaryColor,
+                                    ),
+                                    child: Text(
+                                      "Send OTP",
+                                      style: TextStyle(fontSize: 18,
+                                      color: Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -268,6 +303,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
             //   alignment: Alignment.bottomCenter,
             //   child: 
             // )
+            LoadingIndicator(isLoading: isLoading),
         ],
       )
     );

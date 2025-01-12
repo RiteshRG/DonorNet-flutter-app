@@ -1,6 +1,8 @@
 import 'dart:async';
-
+import 'dart:ffi' as ffi;
+import 'package:flutter/widgets.dart';
 import 'package:donornet/materials/app_colors.dart';
+import 'package:donornet/utilities/OTP_service.dart';
 import 'package:donornet/views/email_verification_page.dart';
 import 'package:donornet/views/registration_page.dart';
 import 'package:donornet/views/resetPassword.dart';
@@ -9,7 +11,9 @@ import 'package:flutter_svg/svg.dart';
 
 
 class OTPVerificationPage extends StatefulWidget {
-  const OTPVerificationPage({super.key});
+   final String email;
+  // const OTPVerificationPage({super.key});
+  const OTPVerificationPage({Key? key, required this.email}) :super(key: key);
 
   @override
   State<OTPVerificationPage> createState() => _OTPVerificationPageState();
@@ -21,36 +25,97 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
   final TextEditingController controller2 = TextEditingController();
   final TextEditingController controller3 = TextEditingController();
   final TextEditingController controller4 = TextEditingController();
+  final TextEditingController controller5 = TextEditingController();
+  final TextEditingController controller6 = TextEditingController();
+  final OTPService _otpService = OTPService(); 
+  bool _isOtpVerified = false;
 
-  int _start = 180; // Initial timer duration
-  late Timer _timer;
-
-  void initState() {
-    super.initState();
-    _startTimer(); // Start the timer when the screen is loaded
+  void sendOtpWhenPageLoads() async{
+    bool issent = await _otpService.sendOtp(widget.email);
+        if(issent){
+          //Fluttertoast.showToast(msg: "OTP sent successfully to $email");
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("OTP sent successfully to ${widget.email}")),);
+        }else{
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to send OTP. Try again.")));
+        }
   }
 
-  // Start the countdown timer
-  void _startTimer() {
-    const oneSec = Duration(seconds: 1);
-    _timer = Timer.periodic(oneSec, (Timer timer) {
-      if (_start == 0) {
-        setState(() {
-          _timer.cancel(); // Stop the timer when it reaches 0
-        });
-      } else {
-        setState(() {
-          _start--; // Decrease the timer value every second
-        });
-      }
-    });
+  void _verifyOtp() async{
+    String otp = controller1.text.trim() + controller2.text.trim() + controller3.text.trim() + controller4.text.trim() + controller5.text.trim() + controller6.text.trim();
+
+    if (otp.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please enter OTP")),
+      );
+      return;
+    }
+   
+    bool isVerified = await _otpService.verifyOtp(otp);
+
+    if (isVerified) {
+      setState(() {
+        _isOtpVerified = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("OTP verified successfully")),
+      );
+      OTPService().resetOtp();
+       Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => ResetPasswordPage(email: widget.email),
+          ),
+          ModalRoute.withName('loginRoute'), // Ensures login page is at the bottom of the stack
+        );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Invalid OTP, please try again")),
+      );
+    }
+
   }
 
-  @override
-  void dispose() {
-    _timer.cancel(); // Cancel the timer when the screen is disposed
-    super.dispose();
+
+  void _resendOtp() async {
+    bool isSent = await _otpService.resendOtp(widget.email);
+
+    if (isSent) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("OTP sent again to ${widget.email}")),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to resend OTP")),
+      );
+    }
   }
+
+
+  // int _start = 180; // Initial timer duration
+  // late Timer _timer;
+  // void initState() {
+  //   super.initState();
+  //   _startTimer(); // Start the timer when the screen is loaded
+  // }
+  // // Start the countdown timer
+  // void _startTimer() {
+  //   const oneSec = Duration(seconds: 1);
+  //   _timer = Timer.periodic(oneSec, (Timer timer) {
+  //     if (_start == 0) {
+  //       setState(() {
+  //         _timer.cancel(); // Stop the timer when it reaches 0
+  //       });
+  //     } else {
+  //       setState(() {
+  //         _start--; // Decrease the timer value every second
+  //       });
+  //     }
+  //   });
+  // }
+  // @override
+  // void dispose() {
+  //   _timer.cancel(); // Cancel the timer when the screen is disposed
+  //   super.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +203,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                         ],
                       ),
                       padding: EdgeInsets.only(
-                        top: 25,
+                        top: 30,
                       ),
                       child: SingleChildScrollView(
                         child: Padding(
@@ -149,7 +214,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                           child: Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Text('Enter the verified email address associated with your account, and we will send you an OTP via email to reset your password.',
+                                Text('Please enter the OTP sent to your email address (${widget.email}) to verify your identity and proceed with resetting your password.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 14,
@@ -157,18 +222,18 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                                 ),
                                 ),
                                 
-                                SizedBox(height: 25,),
+                                // SizedBox(height: 25,),
               
-                                Text(
-                                  '${_start ~/ 60}:${_start % 60 < 10 ? '0${_start % 60}' : _start % 60}',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.secondaryColor,
-                                  ),
-                                ),
+                                // Text(
+                                //   '${_start ~/ 60}:${_start % 60 < 10 ? '0${_start % 60}' : _start % 60}',
+                                //   style: TextStyle(
+                                //     fontSize: 18,
+                                //     fontWeight: FontWeight.bold,
+                                //     color: AppColors.secondaryColor,
+                                //   ),
+                                // ),
               
-                                SizedBox(height: 20,),
+                                SizedBox(height: 45,),
               
                                 //*******Email Text Field**********
                                 Row(
@@ -179,8 +244,12 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                                     OTPTextField(controller: controller2),
                                     SizedBox(width: 10),
                                     OTPTextField(controller: controller3),
-                                    SizedBox(width: 10),
+                                    SizedBox(width: 20),
                                     OTPTextField(controller: controller4),
+                                    SizedBox(width: 10),
+                                    OTPTextField(controller: controller5),
+                                    SizedBox(width: 10),
+                                    OTPTextField(controller: controller6),
                                   ],
                                 ),
               
@@ -196,7 +265,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                                     ),),
                                     GestureDetector(
                                       onTap: () {
-                                        //
+                                        _resendOtp();
                                       },
                                       child: Text(
                                         "Resend",
@@ -211,7 +280,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                                   ],
                                 ),
               
-                                SizedBox(height: 50),
+                                SizedBox(height: 60),
               
                                 //*******Register Button**********
                                 Center(
@@ -220,9 +289,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                                       // if (_formKey.currentState?.validate() ?? false) {
                                       //   // If the form is valid, proceed with registration logic
                                       // }
-                                      String otp = controller1.text + controller2.text + controller3.text + controller4.text;
-                                      print("Entered OTP: $otp");
-                                      Navigator.push(context, MaterialPageRoute(builder: (context) => ResetPasswordPage()));
+                                      _verifyOtp();
                                     },
                                     child: Text(
                                       "Verify OTP",
@@ -231,7 +298,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                                       ),
                                     ),
                                     style: ElevatedButton.styleFrom(
-                                      minimumSize: Size(240, 50),
+                                      minimumSize: Size(240.0, 50.0),
                                       backgroundColor:  AppColors.primaryColor,
                                     ),
                                   ),
@@ -242,7 +309,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text("Don’t have an Account? ",
+                                    Text("Go back to ",
                                     style: TextStyle(
                                       color: Colors.black,
                                       backgroundColor: Colors.white,
@@ -254,7 +321,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                                               MaterialPageRoute(builder: (context) => Register()));
                                       },
                                       child: Text(
-                                        "Register",
+                                        "Login",
                                         style: TextStyle(
                                           backgroundColor: Colors.white,
                                             decoration: TextDecoration.underline, decorationStyle: TextDecorationStyle.solid,
@@ -324,36 +391,40 @@ class OTPTextField extends StatelessWidget {
   OTPTextField({required this.controller});
 
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 50,
-      child: TextField(
-        controller: controller,
-        maxLength: 1,
-        keyboardType: TextInputType.number,
-        textAlign: TextAlign.center,
-        decoration: InputDecoration(
-          counterText: "",
-          hintText: "0",
-          filled: true,
-          fillColor: const Color.fromARGB(0, 182, 239, 215),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: AppColors.secondaryColor),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: AppColors.secondaryColor),
-          ),
-          contentPadding: EdgeInsets.symmetric(vertical: 10),
-        ),
-        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, ),
-        onChanged: (value) {
-          if (value.isNotEmpty) {
-            FocusScope.of(context).nextFocus();
-          }
-        },
+Widget build(BuildContext context) {
+  return SizedBox(
+  width: 30,
+  child: TextField(
+    controller: controller,
+    maxLength: 1,
+    keyboardType: TextInputType.number,
+    textAlign: TextAlign.center,
+    decoration: InputDecoration(
+      counterText: "",
+      hintText: "0",
+      filled: true,
+      fillColor: const Color.fromARGB(0, 182, 239, 215),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12), // Set the radius for the rounded border
+        borderSide: BorderSide(color: Colors.black, width: 1), // Set the color and width of the border
       ),
-    );
-  }
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12), // Keep the same border radius when focused
+        borderSide: BorderSide(color: AppColors.primaryColor, width: 2), // Border color when focused
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12), // Keep the same border radius when enabled
+        borderSide: BorderSide(color: Colors.grey, width: 1), // Border color when enabled
+      ),
+      contentPadding: EdgeInsets.symmetric(vertical: 5),
+    ),
+    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+    onChanged: (value) {
+      if (value.isNotEmpty) {
+        FocusScope.of(context).nextFocus();
+      }
+    },
+  ),
+);
+}
 }

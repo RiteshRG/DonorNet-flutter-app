@@ -31,6 +31,11 @@ class _LoginState extends State<Login> {
     String email =emailController.text.trim();
     String password =passwordController.text.trim();
 
+    if (email.isEmpty || password.isEmpty) {
+       showerrorDialog(context,"Please fill all the details!");
+       return;
+    }
+
     setState(() {
       isLoading = true;
     });
@@ -50,10 +55,13 @@ class _LoginState extends State<Login> {
     }on FirebaseAuthException catch (e){
       if (e.code == 'wrong-password') {
         showerrorDialog(context, "Incorrect password. Please try again.");
-      } else if (e.code == 'user-not-found') {
+      }else if (e.code == 'invalid-email') {
+        showerrorDialog(context,"The email address is invalid.");
+      }else if (e.code == 'user-not-found') {
         showerrorDialog(context, "User not found. Please check your credentials or sign up.");
       }else {
-        showerrorDialog(context, "Error: ${e.message}");
+        devtools.log("${e.message}");
+        showerrorDialog(context, "Oops! Something went wrong. Try again later");
       }
     }catch (e){
       devtools.log("An unexpected error occurred: ${e.toString()}");

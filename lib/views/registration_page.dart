@@ -32,12 +32,35 @@ class _RegisterState extends State<Register> {
 
   bool isLoading = false;
 
+     @override
+  void initState() {
+    emailController = TextEditingController();
+    firstNameController = TextEditingController();
+    lastNameController = TextEditingController();
+    passwordController = TextEditingController();
+    cPasswordController = TextEditingController();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    firstNameController.dispose();
+    lastNameController.dispose();
+    passwordController.dispose();
+    cPasswordController.dispose();
+    super.dispose();
+  }
+
   Future<void> createAccount() async{
     String email =emailController.text.trim();
     String firstName =firstNameController.text.trim();
     String lastName =lastNameController.text.trim();
     String password =passwordController.text.trim();
     String cPassword =cPasswordController.text.trim();
+      setState(() {
+      isLoading = true;
+      });
 
 
     if (firstName.isEmpty || lastName.isEmpty || email.isEmpty || password.isEmpty || cPassword.isEmpty) {
@@ -59,10 +82,6 @@ class _RegisterState extends State<Register> {
       showerrorDialog(context, "You must accept the terms and conditions to proceed.");
     }else{
 
-      setState(() {
-      isLoading = true;
-      });
-
       try{
         UserCredential userCredential = await _auth.
         createUserWithEmailAndPassword(email: email, password: password);
@@ -77,11 +96,12 @@ class _RegisterState extends State<Register> {
           'first_name':firstName,
           'last_name': lastName,
           'email': email,
+          'password': password,
           'is_verified': false,
           'registration_date': DateTime.now(),
         });
 
-        Fluttertoast.showToast(msg: "Registration successful! Please verify your email.");
+        showerrorDialog(context,"Registration successful! Please verify your email.");
 
         _auth.authStateChanges().listen((user) async {
         if (user != null && user.emailVerified) {
@@ -106,7 +126,8 @@ class _RegisterState extends State<Register> {
       } else if (e.code == 'invalid-email') {
         showerrorDialog(context,"The email address is invalid.");
       } else {
-        showerrorDialog(context, "Error: ${e.message}");
+        devtools.log("${e.message}");
+        showerrorDialog(context, "Oops! Something went wrong. Try again later");
       }
     } catch (e) {
       // Handle any other errors
@@ -120,26 +141,6 @@ class _RegisterState extends State<Register> {
 
     }
 
-  }
-
-   @override
-  void initState() {
-    emailController = TextEditingController();
-    firstNameController = TextEditingController();
-    lastNameController = TextEditingController();
-    passwordController = TextEditingController();
-    cPasswordController = TextEditingController();
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    emailController.dispose();
-    firstNameController.dispose();
-    lastNameController.dispose();
-    passwordController.dispose();
-    cPasswordController.dispose();
-    super.dispose();
   }
 
 

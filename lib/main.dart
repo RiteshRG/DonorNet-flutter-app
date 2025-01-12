@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
         'registerRoute': (context) => Register(),
         'verificationRoute': (context) => Verification(),
         'emailVerificationRoute': (context) => EmailVerificationPage(),
-        'ResetPasswordPageRoute': (context) => ResetPasswordPage(),
+        'ResetPasswordPageRoute': (context) => ResetPasswordPage(email: '',),
         'homePageRoute': (context) => HomePage(),
       },
     );

@@ -1,20 +1,134 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/materials/app_colors.dart';
+import 'package:donornet/utilities/loading_indicator.dart';
+import 'package:donornet/utilities/show_error_dialog.dart';
 import 'package:donornet/views/login_page.dart';
-import 'package:donornet/views/registration_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'dart:developer' as devtools show log;
 
 class ResetPasswordPage extends StatefulWidget {
-  const ResetPasswordPage({super.key});
+  final String email;
 
+  const ResetPasswordPage({Key? key, required this.email}) : super(key: key);
+    
   @override
   State<ResetPasswordPage> createState() => _ResetPasswordPageState();
 }
 
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool isPasswordVisible = false;
   bool isConfirmPasswordVisible = false;
   bool isChecked = false;
+  bool isLoading = false;
+  late final TextEditingController passwordController;
+  late final TextEditingController cPasswordController;
+
+    @override
+  void initState() {
+    passwordController = TextEditingController();
+    cPasswordController = TextEditingController();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    passwordController.dispose();
+    cPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> resetPassword() async{
+    
+    String password = passwordController.text.trim();
+    String cPassword = cPasswordController.text.trim();
+
+    if(password.isEmpty){
+      showerrorDialog(context,"Please enter both password and confirm password.");
+      return;
+    }else if(password != cPassword){
+      showerrorDialog(context,"Passwords do not match. Please make sure both passwords are identical.");
+      return;
+    }else if (!(password.length >= 8 && password.length <= 15 && RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$%\^&\*\(\)_\+\-=\[\]\{\};:,.<>?])').hasMatch(password))) {
+      showerrorDialog(context, "Password must be 8-15 characters, with at least one uppercase letter, one lowercase letter, one number, and one special character.");
+      return;
+    }else{
+      try{
+         setState(() {
+      isLoading = true;
+      });
+        String email = widget.email;
+
+        final querySnapshot = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .get();
+
+          final document = querySnapshot.docs.first;
+          final currentPassword = document['password'];
+          await _firestore.collection('users').doc(document.id).update({'password': password});
+          bool passwordUpdated = await _newPassword(password, currentPassword, email);
+
+          if(passwordUpdated){
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Password changed successfully!'),));
+            Navigator.of(context).pushNamedAndRemoveUntil('loginRoute', (route) => false,);
+          }else{
+            await _firestore.collection('users').doc(document.id).update({'password': currentPassword});
+            showerrorDialog(context, "Oops! Something went wrong. Try again later");
+          }
+      }on FirebaseAuthException catch (e){
+        if (e.code == 'weak-password') {
+        // ignore: use_build_context_synchronously
+        showerrorDialog(context, "The password is too weak.");
+      }else {
+        devtools.log("${e.message}");
+        showerrorDialog(context, "Oops! Something went wrong. Try again later");
+      }
+      }catch (e){
+        devtools.log("An unexpected error occurred: ${e.toString()}");
+        showerrorDialog(context,"An unexpected error occurred: ${e.toString()}");
+      }finally {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+  Future<bool> _newPassword(String password,String currentPassword, String email) async{   
+      try{ 
+        User? user = FirebaseAuth.instance.currentUser;
+        AuthCredential credential = EmailAuthProvider.credential(
+          email: email,
+          password: currentPassword, // Collect or verify the current password
+        );
+        user = (await _auth.signInWithCredential(credential)).user;
+
+        await user!.updatePassword(password);
+      
+        await _auth.signOut();
+        return true;
+      }
+      on FirebaseAuthException catch (e){
+      if (e.code == 'weak-password') {
+      // ignore: use_build_context_synchronously
+      showerrorDialog(context, "The password is too weak.");
+      return false;
+      }else {
+        devtools.log("${e.message}");
+        showerrorDialog(context, "Oops! Something went wrong. Try again later");
+        return false;
+      }
+      }catch (e){
+        devtools.log("An unexpected error occurred: ${e.toString()}");
+        showerrorDialog(context,"An unexpected error occurred: ${e.toString()}");
+        return false;
+      }
+    }
+
 
   @override
   Widget build(BuildContext context) {
@@ -105,6 +219,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                               children: [
                                 //*******Email Text Field**********
                                  TextFormField(
+                                  controller: passwordController,
                                   obscureText: !isPasswordVisible,
                                   decoration: InputDecoration(
                                     labelText: "Password",
@@ -153,6 +268,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               
                                 // Confirm Password Field (TextFormField with validator)
                                 TextFormField(
+                                  controller: cPasswordController,
                                   obscureText: !isConfirmPasswordVisible,
                                   decoration: InputDecoration(
                                     labelText: "Confirm Password",
@@ -212,21 +328,19 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                                 Center(
                                   child: ElevatedButton(
                                     onPressed: () {
-                                      // if (_formKey.currentState?.validate() ?? false) {
-                                      //   // If the form is valid, proceed with registration logic
-                                      // }
-                                      Navigator.push(context, 
-                                      MaterialPageRoute(builder: (context) => Login()));
+                                      resetPassword();
+                                      // Navigator.push(context, 
+                                      // MaterialPageRoute(builder: (context) => Login()));
                                     },
+                                    style: ElevatedButton.styleFrom(
+                                      minimumSize: Size(240, 50),
+                                      backgroundColor:  AppColors.primaryColor,
+                                    ),
                                     child: Text(
                                       "Change password",
                                       style: TextStyle(fontSize: 18,
                                       color: Colors.white,
                                       ),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      minimumSize: Size(240, 50),
-                                      backgroundColor:  AppColors.primaryColor,
                                     ),
                                   ),
                                 ),
@@ -244,8 +358,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                                     ),),
                                     GestureDetector(
                                       onTap: () {
-                                        Navigator.push(context, 
-                                              MaterialPageRoute(builder: (context) => Login()));
+                                         Navigator.of(context).pushNamedAndRemoveUntil('loginRoute', (route) => false,);
                                       },
                                       child: Text(
                                         "Login",
@@ -277,6 +390,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             //   alignment: Alignment.bottomCenter,
             //   child: 
             // )
+             LoadingIndicator(isLoading: isLoading),
         ],
       )
     );

@@ -1,8 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:donornet/materials/app_colors.dart';
-import 'package:donornet/views/email_verification_page.dart';
+import 'package:donornet/utilities/show_error_dialog.dart';
 import 'package:donornet/views/login_page.dart';
-import 'package:donornet/views/registration_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -35,9 +34,9 @@ void initState() {
     if (user != null && !user.emailVerified) {
       try {
         await user.sendEmailVerification();
-        Fluttertoast.showToast(msg: "Verification email sent!");
+        showerrorDialog(context,"Verification email sent!");
       } catch (e) {
-        Fluttertoast.showToast(msg: "Error sending email: ${e.toString()}");
+        showerrorDialog(context,"Error sending email: ${e.toString()}");
       }
     }
     setState(() {
