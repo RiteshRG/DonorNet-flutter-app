@@ -19,3 +19,22 @@ Future<void> showerrorDialog(
     },
   );
 }
+
+Future<void> permissionDialog(
+  BuildContext context, 
+  String text,
+){
+  return showDialog(
+    context: context, builder: (context) {
+      return AlertDialog(
+        title: const Text('Allow Permission'),
+        content: Text(text),
+        actions: [
+          TextButton(onPressed: (){
+            Navigator.of(context).pop();
+          }, child: const Text('OK')),
+        ],
+      );
+    },
+  );
+}

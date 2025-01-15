@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
 import 'package:donornet/utilities/show_error_dialog.dart';
-import 'package:donornet/views/authentication/home.dart';
+import 'package:donornet/views/home%20page/home.dart';
 import 'package:donornet/views/authentication/registration_page.dart';
 import 'package:donornet/views/authentication/email_verification_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -53,12 +53,15 @@ class _LoginState extends State<Login> {
       }
 
     }on FirebaseAuthException catch (e){
+       devtools.log("FirebaseAuthException caught: ${e.code}");
       if (e.code == 'wrong-password') {
         showerrorDialog(context, "Incorrect password. Please try again.");
       }else if (e.code == 'invalid-email') {
         showerrorDialog(context,"The email address is invalid.");
       }else if (e.code == 'user-not-found') {
         showerrorDialog(context, "User not found. Please check your credentials or sign up.");
+      } else if(e.code == 'invalid-credential'){
+        showerrorDialog(context, "The credentials provided are invalid. Please check your email and password and try again.");
       }else {
         devtools.log("${e.message}");
         showerrorDialog(context, "Oops! Something went wrong. Try again later");
