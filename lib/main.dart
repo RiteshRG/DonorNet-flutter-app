@@ -1,5 +1,5 @@
 import 'package:donornet/materials/app_colors.dart';
-import 'package:donornet/views/add_item_page.dart';
+import 'package:donornet/views/add_item_page___.dart';
 import 'package:donornet/views/authentication/email_verification_page.dart';
 import 'package:donornet/views/home%20page/home.dart';
 import 'package:donornet/views/authentication/login_page.dart';
@@ -7,7 +7,7 @@ import 'package:donornet/views/authentication/registration_page.dart';
 import 'package:donornet/views/authentication/resetPassword.dart';
 import 'package:donornet/views/authentication/verification.dart';
 import 'package:donornet/views/authentication/welcome_page.dart';
-import 'package:donornet/views/add_item.dart';
+import 'package:donornet/views/add_item_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
        //home: const WelcomePageSelector(),
-      home: AddItem(),
+      home: AddItemPage(),
       routes: {
         'welcomePageRoute': (context) => WelcomePage(),
         'loginRoute': (context) => Login(),
@@ -44,6 +44,7 @@ class MyApp extends StatelessWidget {
         'emailVerificationRoute': (context) => EmailVerificationPage(),
         'ResetPasswordPageRoute': (context) => ResetPasswordPage(email: '',),
         'homePageRoute': (context) => HomePage(),
+        'addItemPage': (context) => AddItemPage(),
       },
     );
   }

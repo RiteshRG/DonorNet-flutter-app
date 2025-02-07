@@ -22,12 +22,12 @@ class _PostState extends State<Post> {
           bottom: 20),
         height: 240,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
+          color: const Color.fromARGB(255, 255, 255, 255),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
               color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.2), // Shadow color with opacity
-              spreadRadius: 3, // How far the shadow spreads
+              spreadRadius: 0, // How far the shadow spreads
               blurRadius: 4, // How blurry the shadow appears
               offset: Offset(3, 3), // Offset of the shadow (x, y)
             ),
@@ -43,8 +43,8 @@ class _PostState extends State<Post> {
                       //image
                       ClipRRect(
                           borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(10),
-                            topRight: Radius.circular(10),
+                            topLeft: Radius.circular(20),
+                            topRight: Radius.circular(20),
                           ),
                           child: Image.network(
                             'https://collectmyclothes.co.uk/wp-content/uploads/2019/11/donation.jpg',
@@ -64,7 +64,7 @@ class _PostState extends State<Post> {
                               FittedBox(
                                 child: Text("Rajesh Singh",
                                 style: TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 12,
                                 ),
                                 ),
                               ),
@@ -72,7 +72,7 @@ class _PostState extends State<Post> {
                               Icon(
                                 Icons.arrow_drop_down_circle_rounded,
                                 color: Colors.black,
-                                size: 5,
+                                size: 4,
                               ),
                               SizedBox(width: 12,),
                               Icon(Icons.star,
@@ -113,7 +113,7 @@ class _PostState extends State<Post> {
                         child: FittedBox(
                           child: Text("Good Condition Jeans Pants",
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.w400
                           ),
                           ),
@@ -129,7 +129,7 @@ class _PostState extends State<Post> {
                       "8 Nov",
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 15,
+                        fontSize: 12,
                         shadows: [
                           Shadow(
                             offset: Offset(2, 2), 
@@ -145,7 +145,7 @@ class _PostState extends State<Post> {
             ),
             //profile
             Positioned(
-              bottom: 39.5,
+              bottom: 42.5,
               child: GestureDetector(
                 onTap: () {
                   // Add your click action here
@@ -171,8 +171,8 @@ class _PostState extends State<Post> {
                   child: ClipOval(
                     child:  Image.network(
                       'https://i.pinimg.com/originals/83/bc/8b/83bc8b88cf6bc4b4e04d153a418cde62.jpg',
-                      height: 46,
-                      width: 46,
+                      height: 35,
+                      width: 35,
                       fit: BoxFit.cover,
                     ),
                   ),

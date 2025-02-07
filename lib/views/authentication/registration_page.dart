@@ -9,8 +9,6 @@ import 'package:flutter_svg/svg.dart';
 import 'dart:developer' as devtools show log;
 import 'package:donornet/utilities/loading_indicator.dart';
 
-import 'package:fluttertoast/fluttertoast.dart';
-
 class Register extends StatefulWidget {
   const Register({super.key});
 

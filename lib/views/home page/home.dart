@@ -229,7 +229,7 @@ void logoutUser() async {
                     // Scrollable Post List
                     Expanded(
                       child: Container(
-                        color: const Color.fromARGB(255, 230, 230, 230),
+                        color: const Color.fromARGB(255, 255, 255, 255),
                         child: ListView.builder(
                           itemCount: 10, // Replace with the dynamic post count
                           itemBuilder: (context, index) {
@@ -251,9 +251,9 @@ void logoutUser() async {
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.3),
-              spreadRadius: 2,
-              blurRadius: 7,
-              offset: Offset(0, -5),
+              spreadRadius: 1,
+              blurRadius: 5,
+              offset: Offset(0, -2),
             ),
           ],
         ),
@@ -263,7 +263,9 @@ void logoutUser() async {
           unselectedItemColor: const Color.fromARGB(126, 35, 151, 103),
           currentIndex: 0, // Set initial index
           onTap: (index) {
-            // Handle bottom navigation tap
+            if(index == 2){
+               Navigator.of(context).pushNamed('addItemPage');
+            }
           },
           // showSelectedLabels: false,
           // showUnselectedLabels: false,
@@ -298,8 +300,8 @@ void logoutUser() async {
                   boxShadow: [
                     BoxShadow(
                       color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.3),
-                      spreadRadius: 2,
-                      blurRadius: 5,
+                      spreadRadius: 0,
+                      blurRadius: 2,
                       offset: Offset(0, 2),
                     )
                   ],
