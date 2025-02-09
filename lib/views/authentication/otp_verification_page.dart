@@ -1,7 +1,7 @@
 
 import 'package:flutter/widgets.dart';
 import 'package:donornet/materials/app_colors.dart';
-import 'package:donornet/services/OTP_service.dart';
+import 'package:donornet/services%20and%20provider/OTP_service.dart';
 import 'package:donornet/views/authentication/email_verification_page.dart';
 import 'package:donornet/views/authentication/registration_page.dart';
 import 'package:donornet/views/authentication/resetPassword.dart';

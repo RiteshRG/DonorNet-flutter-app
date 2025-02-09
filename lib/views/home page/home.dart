@@ -116,6 +116,7 @@ void logoutUser() async {
                           Expanded(
                             child: Container(
                               padding: EdgeInsets.only(
+                                top: 5,
                                 right: 20
                               ),
                               alignment: Alignment.topRight,
@@ -126,7 +127,7 @@ void logoutUser() async {
                                   },
                                   child: Icon(Icons.menu,
                                 color: Colors.white,
-                                size: 32,
+                                size: 25,
                                 ),
                                 ),
                               ),
@@ -250,82 +251,52 @@ void logoutUser() async {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withOpacity(0.1),
               spreadRadius: 1,
               blurRadius: 5,
               offset: Offset(0, -2),
             ),
           ],
         ),
-        child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: Colors.green,
-          unselectedItemColor: const Color.fromARGB(126, 35, 151, 103),
-          currentIndex: 0, // Set initial index
+        child:BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: AppColors.primaryColor,
+        unselectedItemColor:const Color.fromARGB(179, 55, 170, 122),
+        currentIndex: 0, // Set initial index
           onTap: (index) {
             if(index == 2){
-               Navigator.of(context).pushNamed('addItemPage');
+               Navigator.of(context).pushNamed('addItemPageRoute');
             }
+            if(index == 3){
+               Navigator.of(context).pushNamed('chatPageRoute');
+            }
+            if(index == 4){
+               Navigator.of(context).pushNamed('myProfilePageRoute');
+            }
+
           },
-          // showSelectedLabels: false,
-          // showUnselectedLabels: false,
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined, size: 25),
-              label: "Home",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.my_location_outlined, size: 25),
-              label: "Location",
-            ),
-            BottomNavigationBarItem(
-              icon: SvgPicture.asset(
-                'assets/icons/add.svg',
-                height: 34,
-                width: 34,
-                fit: BoxFit.cover,
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: ''),
+          BottomNavigationBarItem(
+            icon: Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                    colors: [AppColors.primaryColor, AppColors.tertiaryColor], 
+                    begin: Alignment.topLeft, 
+                    end: Alignment.bottomRight,
+                ), 
+                shape: BoxShape.circle,
               ),
-              label: "Post",
+              child: Icon(Icons.add, color: Colors.white),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.chat_outlined, size: 25),
-              label: "Chat",
-            ),
-            BottomNavigationBarItem(
-              icon: Container(
-                width: 25,
-                height: 25,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.3),
-                      spreadRadius: 0,
-                      blurRadius: 2,
-                      offset: Offset(0, 2),
-                    )
-                  ],
-                  image: DecorationImage(
-                    image: AssetImage('assets/profile_4.jpg'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              label: "Profile",
-            ),
-          ],
-          selectedLabelStyle: TextStyle(
-            fontSize: 10, 
-            color: AppColors.tertiaryColor,
-            //fontWeight: FontWeight.bold, // Optional for bold text
+            label: '',
           ),
-          unselectedLabelStyle: TextStyle(
-           fontSize: 9, 
-           color: AppColors.tertiaryColor,
-            //fontWeight: FontWeight.normal, // Optional for normal text
-          ),
-        ),
-      ),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: ''),
+        ],
+      )),
     );
   }
 }

@@ -96,6 +96,7 @@ class _RegisterState extends State<Register> {
           'email': email,
           'password': password,
           'is_verified': false,
+          'profile_image': "https://cdn-icons-png.flaticon.com/128/10307/10307911.png",
           'registration_date': DateTime.now(),
         });
 

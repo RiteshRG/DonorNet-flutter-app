@@ -1,5 +1,5 @@
 import 'package:donornet/materials/app_colors.dart';
-import 'package:donornet/services/map_service.dart';
+import 'package:donornet/services%20and%20provider/map_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:geolocator/geolocator.dart';
@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:latlong2/latlong.dart';
-import 'package:donornet/services/map_service.dart';
+import 'package:donornet/services%20and%20provider/map_service.dart';
 
 class AddItemPage extends StatefulWidget {
   @override
@@ -298,14 +298,14 @@ class _AddItemPageState extends State<AddItemPage> {
             // Post Button
             Center(
               child: Container(
-                width: double.infinity, // You can change this depending on your layout needs
-                height: 50.0, // Adjust the height of the button
+                width: double.infinity,
+                height: 50.0, 
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(30), // Rounded corners
+                  borderRadius: BorderRadius.circular(30), 
                   gradient: LinearGradient(
-                    colors: [AppColors.primaryColor, AppColors.tertiaryColor], // Gradient colors (purple gradient)
-                    begin: Alignment.topLeft, // Gradient starts from the top left
-                    end: Alignment.bottomRight, // Gradient ends at the bottom right
+                    colors: [AppColors.primaryColor, AppColors.tertiaryColor], 
+                    begin: Alignment.topLeft, 
+                    end: Alignment.bottomRight, 
                   ),
                 ),
                 child: ElevatedButton(
@@ -339,82 +339,51 @@ class _AddItemPageState extends State<AddItemPage> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withOpacity(0.1),
               spreadRadius: 1,
               blurRadius: 5,
               offset: Offset(0, -2),
             ),
           ],
         ),
-        child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: Colors.green,
-          unselectedItemColor: const Color.fromARGB(126, 35, 151, 103),
-          currentIndex: 2, // Set initial index
+        child:BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: AppColors.primaryColor,
+        unselectedItemColor:const Color.fromARGB(179, 55, 170, 122),
+        currentIndex: 2, // Set initial index
           onTap: (index) {
             if(index == 0){
                Navigator.of(context).pushNamedAndRemoveUntil('homePageRoute', (route) => false,);
             }
+            if(index == 3){
+               Navigator.of(context).pushNamedAndRemoveUntil('chatPageRoute', (route) => false,);
+            }
+            if(index == 4){
+               Navigator.of(context).pushNamedAndRemoveUntil('myProfilePageRoute', (route) => false,);
+            }
           },
-          // showSelectedLabels: false,
-          // showUnselectedLabels: false,
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined, size: 25),
-              label: "Home",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.my_location_outlined, size: 25),
-              label: "Location",
-            ),
-            BottomNavigationBarItem(
-              icon: SvgPicture.asset(
-                'assets/icons/add.svg',
-                height: 34,
-                width: 34,
-                fit: BoxFit.cover,
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: ''),
+          BottomNavigationBarItem(
+            icon: Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                    colors: [AppColors.primaryColor, AppColors.tertiaryColor], 
+                    begin: Alignment.topLeft, 
+                    end: Alignment.bottomRight,
+                ), 
+                shape: BoxShape.circle,
               ),
-              label: "Post",
+              child: Icon(Icons.add, color: Colors.white),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.chat_outlined, size: 25),
-              label: "Chat",
-            ),
-            BottomNavigationBarItem(
-              icon: Container(
-                width: 25,
-                height: 25,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.3),
-                      spreadRadius: 0,
-                      blurRadius: 2,
-                      offset: Offset(0, 2),
-                    )
-                  ],
-                  image: DecorationImage(
-                    image: AssetImage('assets/profile_4.jpg'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              label: "Profile",
-            ),
-          ],
-          selectedLabelStyle: TextStyle(
-            fontSize: 10, 
-            color: AppColors.tertiaryColor,
-            //fontWeight: FontWeight.bold, // Optional for bold text
+            label: '',
           ),
-          unselectedLabelStyle: TextStyle(
-          fontSize: 9, 
-          color: AppColors.tertiaryColor,
-            //fontWeight: FontWeight.normal, // Optional for normal text
-          ),
-        ),
-      ),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: ''),
+        ],
+      )),
     );
   }
 
