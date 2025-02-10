@@ -1,4 +1,5 @@
 
+import 'package:donornet/utilities/access_throught_link.dart';
 import 'package:flutter/widgets.dart';
 import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/services%20and%20provider/OTP_service.dart';
@@ -6,7 +7,6 @@ import 'package:donornet/views/authentication/email_verification_page.dart';
 import 'package:donornet/views/authentication/registration_page.dart';
 import 'package:donornet/views/authentication/resetPassword.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 
 
 class OTPVerificationPage extends StatefulWidget {
@@ -147,8 +147,8 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
               child: Opacity(
                 opacity: 0.77,
                 child: Center(
-                  child: SvgPicture.asset(
-                    'assets/icons/logo.svg',
+                  child: Image.network(
+                     '${AccessLink.logoFlip}',
                     height: 225,
                     width: 225,
                     fit: BoxFit.cover,

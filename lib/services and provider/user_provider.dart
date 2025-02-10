@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:donornet/utilities/show_error_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -81,5 +82,18 @@ class UserProvider with ChangeNotifier {
 
     _isLoading = false;
     notifyListeners();
+  }
+
+  void logoutUser(BuildContext context) async {
+    try {
+      await _auth.signOut();
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        'welcomePageRoute', 
+        (route) => false,
+      );
+      print("User successfully logged out");
+    } catch (e) {
+      showerrorDialog(context, "Error logging out: $e");
+    }
   }
 }

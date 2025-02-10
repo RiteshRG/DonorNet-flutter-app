@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/services%20and%20provider/OTP_service.dart';
+import 'package:donornet/utilities/access_throught_link.dart';
 
 import 'package:donornet/utilities/loading_indicator.dart';
 import 'package:donornet/utilities/show_error_dialog.dart';
@@ -117,13 +118,13 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
             ),
           ),
           Positioned(
-              top: -75,
+              top: -70,
               right: -80,
               child: Opacity(
                 opacity: 0.77,
                 child: Center(
-                  child: SvgPicture.asset(
-                    'assets/icons/logo.svg',
+                  child: Image.network(
+                     '${AccessLink.logoFlip}',
                     height: 225,
                     width: 225,
                     fit: BoxFit.cover,

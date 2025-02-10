@@ -1,6 +1,7 @@
 import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/services%20and%20provider/user_provider.dart';
 import 'package:donornet/views/authentication/email_verification_page.dart';
+import 'package:donornet/views/filter.dart';
 import 'package:donornet/views/home%20page/home.dart';
 import 'package:donornet/views/authentication/login_page.dart';
 import 'package:donornet/views/authentication/registration_page.dart';
@@ -8,7 +9,8 @@ import 'package:donornet/views/authentication/resetPassword.dart';
 import 'package:donornet/views/authentication/verification.dart';
 import 'package:donornet/views/authentication/welcome_page.dart';
 import 'package:donornet/views/add_item_page.dart';
-import 'package:donornet/views/message_room.dart';
+import 'package:donornet/views/chat_page.dart';
+import 'package:donornet/views/levels/my_level_page.dart';
 import 'package:donornet/views/profile_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -45,8 +47,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-       home: const WelcomePageSelector(),
-      //home: ChatPage(),
+       //home: const WelcomePageSelector(),
+      home: HomePage(),
       routes: {
         'welcomePageRoute': (context) => WelcomePage(),
         'loginRoute': (context) => Login(),
@@ -57,7 +59,8 @@ class MyApp extends StatelessWidget {
         'homePageRoute': (context) => HomePage(),
         'addItemPageRoute': (context) => AddItemPage(),
         'chatPageRoute': (context) =>ChatPage(),
-        'myProfilePageRoute': (context) => Profile_page()
+        'myProfilePageRoute': (context) => Profile_page(),
+        'myLevelPageRoute': (context) => MyLevelPage()
       },
     );
   }

@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/materials/app_colors.dart';
+import 'package:donornet/utilities/access_throught_link.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
 import 'package:donornet/utilities/show_error_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'dart:developer' as devtools show log;
 
 class ResetPasswordPage extends StatefulWidget {
@@ -160,8 +160,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               child: Opacity(
                 opacity: 0.77,
                 child: Center(
-                  child: SvgPicture.asset(
-                    'assets/icons/logo.svg',
+                  child: Image.network(
+                     '${AccessLink.logoFlip}',
                     height: 225,
                     width: 225,
                     fit: BoxFit.cover,

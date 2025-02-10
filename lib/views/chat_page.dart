@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 
 // MessageTile class to represent each message tile
 class MessageTile extends StatelessWidget {
-  final String profileImage;
+  final String? profileImage;
   final String itemImage;
   final String ownerName;
   final String postTitle;
   final String lastMessage;
   final String lastMessageDate;
-  final bool claimed;
+  final String status;
 
   MessageTile({
     required this.profileImage,
@@ -19,7 +19,7 @@ class MessageTile extends StatelessWidget {
     required this.postTitle,
     required this.lastMessage,
     required this.lastMessageDate,
-    required this.claimed,
+    required this.status,
   });
 
   @override
@@ -67,7 +67,7 @@ class MessageTile extends StatelessWidget {
                       },
                     ),
                   ),
-                  if (!claimed)
+                  if (status == 'claimed')
                     Positioned.fill(
                       child: Container(
                         decoration: BoxDecoration(
@@ -100,28 +100,35 @@ class MessageTile extends StatelessWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.all(Radius.circular(100)),
-                      border: Border.all(
-                        color: AppColors.primaryColor, // White border color
-                        width: 1, // Border width
-                      ),
-                    ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(30),
-                        child: Image.network(
-                          profileImage,
-                          width: 25,
-                          height: 25,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return CircleAvatar(
-                              radius: 15,
-                              backgroundColor: Colors.grey,
-                              child: Icon(Icons.person, color: Colors.white, size: 25),
-                            );
-                          },
+                        border: Border.all(
+                          color: AppColors.primaryColor, // White border color
+                          width: 1, // Border width
                         ),
                       ),
-                    ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(30),
+                        child: profileImage == null
+                            ? CircleAvatar(
+                                radius: 15,
+                                backgroundColor: Colors.grey,
+                                child: Icon(Icons.person, color: Colors.white, size: 25),
+                              )
+                            : Image.network(
+                                profileImage!,
+                                width: 25,
+                                height: 25,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return CircleAvatar(
+                                    radius: 15,
+                                    backgroundColor: Colors.grey,
+                                    child: Icon(Icons.person, color: Colors.white, size: 25),
+                                  );
+                                },
+                              ),
+                      ),
+                    )
+
                   ),
                   // Positioned Date in Top Right Corner
                 ],
@@ -135,16 +142,16 @@ class MessageTile extends StatelessWidget {
                   children: [
                     Text(
                       ownerName,
-                      style: TextStyle(fontSize: 14, color: const Color.fromARGB(255, 0, 0, 0)),
+                      style: TextStyle(fontSize: 12, color: const Color.fromARGB(255, 0, 0, 0)),
                     ),
                     SizedBox(height: 0,),
                     Text(
                       postTitle,
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
                     ),
-                    SizedBox(height: 8,),
+                    SizedBox(height: 5,),
                     Text(
                       lastMessage,
                       style: TextStyle(fontSize: 14, color: AppColors.secondaryColor),
@@ -183,31 +190,40 @@ class _ChatPageState extends State<ChatPage> {
   // Same static data for all tiles
   final List<Map<String, dynamic>> messageData = [
     {
-      'profileImage': 'https://i.pinimg.com/originals/83/bc/8b/83bc8b88cf6bc4b4e04d153a418cde62.jpg',
-      'itemImage': 'https://collectmyclothes.co.uk/wp-content/uploads/2019/11/donation.jpg',
-      'ownerName': 'Jason',
-      'postTitle': 'cloths',
-      'lastMessage': 'Thanks for your help!',
+      'profileImage': 'https://c.stocksy.com/a/dTW500/z9/1316485.jpg',
+      'itemImage': 'https://storage.needpix.com/rsynced_images/old-jeans-3589262_1280.jpg',
+      'ownerName': 'Rajesh Sharma',
+      'postTitle': 'Warm Blanket',
+      'lastMessage': 'hii',
       'lastMessageDate': 'Feb 8',
-      'claimed': true,
+      'status': 'available',
     },
     {
       'profileImage': 'https://i.pinimg.com/originals/83/bc/8b/83bc8b88cf6bc4b4e04d153a418cde62.jpg',
       'itemImage': 'https://collectmyclothes.co.uk/wp-content/uploads/2019/11/donation.jpg',
-      'ownerName': 'John',
-      'postTitle': 'Winter',
-      'lastMessage': 'Thanks for your help!',
+      'ownerName': 'Priya Iyer',
+      'postTitle': 'School Books',
+      'lastMessage': 'Thank you so much for sharing!',
       'lastMessageDate': 'Feb 8',
-      'claimed': false ,
+      'status': 'claimed' ,
     },
     {
-      'profileImage': 'https://i.pinimg.com/originals/83/bc/8b/83bc8b88cf6bc4b4e04d153a418cde62.jpg',
-      'itemImage': 'https://collectmyclothes.co.uk/wp-content/uploads/2019/11/donation.jpg',
-      'ownerName': 'Doe',
-      'postTitle': 'Jacket',
-      'lastMessage': 'Thanks for your help!',
-      'lastMessageDate': 'Feb 8',
-      'claimed': true,
+      'profileImage': 'https://c8.alamy.com/comp/2AE4838/profile-of-a-teenage-indian-boy-looking-at-outsides-2AE4838.jpg',
+      'itemImage': 'https://4.bp.blogspot.com/-MO6lqm3QOGM/WNHSSHMqQ4I/AAAAAAABoVE/IepKWfWFrKEy66hlgS6zr_xN6QfNTBUMQCEw/s1600/032117buffet.jpg',
+      'ownerName': 'Arvind Verma',
+      'postTitle': 'Old Furniture in Good Condition',
+      'lastMessage': 'Is it still available?',
+      'lastMessageDate': 'Feb 10',
+      'status': 'available',
+    },
+    {
+      'profileImage': 'https://c8.alamy.com/comp/2AE4838/profile-of-a-teenage-indian-boy-looking-at-outsides-2AE4838.jpg',
+      'itemImage': 'https://4.bp.blogspot.com/-MO6lqm3QOGM/WNHSSHMqQ4I/AAAAAAABoVE/IepKWfWFrKEy66hlgS6zr_xN6QfNTBUMQCEw/s1600/032117buffet.jpg',
+      'ownerName': 'Arvind Verma',
+      'postTitle': 'Old Furniture in Good Condition',
+      'lastMessage': 'Is it still available?',
+      'lastMessageDate': 'Feb 10',
+      'status': 'available',
     },
   ];
 
@@ -262,7 +278,7 @@ class _ChatPageState extends State<ChatPage> {
                     postTitle: message['postTitle'],
                     lastMessage: message['lastMessage'],
                     lastMessageDate: message['lastMessageDate'],
-                    claimed: message['claimed'],
+                    status: message['status'], 
                   ),
                 ),
               );
@@ -274,7 +290,7 @@ class _ChatPageState extends State<ChatPage> {
               postTitle: message['postTitle'],
               lastMessage: message['lastMessage'],
               lastMessageDate: message['lastMessageDate'],
-              claimed: message['claimed'],
+              status: message['status'],
             ),
           );
         },

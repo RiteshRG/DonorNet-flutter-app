@@ -1,5 +1,6 @@
 import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/utilities/show_error_dialog.dart';
+import 'package:donornet/views/filter.dart';
 import 'package:donornet/views/home%20page/drawer.dart';
 import 'package:donornet/views/home%20page/post.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -28,6 +29,39 @@ void logoutUser() async {
 
     showerrorDialog(context, "Error logging out: $e");
   }
+}
+
+ List<PostDataList> posts =[
+    PostDataList(
+      postImage: 'https://storage.needpix.com/rsynced_images/old-jeans-3589262_1280.jpg',
+      profileImage: 'https://i.pinimg.com/originals/5d/a8/76/5da8768c07eb3db7dbf5f394ab4444a6.jpg',
+      date: '8 feb',
+      name: 'Rajesh Sharma',
+      rating: '4.2',
+      distance: '10km',
+      postTitle: 'Good Condition Jeans Pants', 
+    ),
+    PostDataList(
+      postImage: 'https://4.bp.blogspot.com/-MO6lqm3QOGM/WNHSSHMqQ4I/AAAAAAABoVE/IepKWfWFrKEy66hlgS6zr_xN6QfNTBUMQCEw/s1600/032117buffet.jpg',
+      profileImage: 'https://c8.alamy.com/comp/2AE4838/profile-of-a-teenage-indian-boy-looking-at-outsides-2AE4838.jpg',
+      date: '10 feb',
+      name: 'Arvind Verma',
+      rating: '4.3',
+      distance: '12km',
+      postTitle: 'Old Furniture in Good Condition'
+    ),
+    PostDataList(
+      postImage: "https://tse1.mm.bing.net/th?id=OIP.bBNhDMx06zyK_Q_9hN35IAHaFl&pid=Api&P=0&h=180",
+      profileImage: "https://e1.pxfuel.com/desktop-wallpaper/224/8/desktop-wallpaper-smart-indian-boy-pic.jpg",
+      date: "10 Feb",
+      name: "Vikram Patel",
+      rating: "4.3",
+      distance: "12km",
+      postTitle: "Old Sneakers in Good Condition"
+    )
+   ];
+void _openFilterBottomSheet() {
+  showFilterBottomSheet(context); // Call the filter bottom sheet function
 }
 
   @override
@@ -193,7 +227,7 @@ void logoutUser() async {
                           /*****Filter******* */
                           GestureDetector(
                             onTap: () {
-                              logoutUser();
+                              _openFilterBottomSheet();
                             },
                             child: Container(
                               padding: EdgeInsets.all(15),
@@ -232,9 +266,9 @@ void logoutUser() async {
                       child: Container(
                         color: const Color.fromARGB(255, 255, 255, 255),
                         child: ListView.builder(
-                          itemCount: 10, // Replace with the dynamic post count
+                          itemCount:  posts.length, // Replace with the dynamic post count
                           itemBuilder: (context, index) {
-                            return Post();
+                           return Post(post: posts[index]);
                           },
                         ),
                       ),

@@ -1,12 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/materials/app_colors.dart';
+import 'package:donornet/utilities/access_throught_link.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
 import 'package:donornet/utilities/show_error_dialog.dart';
 import 'package:donornet/views/authentication/registration_page.dart';
 import 'package:donornet/views/authentication/email_verification_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:developer' as devtools show log;
 
 class Login extends StatefulWidget {
@@ -120,8 +120,8 @@ class _LoginState extends State<Login> {
               child: Opacity(
                 opacity: 0.77,
                 child: Center(
-                  child: SvgPicture.asset(
-                    'assets/icons/logo.svg',
+                  child: Image.network(
+                     '${AccessLink.logoFlip}',
                     height: 225,
                     width: 225,
                     fit: BoxFit.cover,

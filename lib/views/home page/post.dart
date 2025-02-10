@@ -1,14 +1,38 @@
 import 'package:donornet/materials/app_colors.dart';
 import 'package:flutter/material.dart';
 
+class PostDataList{
+  final String postImage;
+  final String profileImage;
+  final String date;
+  final String name;
+  final String rating;
+  final String distance;
+  final String postTitle;
+
+  PostDataList({
+    required this.postImage,
+    required this.profileImage,
+    required this.date,
+    required this.name,
+    required this.rating,
+    required this.distance,
+    required this.postTitle,
+  });
+}
+
 class Post extends StatefulWidget {
-  const Post({super.key});
+   final PostDataList post;
+  const Post({super.key, required this.post});
 
   @override
   State<Post> createState() => _PostState();
 }
 
 class _PostState extends State<Post> {
+  
+
+   
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -27,9 +51,9 @@ class _PostState extends State<Post> {
           boxShadow: [
             BoxShadow(
               color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.2), // Shadow color with opacity
-              spreadRadius: 0, // How far the shadow spreads
+              spreadRadius: 2, // How far the shadow spreads
               blurRadius: 4, // How blurry the shadow appears
-              offset: Offset(3, 3), // Offset of the shadow (x, y)
+              offset: Offset(0, 0), // Offset of the shadow (x, y)
             ),
           ],
         ),
@@ -47,7 +71,7 @@ class _PostState extends State<Post> {
                             topRight: Radius.circular(20),
                           ),
                           child: Image.network(
-                            'https://collectmyclothes.co.uk/wp-content/uploads/2019/11/donation.jpg',
+                            widget.post.postImage,
                             width: double.infinity,
                             height: 178, // Adjust image height
                             fit: BoxFit.cover,
@@ -62,7 +86,7 @@ class _PostState extends State<Post> {
                             children: [
                               //name
                               FittedBox(
-                                child: Text("Rajesh Singh",
+                                child: Text("${widget.post.name}",
                                 style: TextStyle(
                                   fontSize: 12,
                                 ),
@@ -81,7 +105,7 @@ class _PostState extends State<Post> {
                               ),
                               SizedBox(width: 5,),
                               FittedBox(
-                                child: Text("4.2",
+                                child: Text("${widget.post.rating}",
                                 style: TextStyle(
                                     fontSize: 12,
                                   ),
@@ -95,7 +119,7 @@ class _PostState extends State<Post> {
                               ),
                               SizedBox(width: 2,),
                               FittedBox(
-                                child: Text("10 km",
+                                child: Text("${widget.post.distance}",
                                   style: TextStyle(
                                     color: AppColors.secondaryColor,
                                     fontSize: 12
@@ -111,7 +135,7 @@ class _PostState extends State<Post> {
                         padding: EdgeInsets.only(left: 40.5, top: 3),
                         alignment: Alignment.centerLeft,
                         child: FittedBox(
-                          child: Text("Good Condition Jeans Pants",
+                          child: Text("${widget.post.postTitle}",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w400
@@ -126,7 +150,7 @@ class _PostState extends State<Post> {
                     top: 5,
                     right: 10,
                     child: Text(
-                      "8 Nov",
+                      "${widget.post.date}",
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -170,7 +194,7 @@ class _PostState extends State<Post> {
                     ),
                   child: ClipOval(
                     child:  Image.network(
-                      'https://i.pinimg.com/originals/83/bc/8b/83bc8b88cf6bc4b4e04d153a418cde62.jpg',
+                      '${widget.post.profileImage}',
                       height: 35,
                       width: 35,
                       fit: BoxFit.cover,

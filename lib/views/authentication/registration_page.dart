@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/materials/app_colors.dart';
+import 'package:donornet/utilities/access_throught_link.dart';
 import 'package:donornet/utilities/show_error_dialog.dart';
 import 'package:donornet/views/authentication/login_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -63,21 +64,27 @@ class _RegisterState extends State<Register> {
 
     if (firstName.isEmpty || lastName.isEmpty || email.isEmpty || password.isEmpty || cPassword.isEmpty) {
        showerrorDialog(context,"Please fill all the details!");
+       isLoading = false;
        return;
     }else if(firstName.length > 20 || RegExp(r'[^a-zA-Z]').hasMatch(firstName)){
       showerrorDialog(context,"First name must be at most 20 characters long and contain only letters.");
+      isLoading = false;
       return;
     }else if(lastName.length > 20 || RegExp(r'[^a-zA-Z]').hasMatch(lastName)){
       showerrorDialog(context,"Last name must be at most 20 characters long and contain only letters.");
+      isLoading = false;
       return;
     }else if(password != cPassword){
        showerrorDialog(context,"Password do not match!");
+       isLoading = false;
        return;
       }else if (!(password.length >= 8 && password.length <= 15 && RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$%\^&\*\(\)_\+\-=\[\]\{\};:,.<>?])').hasMatch(password))) {
       showerrorDialog(context, "Password must be 8-15 characters, with at least one uppercase letter, one lowercase letter, one number, and one special character.");
+      isLoading = false;
       return;
     }else if(isChecked == false){
       showerrorDialog(context, "You must accept the terms and conditions to proceed.");
+      isLoading = false;
     }else{
 
       try{
@@ -174,8 +181,8 @@ class _RegisterState extends State<Register> {
               child: Opacity(
                 opacity: 0.77,
                 child: Center(
-                  child: SvgPicture.asset(
-                    'assets/icons/logo.svg',
+                  child:Image.network(
+                     '${AccessLink.logoFlip}',
                     height: 225,
                     width: 225,
                     fit: BoxFit.cover,

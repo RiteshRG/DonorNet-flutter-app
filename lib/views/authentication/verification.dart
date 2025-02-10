@@ -1,5 +1,6 @@
 
 import 'package:donornet/materials/app_colors.dart';
+import 'package:donornet/utilities/access_throught_link.dart';
 import 'package:donornet/utilities/show_error_dialog.dart';
 import 'package:donornet/views/authentication/login_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -66,8 +67,8 @@ void initState() {
               child: Opacity(
                 opacity: 0.77,
                 child: Center(
-                  child: SvgPicture.asset(
-                    'assets/icons/logo.svg',
+                  child: Image.network(
+                     '${AccessLink.logoFlip}',
                     height: 225,
                     width: 225,
                     fit: BoxFit.cover,
@@ -88,7 +89,7 @@ void initState() {
                     child: Text('Verify Email',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 29,
+                      fontSize: 24,
                       //fontWeight: FontWeight.bold
                     ),
                     ),
@@ -117,8 +118,8 @@ void initState() {
                               child: Text("We've sent you an email verification. please open it to verify your acount.\n\nIf you haven't recevied a verification email yet, press the button below. Please verify your email address",
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w400,
                                 color: const Color.fromARGB(255, 255, 255, 255)
                               ),
                               ),
@@ -140,7 +141,7 @@ void initState() {
                                 ? CircularProgressIndicator(color: Colors.white)
                                 : Text(
                                   "Send email verification",
-                                  style: TextStyle(fontSize: 20,
+                                  style: TextStyle(fontSize: 18,
                                   color: AppColors.tertiaryColor,
                                   ),
                                 ),
@@ -155,7 +156,7 @@ void initState() {
                                   Text("Go back to the  ",
                                   style: TextStyle(
                                     color: const Color.fromARGB(255, 255, 255, 255),
-                                    fontSize: 18
+                                    fontSize: 14
                                   ),),
                                   GestureDetector(
                                     onTap: () {
@@ -168,7 +169,7 @@ void initState() {
                                           decoration: TextDecoration.underline, decorationStyle: TextDecorationStyle.solid,
                                           decorationColor: AppColors.primaryColor,
                                         color:  const Color.fromARGB(255, 255, 255, 255),
-                                        fontSize: 18,
+                                        fontSize: 14,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),

@@ -1,5 +1,6 @@
 import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/services%20and%20provider/user_provider.dart';
+import 'package:donornet/utilities/loading_indicator.dart';
 import 'package:donornet/views/home%20page/drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -27,158 +28,163 @@ class _Profile_pageState extends State<Profile_page> {
     return Scaffold(
       key: _scaffoldKey,
       drawer: CustomDrawer(),
-      body: Column(
+      body: Stack(
         children: [
-          // Profile Header Section
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primaryColor,
-                  AppColors.tertiaryColor,
-                ],
-              ),
-            ),
-            child: SafeArea(
-              child: Stack(
-                children: [
-                  Container(
-                    height: 280,
-                    width: double.infinity,
-                    child: userData != null && userData['profile_image'] != null
-                    ? Image.network(
-                        userData['profile_image'], // Load from Firebase or any URL
-                        opacity: AlwaysStoppedAnimation(0.1),
-                        fit: BoxFit.cover,
-                      )
-                    : SizedBox(),
+          Column(
+            children: [
+              // Profile Header Section
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primaryColor,
+                      AppColors.tertiaryColor,
+                    ],
                   ),
-                  Column(
+                ),
+                child: SafeArea(
+                  child: Stack(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Container(
+                        height: 280,
+                        width: double.infinity,
+                        child: userData != null && userData['profile_image'] != null
+                        ? Image.network(
+                            userData['profile_image'], // Load from Firebase or any URL
+                            opacity: AlwaysStoppedAnimation(0.1),
+                            fit: BoxFit.cover,
+                          )
+                        : SizedBox(),
+                      ),
+                      Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Icon(Icons.mode_edit_outline_outlined, color: Colors.white, size: 25,),
+                                InkWell(
+                                  onTap: (){
+                                      _scaffoldKey.currentState?.openDrawer();
+                                  },
+                                  child: Icon(Icons.menu,
+                                color: Colors.white,
+                                ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Stack(
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: const Color.fromARGB(255, 197, 223, 212), // White border color
+                                    width: 2.0, // Border thickness
+                                  ),
+                                ),
+                                child:  userData != null && userData['profile_image'] != null
+                                ? CircleAvatar(
+                                    radius: 50,
+                                    backgroundImage: NetworkImage(userData['profile_image'],),
+                                  )
+                                : CircleAvatar(
+                                    radius: 50,
+                                    child: Icon(Icons.person, size: 50),
+                                  ),
+                              ),
+                              Positioned(
+                                right: -4,
+                                top: -4,
+                                child: Container(
+                                  height: 40,
+                                  width: 40,
+                                  padding: EdgeInsets.all(1),
+                                  decoration: BoxDecoration(
+                                    color: const Color.fromARGB(0, 255, 153, 0),
+                                    borderRadius: BorderRadius.all(Radius.circular(100)),
+                                     boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1), // Shadow color
+                                        spreadRadius: 0, // How much the shadow spreads
+                                        blurRadius: 0.5, // How blurry the shadow is
+                                        offset: Offset(0, 3), // Shadow position (x, y)
+                                      ),
+                                    ],
+                                  ),
+                                  child: Image.asset(
+                                    'assets/level_1-removebg-preview.png',
+                                    height: 40,
+                                  width: 40,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            '${userData?['first_name']} ${userData?['last_name']}',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Level 1',
+                                style: TextStyle(color: Colors.white70),
+                              ),
+                              SizedBox(width: 8),
+                              Icon(Icons.star, size: 16, color: Colors.amber),
+                              Text(
+                                '  4.5',
+                                style: TextStyle(color: Colors.white70),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          
+              // Tabs Section
+              Expanded(
+                child: DefaultTabController(
+                  length: 2,
+                  child: Column(
+                    children: [
+                      TabBar(
+                        tabs: [
+                          Tab(text: 'Pending Donations'),
+                          Tab(text: 'Claimed Donations'),
+                        ],
+                        labelColor: AppColors.primaryColor,
+                        unselectedLabelColor: Colors.grey,
+                        indicatorColor:  AppColors.secondaryColor,
+                      ),
+                      Expanded(
+                        child: TabBarView(
                           children: [
-                            Icon(Icons.mode_edit_outline_outlined, color: Colors.white, size: 25,),
-                            InkWell(
-                              onTap: (){
-                                  _scaffoldKey.currentState?.openDrawer();
-                              },
-                              child: Icon(Icons.menu,
-                            color: Colors.white,
-                            ),
-                            ),
+                            _buildDonationsGrid('Pending Donations'),
+                            _buildDonationsClaimedGrid('Claimed Donations'),
                           ],
                         ),
                       ),
-                      Stack(
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: const Color.fromARGB(255, 197, 223, 212), // White border color
-                                width: 2.0, // Border thickness
-                              ),
-                            ),
-                            child:  userData != null && userData['profile_image'] != null
-                            ? CircleAvatar(
-                                radius: 50,
-                                backgroundImage: NetworkImage(userData['profile_image'],),
-                              )
-                            : CircleAvatar(
-                                radius: 50,
-                                child: Icon(Icons.person, size: 50),
-                              ),
-                          ),
-                          Positioned(
-                            right: -4,
-                            top: -4,
-                            child: Container(
-                              height: 40,
-                              width: 40,
-                              padding: EdgeInsets.all(1),
-                              decoration: BoxDecoration(
-                                color: const Color.fromARGB(0, 255, 153, 0),
-                                borderRadius: BorderRadius.all(Radius.circular(100)),
-                                 boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1), // Shadow color
-                                    spreadRadius: 0, // How much the shadow spreads
-                                    blurRadius: 0.5, // How blurry the shadow is
-                                    offset: Offset(0, 3), // Shadow position (x, y)
-                                  ),
-                                ],
-                              ),
-                              child: Image.asset(
-                                'assets/level_1-removebg-preview.png',
-                                height: 40,
-                              width: 40,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        '${userData?['first_name']} ${userData?['last_name']}',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Level 1',
-                            style: TextStyle(color: Colors.white70),
-                          ),
-                          SizedBox(width: 8),
-                          Icon(Icons.star, size: 16, color: Colors.amber),
-                          Text(
-                            '  4.5',
-                            style: TextStyle(color: Colors.white70),
-                          ),
-                        ],
-                      ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-
-          // Tabs Section
-          Expanded(
-            child: DefaultTabController(
-              length: 2,
-              child: Column(
-                children: [
-                  TabBar(
-                    tabs: [
-                      Tab(text: 'Pending Donations'),
-                      Tab(text: 'Claimed Donations'),
-                    ],
-                    labelColor: AppColors.primaryColor,
-                    unselectedLabelColor: Colors.grey,
-                    indicatorColor:  AppColors.secondaryColor,
-                  ),
-                  Expanded(
-                    child: TabBarView(
-                      children: [
-                        _buildDonationsGrid('Pending Donations'),
-                        _buildDonationsClaimedGrid('Claimed Donations'),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          LoadingIndicator(isLoading: isLoading,loaderColor: const Color.fromARGB(255, 235, 72, 72)),
         ],
       ),
       bottomNavigationBar: Container(

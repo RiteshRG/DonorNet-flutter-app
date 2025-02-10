@@ -1,4 +1,5 @@
 import 'package:donornet/materials/app_colors.dart';
+import 'package:donornet/utilities/access_throught_link.dart';
 import 'package:donornet/views/authentication/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -17,14 +18,14 @@ class _WelcomePage extends State<WelcomePage> {
       body: Stack(
         children: [
           // Background Image
-          Container(
-            child: SvgPicture.asset(
-                    'assets/icons/logo.svg',
-                    height: 225,
-                    width: 225,
-                    fit: BoxFit.cover,
-                  ),
-          ),
+          // Container(
+          //   child: Image.network(
+          //           '${AccessLink.logo}',
+          //           height: 225,
+          //           width: 225,
+          //           fit: BoxFit.cover,
+          //         ),
+          // ),
           // Gradient Overlay
           Container(
             decoration: BoxDecoration(
@@ -40,41 +41,31 @@ class _WelcomePage extends State<WelcomePage> {
           ),
          Stack(
           children: [
-            // First Positioned widget (top-left with offset)
             Positioned(
               top: -140,
               left: -80,
               child: Opacity(
                 opacity: 0.55,
-                child: Transform(
-                  alignment: Alignment.center,
-                  transform: Matrix4.identity()..scale(-1.0, 1.0), // Horizontal flip
-                  child: SvgPicture.asset(
-                    'assets/icons/logo.svg',
-                    height: 225,
-                    width: 225,
-                    fit: BoxFit.cover,
-                  ),
+                child: Image.network(
+                  '${AccessLink.logo}',
+                  height: 225,
+                  width: 225,
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
             
-            // Second Positioned widget (centered and applying the left position)
             Positioned(
-              right: -90, // This can be adjusted based on the desired vertical positioning.
-              top: MediaQuery.of(context).size.height / 2 - 125, // This centers the widget horizontally
+              right: -90, 
+              top: MediaQuery.of(context).size.height / 2 - 125, 
               child: Opacity(
                 opacity: 0.55,
-                child: Transform(
-                  alignment: Alignment.center,
-                  transform: Matrix4.identity()..scale(1.0, 1.0), // Horizontal flip
-                  child: SvgPicture.asset(
-                    'assets/icons/logo.svg',
+                child: Image.network(
+                  '${AccessLink.logoFlip}',
                     height: 210,
                     width: 210,
                     fit: BoxFit.cover,
                   ),
-                ),
               ),
             ),
           ],
@@ -88,16 +79,12 @@ class _WelcomePage extends State<WelcomePage> {
                 // Logo Section
                 SizedBox(height: MediaQuery.of(context).size.height * 0.12),
                 Container(
-                  child: Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.identity()..scale(-1.0, 1.0), // Horizontal flip
-                    child: SvgPicture.asset(
-                      'assets/icons/logo.svg',
+                  child: Image.network(
+                  '${AccessLink.logo}',
                       height: 100,
                       width: 100,
                       fit: BoxFit.cover,
                     ),
-                  ),
                 ),
 
                 const SizedBox(height: 16),
