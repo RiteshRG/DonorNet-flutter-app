@@ -1,4 +1,6 @@
 import 'package:donornet/materials/app_colors.dart';
+import 'package:donornet/views/post%20details/user_post_details_page.dart';
+import 'package:donornet/views/user_profile.dart';
 import 'package:flutter/material.dart';
 
 class PostDataList{
@@ -37,7 +39,12 @@ class _PostState extends State<Post> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Add your click action here
+        Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PostDetailsPage(post: widget.post),
+      ),
+    );
         print('post clicked');
       },
       child: Container(
@@ -100,7 +107,7 @@ class _PostState extends State<Post> {
                               ),
                               SizedBox(width: 12,),
                               Icon(Icons.star,
-                                color: const Color.fromARGB(255, 245, 185, 6),
+                                color: Color.fromARGB(255, 255, 200, 0),
                                 size: 14,
                               ),
                               SizedBox(width: 5,),
@@ -121,7 +128,7 @@ class _PostState extends State<Post> {
                               FittedBox(
                                 child: Text("${widget.post.distance}",
                                   style: TextStyle(
-                                    color: AppColors.secondaryColor,
+                                    color: Colors.grey,
                                     fontSize: 12
                                   ),
                                 ),
@@ -172,8 +179,18 @@ class _PostState extends State<Post> {
               bottom: 42.5,
               child: GestureDetector(
                 onTap: () {
-                  // Add your click action here
-                  print('profile clicked');
+                 Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserProfile(
+                      profileImage: widget.post.profileImage, // Correctly accessing post data
+                      name: widget.post.name,
+                      rating: widget.post.rating
+                    ),
+                  ),
+                );
+
+
                 },
                 child: Container(
                   margin: EdgeInsets.only(left: 18),

@@ -1,31 +1,30 @@
 import 'package:donornet/materials/app_colors.dart';
-import 'package:donornet/services%20and%20provider/user_provider.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
 import 'package:donornet/views/home%20page/drawer.dart';
-import 'package:donornet/views/post%20details/post_details.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-class Profile_page extends StatefulWidget {
+class UserProfile extends StatefulWidget {
+  final String profileImage;
+  final String name;
+  final String rating;
+
+  const UserProfile({
+    Key? key,
+    required this.profileImage,
+    required this.name,
+    required this.rating,
+  }) : super(key: key);
+
+
   @override
-  _Profile_pageState createState() => _Profile_pageState();
+  State<UserProfile> createState() => _UserProfileState();
 }
 
-class _Profile_pageState extends State<Profile_page> {
+class _UserProfileState extends State<UserProfile> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
-    @override
-  void initState() {
-    super.initState();
-    // Fetch user data when the screen is initialized
-    Provider.of<UserProvider>(context, listen: false).fetchUserDetails();
-  }
-
+  
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context);
-    final userData = userProvider.userData;
-    final isLoading = userProvider.isLoading;
     return Scaffold(
       key: _scaffoldKey,
       drawer: CustomDrawer(),
@@ -49,13 +48,11 @@ class _Profile_pageState extends State<Profile_page> {
                       Container(
                         height: 280,
                         width: double.infinity,
-                        child: userData != null && userData['profile_image'] != null
-                        ? Image.network(
-                            userData['profile_image'], // Load from Firebase or any URL
+                        child:Image.network(
+                            "${widget.profileImage}", // Load from Firebase or any URL
                             opacity: AlwaysStoppedAnimation(0.1),
                             fit: BoxFit.cover,
                           )
-                        : SizedBox(),
                       ),
                       Column(
                         children: [
@@ -64,7 +61,12 @@ class _Profile_pageState extends State<Profile_page> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Icon(Icons.mode_edit_outline_outlined, color: Colors.white, size: 25,),
+                                InkWell(
+                                  onTap: (){
+                                      Navigator.pop(context);
+                                  },
+                                  child: Icon(Icons.arrow_back, color: Color.fromARGB(255, 255, 255, 255)),
+                                ),
                                 InkWell(
                                   onTap: (){
                                       _scaffoldKey.currentState?.openDrawer();
@@ -86,15 +88,10 @@ class _Profile_pageState extends State<Profile_page> {
                                     width: 2.0, // Border thickness
                                   ),
                                 ),
-                                child:  userData != null && userData['profile_image'] != null
-                                ? CircleAvatar(
+                                child:  CircleAvatar(
                                     radius: 50,
-                                    backgroundImage: NetworkImage(userData['profile_image'],),
+                                    backgroundImage: NetworkImage(widget.profileImage),
                                   )
-                                : CircleAvatar(
-                                    radius: 50,
-                                    child: Icon(Icons.person, size: 50),
-                                  ),
                               ),
                               Positioned(
                                 right: -4,
@@ -126,7 +123,7 @@ class _Profile_pageState extends State<Profile_page> {
                           ),
                           SizedBox(height: 12),
                           Text(
-                            '${userData?['first_name']} ${userData?['last_name']}',
+                            '${widget.name}',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 20,
@@ -144,7 +141,7 @@ class _Profile_pageState extends State<Profile_page> {
                               SizedBox(width: 8),
                               Icon(Icons.star, size: 16, color: Colors.amber),
                               Text(
-                                '  4.5',
+                                '  ${widget.rating}',
                                 style: TextStyle(color: Colors.white70),
                               ),
                             ],
@@ -185,59 +182,9 @@ class _Profile_pageState extends State<Profile_page> {
               ),
             ],
           ),
-          LoadingIndicator(isLoading: isLoading,loaderColor: const Color.fromARGB(255, 235, 72, 72)),
+         // LoadingIndicator(isLoading: isLoading,loaderColor: const Color.fromARGB(255, 235, 72, 72)),
         ],
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 5,
-              offset: Offset(0, -2),
-            ),
-          ],
-        ),
-        child:BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.primaryColor,
-         unselectedItemColor:const Color.fromARGB(179, 55, 170, 122),
-        currentIndex: 4, // Set initial index
-          onTap: (index) {
-            if(index == 0){
-               Navigator.of(context).pushNamedAndRemoveUntil('homePageRoute', (route) => false,);
-            }
-            if(index == 2){
-               Navigator.of(context).pushNamed('addItemPageRoute');
-            }
-            if(index == 3){
-               Navigator.of(context).pushNamedAndRemoveUntil('chatPageRoute', (route) => false,);
-            }
-          },
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: ''),
-          BottomNavigationBarItem(
-            icon: Container(
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                    colors: [AppColors.primaryColor, AppColors.tertiaryColor], 
-                    begin: Alignment.topLeft, 
-                    end: Alignment.bottomRight,
-                ), 
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.add, color: Colors.white),
-            ),
-            label: '',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: ''),
-        ],
-      )),
     );
   }
 
@@ -249,20 +196,17 @@ class _Profile_pageState extends State<Profile_page> {
       mainAxisSpacing: 8,
       crossAxisSpacing: 8,
     ),
-    itemCount: 2, // Show 2 images
+    itemCount: 3, // Show 2 images
     itemBuilder: (context, index) {
       List<String> imageUrls = [
-        'https://thumbs.dreamstime.com/b/cricket-bat-ball-26570619.jpg',
-        'https://staticcookist.akamaized.net/wp-content/uploads/sites/22/2023/06/iStock-1430271338.jpg',
+        'https://storage.needpix.com/rsynced_images/old-jeans-3589262_1280.jpg',
+        'https://i.etsystatic.com/8620333/r/il/43095d/1184899900/il_570xN.1184899900_71l0.jpg',
+        'https://tse4.mm.bing.net/th?id=OIP.rnfpkchacq1HmYS6oiY3NwHaJ4&pid=Api&P=0&h=180'
       ];
       
       return GestureDetector(
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => UserPostDetailPage(),
-          ),
-        );
+      
       },
       child: Container(
         decoration: BoxDecoration(
@@ -293,7 +237,7 @@ class _Profile_pageState extends State<Profile_page> {
     itemCount: 1, // Show 2 images
     itemBuilder: (context, index) {
       List<String> imageUrls = [
-        'https://collectmyclothes.co.uk/wp-content/uploads/2019/11/donation.jpg',
+        'https://tse3.mm.bing.net/th?id=OIP.AkBJECD9LR5tjUnpIp1cfgHaFj&pid=Api&P=0&h=180',
       ];
       
       return Container(

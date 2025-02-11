@@ -17,7 +17,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
   @override
   void initState() {
     super.initState();
-    // Fetch user data when the screen is initialized
     Provider.of<UserProvider>(context, listen: false).fetchUserDetails();
   }
 
@@ -47,8 +46,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   radius: 30,
                   backgroundColor: const Color.fromARGB(255, 101, 101, 101), // Fallback background color
                   backgroundImage: userData != null && userData['profile_image'] != null
-                      ? NetworkImage(userData['profile_image']) // Correct way to use NetworkImage
-                      : null, // Use null to show fallback icon if no image
+                      ? NetworkImage(userData['profile_image'],) // Correct way to use NetworkImage
+                      : null, 
                   child: userData == null || userData['profile_image'] == null
                       ? Icon(Icons.person, color: Colors.white, size: 30) // Default icon if no image
                       : null, // No child if image is available
@@ -75,7 +74,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 ),
               ],
             ),
-            //LoadingIndicator(isLoading: isLoading, loaderColor: const Color.fromARGB(255, 255, 255, 255)),
+            LoadingIndicator(isLoading: isLoading, loaderColor: const Color.fromARGB(255, 255, 255, 255)),
           ],
         ),
       ),

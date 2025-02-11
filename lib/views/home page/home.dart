@@ -17,7 +17,28 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  TextEditingController _searchController = TextEditingController();
+  String search = "";
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  void _onSearchChanged() {
+  setState(() {
+    search = _searchController.text;
+  });
+}
+
+@override
+void initState() {
+  super.initState();
+  _searchController.addListener(_onSearchChanged);
+   print("Current input: ${_searchController.text}");
+}
+
+@override
+void dispose() {
+  _searchController.dispose();
+  super.dispose();
+}
 
 void logoutUser() async {
   try {
@@ -197,6 +218,11 @@ void _openFilterBottomSheet() {
                                 ],
                               ),
                               child: TextField(
+                                onSubmitted: (query) {
+                                  print("Searching for: $query"); // Replace with your search function
+                                },
+                                controller: _searchController,
+                                textInputAction: TextInputAction.search,
                                 decoration: InputDecoration(
                                   hintText: "Search",
                                   hintStyle: TextStyle(

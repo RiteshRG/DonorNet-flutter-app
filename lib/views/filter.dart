@@ -135,7 +135,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                   decoration: BoxDecoration(
                     color: selectedDistance == distance
                         ? AppColors.primaryColor
-                        : Colors.grey[200],
+                        : const Color.fromARGB(255, 227, 225, 225),
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: selectedDistance == distance
                         ? [BoxShadow(color: Colors.black12, blurRadius: 5)]
@@ -175,7 +175,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                   decoration: BoxDecoration(
                     color: selectedCategories.contains(category)
                         ? AppColors.primaryColor
-                        : Colors.grey[200],
+                        : const Color.fromARGB(255, 227, 225, 225),
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: selectedCategories.contains(category)
                         ? [BoxShadow(color: Colors.black12, blurRadius: 5)]
@@ -227,10 +227,10 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                 ),
               ),
             )
-
           ),
         ],
       ),
     );
   }
 }
+
