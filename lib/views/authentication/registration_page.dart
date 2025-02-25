@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/utilities/access_throught_link.dart';
-import 'package:donornet/utilities/show_error_dialog.dart';
+import 'package:donornet/utilities/show_dialog.dart';
 import 'package:donornet/views/authentication/login_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -63,27 +63,27 @@ class _RegisterState extends State<Register> {
 
 
     if (firstName.isEmpty || lastName.isEmpty || email.isEmpty || password.isEmpty || cPassword.isEmpty) {
-       showerrorDialog(context,"Please fill all the details!");
+       showErrorDialog(context,"Please fill all the details!");
        isLoading = false;
        return;
     }else if(firstName.length > 20 || RegExp(r'[^a-zA-Z]').hasMatch(firstName)){
-      showerrorDialog(context,"First name must be at most 20 characters long and contain only letters.");
+      showErrorDialog(context,"First name must be at most 20 characters long and contain only letters.");
       isLoading = false;
       return;
     }else if(lastName.length > 20 || RegExp(r'[^a-zA-Z]').hasMatch(lastName)){
-      showerrorDialog(context,"Last name must be at most 20 characters long and contain only letters.");
+      showErrorDialog(context,"Last name must be at most 20 characters long and contain only letters.");
       isLoading = false;
       return;
     }else if(password != cPassword){
-       showerrorDialog(context,"Password do not match!");
+       showErrorDialog(context,"Password do not match!");
        isLoading = false;
        return;
       }else if (!(password.length >= 8 && password.length <= 15 && RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$%\^&\*\(\)_\+\-=\[\]\{\};:,.<>?])').hasMatch(password))) {
-      showerrorDialog(context, "Password must be 8-15 characters, with at least one uppercase letter, one lowercase letter, one number, and one special character.");
+      showErrorDialog(context, "Password must be 8-15 characters, with at least one uppercase letter, one lowercase letter, one number, and one special character.");
       isLoading = false;
       return;
     }else if(isChecked == false){
-      showerrorDialog(context, "You must accept the terms and conditions to proceed.");
+      showErrorDialog(context, "You must accept the terms and conditions to proceed.");
       isLoading = false;
     }else{
 
@@ -96,8 +96,11 @@ class _RegisterState extends State<Register> {
         // Send email verification link
         await userCredential.user?.sendEmailVerification();
 
+        String userId = userCredential.user!.uid;
+
          // Store user data in Firestore
-        await _firestore.collection('users').doc(userCredential.user?.uid).set({
+        await _firestore.collection('users').doc(userId).set({
+          'userId': userId,
           'first_name':firstName,
           'last_name': lastName,
           'email': email,
@@ -107,7 +110,18 @@ class _RegisterState extends State<Register> {
           'registration_date': DateTime.now(),
         });
 
-        showerrorDialog(context,"Registration successful! Please verify your email.");
+        await _firestore.collection('points').doc(userId).set({
+          'user_id': userId,
+          'points_earned': 0
+        });
+
+        await _firestore.collection('levels').doc(userId).set({
+          'user_id': userId,
+          'points_required': 10,
+          'level': 0
+        });
+
+        showErrorDialog(context,"Registration successful! Please verify your email.");
 
         _auth.authStateChanges().listen((user) async {
         if (user != null && user.emailVerified) {
@@ -126,19 +140,19 @@ class _RegisterState extends State<Register> {
       // Handle Firebase Auth errors
       if (e.code == 'weak-password') {
         // ignore: use_build_context_synchronously
-        showerrorDialog(context, "The password is too weak.");
+        showErrorDialog(context, "The password is too weak.");
       } else if (e.code == 'email-already-in-use') {
-        showerrorDialog(context,"An account already exists for that email.");
+        showErrorDialog(context,"An account already exists for that email.");
       } else if (e.code == 'invalid-email') {
-        showerrorDialog(context,"The email address is invalid.");
+        showErrorDialog(context,"The email address is invalid.");
       } else {
         devtools.log("${e.message}");
-        showerrorDialog(context, "Oops! Something went wrong. Try again later");
+        showErrorDialog(context, "Oops! Something went wrong. Try again later");
       }
     } catch (e) {
       // Handle any other errors
       devtools.log("An unexpected error occurred: ${e.toString()}");
-      showerrorDialog(context,"An unexpected error occurred: ${e.toString()}");
+      showErrorDialog(context,"An unexpected error occurred: ${e.toString()}");
     }finally {
       setState(() {
         isLoading = false;

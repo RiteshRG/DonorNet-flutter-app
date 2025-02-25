@@ -4,7 +4,7 @@ import 'package:donornet/services%20and%20provider/OTP_service.dart';
 import 'package:donornet/utilities/access_throught_link.dart';
 
 import 'package:donornet/utilities/loading_indicator.dart';
-import 'package:donornet/utilities/show_error_dialog.dart';
+import 'package:donornet/utilities/show_dialog.dart';
 import 'package:donornet/views/authentication/otp_verification_page.dart';
 import 'package:donornet/views/authentication/registration_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,7 +29,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   Future<void> isEmailRegister() async{
     String email = emailController.text.trim();
     if(email.isEmpty){
-      showerrorDialog(context,"Please Enter your email");
+      showErrorDialog(context,"Please Enter your email");
       return;
     }
     setState(() {
@@ -58,20 +58,20 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
         }
       }else{
         devtools.log("No account found");
-        showerrorDialog(context, "No account found associated with this email address.");
+        showErrorDialog(context, "No account found associated with this email address.");
       }
 
     } on FirebaseException catch (e) {
       if (e.code == 'permission-denied') {
-        showerrorDialog(context, "You don't have permission to access Firestore.");
+        showErrorDialog(context, "You don't have permission to access Firestore.");
       } else if (e.code == 'unavailable') {
-        showerrorDialog(context, "Firestore service is temporarily unavailable.");
+        showErrorDialog(context, "Firestore service is temporarily unavailable.");
       } else {
-        showerrorDialog(context, "Firestore error: ${e.message}");
+        showErrorDialog(context, "Firestore error: ${e.message}");
       }
     } catch (e) {
       devtools.log("An unexpected error occurred: ${e.toString()}");
-      showerrorDialog(context, "An unexpected error occurred: ${e.toString()}");
+      showErrorDialog(context, "An unexpected error occurred: ${e.toString()}");
     } finally {
       setState(() {
         isLoading = false;

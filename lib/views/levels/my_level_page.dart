@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
 import 'package:donornet/views/home%20page/drawer.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:donornet/utilities/access_throught_link.dart';
 import 'package:donornet/materials/app_colors.dart';
@@ -11,8 +13,8 @@ class MyLevelPage extends StatefulWidget {
 }
 
 class _MyLevelPageState extends State<MyLevelPage> {
-  int currentPoints = 400;
-  int currentLevel = 1;
+  int currentPoints = 0;
+  int currentLevel = 0;
   bool isLoading = false; // Loading state
 
   final List<Map<String, dynamic>> levels = [
@@ -31,57 +33,69 @@ class _MyLevelPageState extends State<MyLevelPage> {
   @override
   void initState() {
     super.initState();
+    fetchUserPoints();
     updateLevel();
   }
 
-  /// Function to refresh the page when pulled down
-  Future<void> _refreshData() async {
-    setState(() {
-      isLoading = true;
-    });
-
-    await Future.delayed(Duration(seconds: 2)); // Simulate data fetching
-
-    setState(() {
-      currentPoints = 10; // Reset points or fetch updated data
-      updateLevel();
-      isLoading = false;
-    });
+   Future<void> fetchUserPoints() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+            .collection('points')
+            .where('user_id', isEqualTo: user.uid) // Fetching points for the logged-in user
+            .get();
+        
+        if (querySnapshot.docs.isNotEmpty) {
+          // Assuming each user has only one document in `points`
+          DocumentSnapshot doc = querySnapshot.docs.first;
+          
+          setState(() {
+            currentPoints = (doc['points_earned'] ?? 0).toInt();
+          });
+        }
+      }
+    } catch (e) {
+      print("Error fetching user points: $e");
+    }
   }
 
   Future<void> _refreshPage() async {
+  if (!mounted) return; // Prevents calling setState() on an unmounted widget
+
   setState(() {
     isLoading = true; // Show loading indicator
   });
 
-  await Future.delayed(Duration(seconds: 2)); // Simulate data reload
+  await fetchUserPoints(); // Fetch latest points without restarting the page
+
+  if (!mounted) return;
 
   setState(() {
-    // Reset or fetch new data
-    currentPoints = 10; 
     updateLevel(); 
     isLoading = false; // Hide loading indicator
   });
 }
 
 
-  void updateLevel() {
-    setState(() {
-      if (currentPoints <= 0) {
-        currentLevel = 1;
-      } else if (currentPoints >= levels.last['points']) {
-        currentLevel = levels.length;
-      } else {
-        for (int i = 0; i < levels.length - 1; i++) {
-          if (currentPoints >= levels[i]['points'] &&
-              currentPoints < levels[i + 1]['points']) {
-            currentLevel = levels[i]['level'];
-            break;
-          }
+
+void updateLevel() {
+  setState(() {
+    if (currentPoints <= 0) {
+      currentLevel = 0; // Set Level 0 for 0 points
+    } else if (currentPoints >= levels.last['points']) {
+      currentLevel = levels.length; // Max level reached
+    } else {
+      for (int i = 0; i < levels.length - 1; i++) {
+        if (currentPoints >= levels[i]['points'] &&
+            currentPoints < levels[i + 1]['points']) {
+          currentLevel = levels[i]['level'];
+          break;
         }
       }
-    });
-  }
+    }
+  });
+}
 
   double calculateProgress() {
     if (currentLevel >= levels.length) return 1.0;
@@ -230,16 +244,23 @@ class _MyLevelPageState extends State<MyLevelPage> {
         Stack(
           alignment: Alignment.center,
           children: [
-            Image.network(
-              AccessLink.getLevelImage(currentLevel),
-              height: 120,
-              width: 120,
-            ),
+            // Show an icon if level is 0, otherwise show the level image
+            currentPoints < 10 
+                ? Icon(
+                    Icons.emoji_events_outlined, // Use an appropriate icon
+                    size: 120,
+                    color: Colors.grey[400], // Customize the icon color
+                  )
+                : Image.network(
+                    AccessLink.getLevelImage(currentLevel),
+                    height: 120,
+                    width: 120,
+                  ),
           ],
         ),
         const SizedBox(height: 16),
-        Text(
-          'Level $currentLevel',
+         Text(
+          currentPoints < 10 ? 'Level 0' : 'Level $currentLevel',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
@@ -263,11 +284,13 @@ class _MyLevelPageState extends State<MyLevelPage> {
         ),
         const SizedBox(height: 8),
         Text(
-          currentLevel < levels.length
-              ? '${levels[currentLevel]['points'] - currentPoints} points to Level ${currentLevel + 1}'
-              : 'Max Level Reached!',
-          style: TextStyle(color: Colors.grey[600], fontSize: 16),
-        ),
+        (currentPoints < levels[0]['points'])
+            ? '${levels[0]['points'] - currentPoints} points to Level 1'
+            : (currentLevel < levels.length)
+                ? '${levels[currentLevel]['points'] - currentPoints} points to Level ${currentLevel + 1}'
+                : 'Max Level Reached!',
+        style: TextStyle(color: Colors.grey[600], fontSize: 16),
+      ),
       ],
     );
   }

@@ -1,3 +1,4 @@
+import 'package:donornet/api.dart';
 import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,10 @@ import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class MapLocationService extends StatefulWidget {
+  final Function(LatLng) onLocationSelected;  // Callback function
+
+  MapLocationService({required this.onLocationSelected});
+
   @override
   _MapLocationServiceState createState() => _MapLocationServiceState();
 }
@@ -32,6 +37,7 @@ class _MapLocationServiceState extends State<MapLocationService> {
       setState(() {
         currentLocation = LatLng(position.latitude, position.longitude);
         selectedLocation = currentLocation;  
+         widget.onLocationSelected(selectedLocation!);
       });
     } else {
       print("Location permission not granted");
@@ -42,6 +48,7 @@ class _MapLocationServiceState extends State<MapLocationService> {
     setState(() {
       selectedLocation = newLocation; 
     });
+     widget.onLocationSelected(newLocation);
 
     print("Selected Location: Latitude: ${newLocation.latitude}, Longitude: ${newLocation.longitude}");
   }
@@ -69,10 +76,10 @@ class _MapLocationServiceState extends State<MapLocationService> {
         ),
         children: [
           TileLayer(
-            urlTemplate: "https://api.mapbox.com/styles/v1/mapbox/outdoors-v11/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoidHlwcm9qZWN0IiwiYSI6ImNtNnVscjV1bTBjdncya3NhM3ZiZWpvdjkifQ.xPuVkKwKu-yHZh_BzI-prg",
+            urlTemplate: "https://api.mapbox.com/styles/v1/mapbox/outdoors-v11/tiles/{z}/{x}/{y}?access_token=${APIKey.mapBox}",
 
             additionalOptions: {
-              'accessToken': 'pk.eyJ1IjoidHlwcm9qZWN0IiwiYSI6ImNtNnVscjV1bTBjdncya3NhM3ZiZWpvdjkifQ.xPuVkKwKu-yHZh_BzI-prg',  
+              'accessToken': APIKey.mapBox,  
             },
           ),
           MarkerLayer(

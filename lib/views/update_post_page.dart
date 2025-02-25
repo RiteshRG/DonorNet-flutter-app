@@ -29,6 +29,14 @@ class _UpadtePostPageState extends State<UpadtePostPage> {
   DateTime? _expiryDate;
   TimeOfDay? _expiryTime;
 
+  LatLng? selectedLocation;
+
+  void _handleLocationSelected(LatLng location) {
+    setState(() {
+      selectedLocation = location;
+    });
+  }
+
   Future<void> _pickImage(ImageSource source) async {
     final XFile? selectedImage = await _picker.pickImage(source: source);
     if (selectedImage != null) {
@@ -290,7 +298,7 @@ class _UpadtePostPageState extends State<UpadtePostPage> {
             Container(
             height: 220, // Height for the map container
             width: double.infinity,// Make it as wide as the screen
-            child:MapLocationService(),
+            child: MapLocationService(onLocationSelected: _handleLocationSelected),
           ),
 
             SizedBox(height: 38),

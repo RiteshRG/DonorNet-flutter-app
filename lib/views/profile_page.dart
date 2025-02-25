@@ -1,8 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/services%20and%20provider/user_provider.dart';
+import 'package:donornet/utilities/access_throught_link.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
 import 'package:donornet/views/home%20page/drawer.dart';
 import 'package:donornet/views/post%20details/post_details.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -14,18 +17,30 @@ class Profile_page extends StatefulWidget {
 class _Profile_pageState extends State<Profile_page> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+
     @override
   void initState() {
     super.initState();
     // Fetch user data when the screen is initialized
-    Provider.of<UserProvider>(context, listen: false).fetchUserDetails();
+     Future.microtask(() {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      userProvider.fetchUserDetails();
+      userProvider.fetchUserLevels(context); 
+      if (userProvider.userData != null && userProvider.userData!['uid'] != null) {
+        userProvider.fetchUserRating(userProvider.userData!['uid']); 
+      }
+    });
   }
+
 
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final userData = userProvider.userData;
     final isLoading = userProvider.isLoading;
+    final userLevel = userProvider.userLevel;
+    final pointsRequired = userProvider.pointsRequired;
+    final userRating = userProvider.userRating; 
     return Scaffold(
       key: _scaffoldKey,
       drawer: CustomDrawer(),
@@ -99,30 +114,32 @@ class _Profile_pageState extends State<Profile_page> {
                               Positioned(
                                 right: -4,
                                 top: -4,
-                                child: Container(
-                                  height: 40,
-                                  width: 40,
-                                  padding: EdgeInsets.all(1),
-                                  decoration: BoxDecoration(
-                                    color: const Color.fromARGB(0, 255, 153, 0),
-                                    borderRadius: BorderRadius.all(Radius.circular(100)),
-                                     boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1), // Shadow color
-                                        spreadRadius: 0, // How much the shadow spreads
-                                        blurRadius: 0.5, // How blurry the shadow is
-                                        offset: Offset(0, 3), // Shadow position (x, y)
-                                      ),
-                                    ],
-                                  ),
-                                  child: Image.asset(
-                                    'assets/level_1-removebg-preview.png',
-                                    height: 40,
-                                  width: 40,
-                                  ),
-                                ),
+                                child: userProvider.userLevel > 0 // Show only if level > 0
+                                    ? Container(
+                                        height: 40,
+                                        width: 40,
+                                        padding: EdgeInsets.all(1),
+                                        decoration: BoxDecoration(
+                                          color: Colors.transparent, // Transparent background
+                                          borderRadius: BorderRadius.all(Radius.circular(100)),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.1), // Shadow color
+                                              spreadRadius: 0, // How much the shadow spreads
+                                              blurRadius: 0.5, // How blurry the shadow is
+                                              offset: Offset(0, 3), // Shadow position (x, y)
+                                            ),
+                                          ],
+                                        ),
+                                        child: Image.network(
+                                          AccessLink.getLevelImage(userProvider.userLevel), // Dynamically load correct level image
+                                          height: 40,
+                                          width: 40,
+                                        ),
+                                      )
+                                    : SizedBox(), // Empty widget if level is 0
                               ),
-                            ],
+                             ],
                           ),
                           SizedBox(height: 12),
                           Text(
@@ -138,13 +155,13 @@ class _Profile_pageState extends State<Profile_page> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'Level 1',
+                                'Level ${userProvider.userLevel}',
                                 style: TextStyle(color: Colors.white70),
                               ),
                               SizedBox(width: 8),
                               Icon(Icons.star, size: 16, color: Colors.amber),
                               Text(
-                                '  4.5',
+                                '  ${userProvider.userRating}',
                                 style: TextStyle(color: Colors.white70),
                               ),
                             ],

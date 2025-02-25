@@ -13,14 +13,23 @@ class LoadingIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: isLoading
-          ? CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(
-                  loaderColor ?? AppColors.secondaryColor), // Default color if null
-              strokeWidth: 6,
-            )
-          : SizedBox.shrink(),
-    );
-  }
+  if (!isLoading) return SizedBox(); // Return an empty widget if not loading
+
+  return Center(
+    child: Container(
+      padding: EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(1000),
+      ),
+      child: CircularProgressIndicator(
+        valueColor: AlwaysStoppedAnimation<Color>(
+          loaderColor ?? AppColors.secondaryColor, // Default color if null
+        ),
+        strokeWidth: 6,
+      ),
+    ),
+  );
+}
+
 }

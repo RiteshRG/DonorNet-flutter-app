@@ -1,7 +1,7 @@
 
 import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/utilities/access_throught_link.dart';
-import 'package:donornet/utilities/show_error_dialog.dart';
+import 'package:donornet/utilities/show_dialog.dart';
 import 'package:donornet/views/authentication/login_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -34,9 +34,9 @@ void initState() {
     if (user != null && !user.emailVerified) {
       try {
         await user.sendEmailVerification();
-        showerrorDialog(context,"Verification email sent!");
+        showErrorDialog(context,"Verification email sent!");
       } catch (e) {
-        showerrorDialog(context,"Error sending email: ${e.toString()}");
+        showErrorDialog(context,"Error sending email: ${e.toString()}");
       }
     }
     setState(() {

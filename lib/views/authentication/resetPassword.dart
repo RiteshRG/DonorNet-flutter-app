@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/utilities/access_throught_link.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
-import 'package:donornet/utilities/show_error_dialog.dart';
+import 'package:donornet/utilities/show_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as devtools show log;
@@ -46,13 +46,13 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     String cPassword = cPasswordController.text.trim();
 
     if(password.isEmpty){
-      showerrorDialog(context,"Please enter both password and confirm password.");
+      showErrorDialog(context,"Please enter both password and confirm password.");
       return;
     }else if(password != cPassword){
-      showerrorDialog(context,"Passwords do not match. Please make sure both passwords are identical.");
+      showErrorDialog(context,"Passwords do not match. Please make sure both passwords are identical.");
       return;
     }else if (!(password.length >= 8 && password.length <= 15 && RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$%\^&\*\(\)_\+\-=\[\]\{\};:,.<>?])').hasMatch(password))) {
-      showerrorDialog(context, "Password must be 8-15 characters, with at least one uppercase letter, one lowercase letter, one number, and one special character.");
+      showErrorDialog(context, "Password must be 8-15 characters, with at least one uppercase letter, one lowercase letter, one number, and one special character.");
       return;
     }else{
       try{
@@ -77,19 +77,19 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             Navigator.of(context).pushNamedAndRemoveUntil('loginRoute', (route) => false,);
           }else{
             await _firestore.collection('users').doc(document.id).update({'password': currentPassword});
-            showerrorDialog(context, "Oops! Something went wrong. Try again later");
+            showErrorDialog(context, "Oops! Something went wrong. Try again later");
           }
       }on FirebaseAuthException catch (e){
         if (e.code == 'weak-password') {
         // ignore: use_build_context_synchronously
-        showerrorDialog(context, "The password is too weak.");
+        showErrorDialog(context, "The password is too weak.");
       }else {
         devtools.log("${e.message}");
-        showerrorDialog(context, "Oops! Something went wrong. Try again later");
+        showErrorDialog(context, "Oops! Something went wrong. Try again later");
       }
       }catch (e){
         devtools.log("An unexpected error occurred: ${e.toString()}");
-        showerrorDialog(context,"An unexpected error occurred: ${e.toString()}");
+        showErrorDialog(context,"An unexpected error occurred: ${e.toString()}");
       }finally {
         setState(() {
           isLoading = false;
@@ -114,16 +114,16 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       on FirebaseAuthException catch (e){
       if (e.code == 'weak-password') {
       // ignore: use_build_context_synchronously
-      showerrorDialog(context, "The password is too weak.");
+      showErrorDialog(context, "The password is too weak.");
       return false;
       }else {
         devtools.log("${e.message}");
-        showerrorDialog(context, "Oops! Something went wrong. Try again later");
+        showErrorDialog(context, "Oops! Something went wrong. Try again later");
         return false;
       }
       }catch (e){
         devtools.log("An unexpected error occurred: ${e.toString()}");
-        showerrorDialog(context,"An unexpected error occurred: ${e.toString()}");
+        showErrorDialog(context,"An unexpected error occurred: ${e.toString()}");
         return false;
       }
     }

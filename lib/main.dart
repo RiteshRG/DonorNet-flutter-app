@@ -59,7 +59,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
        home: const WelcomePageSelector(),
-      // home: ConfirmClaimPage(),
+       //home: Profile_page(),
       routes: {
         'welcomePageRoute': (context) => WelcomePage(),
         'loginRoute': (context) => Login(),

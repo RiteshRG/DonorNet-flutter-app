@@ -1,5 +1,9 @@
 import 'package:donornet/materials/app_colors.dart';
+import 'package:donornet/post/post_validation.dart';
 import 'package:donornet/services%20and%20provider/map_service.dart';
+import 'package:donornet/services%20and%20provider/user_service.dart';
+import 'package:donornet/utilities/loading_indicator.dart';
+import 'package:donornet/utilities/show_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:geolocator/geolocator.dart';
@@ -15,11 +19,11 @@ class AddItemPage extends StatefulWidget {
 }
 
 class _AddItemPageState extends State<AddItemPage> {
-  final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
+  late final TextEditingController _titleController;
+  late final TextEditingController _descriptionController;
   final List<String> _categories = [
-    'Food', 'Toy', 'Pet Supplies', 'Clothing and Textiles',
-    'Footwear', 'Furniture', 'Sports Equipment', 'Stationary'
+    'Food', 'Footwear', 'Furniture', 'Toy',
+    'Pet Supply', 'Clothing and Textile', 'Sports Equipment', 'Stationery'
   ];
   String _selectedCategory = '';
   XFile? _image;
@@ -28,6 +32,29 @@ class _AddItemPageState extends State<AddItemPage> {
   TimeOfDay? _pickupTime;
   DateTime? _expiryDate;
   TimeOfDay? _expiryTime;
+  bool isLoading = false;
+
+  LatLng? selectedLocation;
+
+  void _handleLocationSelected(LatLng location) {
+    setState(() {
+      selectedLocation = location;
+    });
+  }
+
+  @override
+  void initState(){
+    _titleController = TextEditingController();
+    _descriptionController = TextEditingController();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickImage(ImageSource source) async {
     final XFile? selectedImage = await _picker.pickImage(source: source);
@@ -129,210 +156,273 @@ class _AddItemPageState extends State<AddItemPage> {
         ),
         foregroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image Selection
-            GestureDetector(
-              onTap: () => _showImagePickerOptions(context),
-              child: Container(
-                height: 200,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(10),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Image Selection
+                GestureDetector(
+                  onTap: () => _showImagePickerOptions(context),
+                  child: Container(
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: _image == null
+                        ? Center(
+                            child: Icon(Icons.add_a_photo, size: 50, color: const Color.fromARGB(186, 38, 182, 122)),
+                          )
+                        : ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.file(File(_image!.path), fit: BoxFit.cover),
+                          ),
+                  ),
                 ),
-                child: _image == null
-                    ? Center(
-                        child: Icon(Icons.add_a_photo, size: 50, color: const Color.fromARGB(186, 38, 182, 122)),
-                      )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.file(File(_image!.path), fit: BoxFit.cover),
+                
+                SizedBox(height: 16),
+                
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: TextField(
+                    controller: _titleController,
+                    decoration: InputDecoration(
+                      labelText: 'Title',
+                       hintText: "Enter the title here",
+                      labelStyle: TextStyle(color: Colors.black), 
+                      floatingLabelStyle: TextStyle(color: AppColors.secondaryColor, fontSize: 18, fontWeight: FontWeight.w500), 
+                      floatingLabelBehavior: FloatingLabelBehavior.always, 
+                      hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.all(16),
+                    ),
+                    maxLength: 50,
+                  ),
+                ),
+                
+                SizedBox(height: 16),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: TextField(
+                    controller: _descriptionController,
+                    decoration: InputDecoration(
+                      labelText: 'Description',
+                      hintText: "Provide details about the item, including pickup timing, quantity, condition, and any special instructions.",
+                      labelStyle: TextStyle(color: Colors.black), 
+                      floatingLabelStyle: TextStyle(color: AppColors.secondaryColor, fontSize: 18,fontWeight: FontWeight.w500), 
+                      floatingLabelBehavior: FloatingLabelBehavior.always, 
+                      hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.all(16),
+                    ),
+                    maxLength: 300,
+                    maxLines: 5,
+                  ),
+                ),
+                
+                SizedBox(height: 16),
+                
+                // Category Selection
+                Text('Select Category:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
+                SizedBox(height: 8),
+                Wrap(
+                  spacing: 8.0,
+                  runSpacing: 8.0,
+                  children: _categories.map((category) {
+                    return ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: _selectedCategory == category ? Colors.white : const Color.fromARGB(255, 106, 106, 106), backgroundColor: _selectedCategory == category ?AppColors.primaryColor : Colors.grey[300],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                       ),
-              ),
-            ),
-            
-            SizedBox(height: 16),
-            
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: TextField(
-                controller: _titleController,
-                decoration: InputDecoration(
-                  labelText: 'Title',
-                   hintText: "Enter the title here",
-                  labelStyle: TextStyle(color: Colors.black), 
-                  floatingLabelStyle: TextStyle(color: AppColors.secondaryColor, fontSize: 18, fontWeight: FontWeight.w500), 
-                  floatingLabelBehavior: FloatingLabelBehavior.always, 
-                  hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.all(16),
+                      onPressed: () {
+                        setState(() {
+                          _selectedCategory = category;
+                        });
+                      },
+                      child: Text(category),
+                    );
+                  }).toList(),
                 ),
-                maxLength: 50,
-              ),
-            ),
-            
-            SizedBox(height: 16),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: TextField(
-                controller: _descriptionController,
-                decoration: InputDecoration(
-                  labelText: 'Description',
-                  hintText: "Provide details about the item, including pickup timing, quantity, condition, and any special instructions.",
-                  labelStyle: TextStyle(color: Colors.black), 
-                  floatingLabelStyle: TextStyle(color: AppColors.secondaryColor, fontSize: 18,fontWeight: FontWeight.w500), 
-                  floatingLabelBehavior: FloatingLabelBehavior.always, 
-                  hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.all(16),
-                ),
-                maxLength: 300,
-                maxLines: 5,
-              ),
-            ),
-            
-            SizedBox(height: 16),
-            
-            // Category Selection
-            Text('Select Category:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
-            SizedBox(height: 8),
-            Wrap(
-              spacing: 8.0,
-              runSpacing: 8.0,
-              children: _categories.map((category) {
-                return ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: _selectedCategory == category ? Colors.white : const Color.fromARGB(255, 106, 106, 106), backgroundColor: _selectedCategory == category ?AppColors.primaryColor : Colors.grey[300],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                
+                SizedBox(height: 30),
+                
+                // Pickup Date and Time
+                Text('Pickup Date and Time:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
+                SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
+                        onPressed: () => _selectDate(context, true),
+                        child: Text(_pickupDate == null ? 'Pick Date' : DateFormat('yyyy-MM-dd').format(_pickupDate!),
+                        style: TextStyle(color: Colors.white),),
+                      ),
                     ),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _selectedCategory = category;
-                    });
-                  },
-                  child: Text(category),
-                );
-              }).toList(),
-            ),
-            
-            SizedBox(height: 30),
-            
-            // Pickup Date and Time
-            Text('Pickup Date and Time:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
-            SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
-                    onPressed: () => _selectDate(context, true),
-                    child: Text(_pickupDate == null ? 'Pick Date' : DateFormat('yyyy-MM-dd').format(_pickupDate!),
-                    style: TextStyle(color: Colors.white),),
-                  ),
-                ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
-                    onPressed: () => _selectTime(context, true),
-                    child: Text(_pickupTime == null ? 'Pick Time' : _pickupTime!.format(context),
-                    style: TextStyle(color: Colors.white),),
-                  ),
-                ),
-              ],
-            ),
-            
-            SizedBox(height: 16),
-            
-            // Expiry Date and Time
-            Text('Expiry Date and Time:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
-            SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
-                    onPressed: () => _selectDate(context, false),
-                    child: Text(_expiryDate == null ? 'Expiry Date' : DateFormat('yyyy-MM-dd').format(_expiryDate!),
-                    style: TextStyle(color: Colors.white),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
+                        onPressed: () => _selectTime(context, true),
+                        child: Text(_pickupTime == null ? 'Pick Time' : _pickupTime!.format(context),
+                        style: TextStyle(color: Colors.white),),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
-                    onPressed: () => _selectTime(context, false),
-                    child: Text(_expiryTime == null ? 'Expiry Time' : _expiryTime!.format(context),
-                    style: TextStyle(color: Colors.white),
+                
+                SizedBox(height: 16),
+                
+                // Expiry Date and Time
+                Text('Expiry Date and Time:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
+                SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
+                        onPressed: () => _selectDate(context, false),
+                        child: Text(_expiryDate == null ? 'Expiry Date' : DateFormat('yyyy-MM-dd').format(_expiryDate!),
+                        style: TextStyle(color: Colors.white),
+                        ),
+                      ),
                     ),
-                  ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
+                        onPressed: () => _selectTime(context, false),
+                        child: Text(_expiryTime == null ? 'Expiry Time' : _expiryTime!.format(context),
+                        style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+            
+                SizedBox(height: 25),
+                
+                // Pickup Date and Time
+                Text('Location', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
+                SizedBox(height: 8),
+                Container(
+                height: 220, // Height for the map container
+                width: double.infinity,// Make it as wide as the screen
+                child:MapLocationService(onLocationSelected: _handleLocationSelected),
+              ),
+            
+              SizedBox(height: 10),
+            Text(
+              selectedLocation != null
+                  ? "User's selected location: ${selectedLocation!.latitude}, ${selectedLocation!.longitude}"
+                  : "Select a location",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
+            
+                SizedBox(height: 38),
+                
+                // Post Button
+                Center(
+                  child: Container(
+                    width: double.infinity,
+                    height: 50.0, 
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(30), 
+                      gradient: LinearGradient(
+                        colors: [AppColors.primaryColor, AppColors.tertiaryColor], 
+                        begin: Alignment.topLeft, 
+                        end: Alignment.bottomRight, 
+                      ),
+                    ),
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        setState(() {
+                        isLoading = true;
+                        });
+                        bool isValid = await validateAndSubmitPost(
+                          imageFile: _image,
+                          title: _titleController.text.trim(),
+                          description: _descriptionController.text.trim(),
+                          category: _selectedCategory,
+                          pickupDate: _pickupDate,
+                          pickupTime: _pickupTime,
+                          expiryDate: _expiryDate,
+                          expiryTime: _expiryTime,
+                          location: selectedLocation, 
+                          context: context, 
+                        );
+                         setState(() {
+                            isLoading = false;
+                          });
+            
+                        if (isValid) {
+                          UserService userService = UserService();
+                           bool isInserted = await userService.createPost(
+                          imageFile: _image,
+                          title: _titleController.text.trim(),
+                          description: _descriptionController.text.trim(),
+                          category: _selectedCategory,
+                          pickupDate: _pickupDate,
+                          pickupTime: _pickupTime,
+                          expiryDate: _expiryDate,
+                          expiryTime: _expiryTime,
+                          location: selectedLocation, 
+                          context: context,
+                        );
 
-            SizedBox(height: 25),
-            
-            // Pickup Date and Time
-            Text('Location', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
-            SizedBox(height: 8),
-            Container(
-            height: 220, // Height for the map container
-            width: double.infinity,// Make it as wide as the screen
-            child:MapLocationService(),
+                        if(isInserted){
+                          showSuccessDialog(context, "Your post has been submitted successfully!");
+                          print("Your post has been submitted successfully!");
+                        }else{
+                          showErrorDialog(context, "Somethig went wrong with firebase, try again later.");
+                        }
+
+                        } else {
+                          print("Post validation failed!");
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent, // Make the button background transparent
+                        shadowColor: Colors.transparent, // Remove shadow
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30), // Rounded corners
+                        ),
+                      ),
+                      child: Text(
+                        'Post', // Button text
+                        style: TextStyle(
+                          color: Colors.white, // Text color
+                          fontSize: 18.0, // Text size
+                          fontWeight: FontWeight.bold, // Text boldness
+                        ),
+                      ),
+                    ),
+                  )
+                ),
+                SizedBox(height: 10),
+              ],
+            ),
           ),
-
-            SizedBox(height: 38),
-            
-            // Post Button
-            Center(
-              child: Container(
-                width: double.infinity,
-                height: 50.0, 
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(30), 
-                  gradient: LinearGradient(
-                    colors: [AppColors.primaryColor, AppColors.tertiaryColor], 
-                    begin: Alignment.topLeft, 
-                    end: Alignment.bottomRight, 
-                  ),
-                ),
-                child: ElevatedButton(
-                  onPressed: () {
-                    
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent, // Make the button background transparent
-                    shadowColor: Colors.transparent, // Remove shadow
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30), // Rounded corners
-                    ),
-                  ),
-                  child: Text(
-                    'Post', // Button text
-                    style: TextStyle(
-                      color: Colors.white, // Text color
-                      fontSize: 18.0, // Text size
-                      fontWeight: FontWeight.bold, // Text boldness
-                    ),
-                  ),
-                ),
-              )
-            ),
-            SizedBox(height: 10),
-          ],
-        ),
+          // Center(
+          //     child: Container(
+          //       height: 100,
+          //       width: 100,
+          //       color: Colors.amber,
+          //     ),
+          //   ),
+            LoadingIndicator(isLoading: isLoading),
+        ],
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -417,10 +507,6 @@ class _AddItemPageState extends State<AddItemPage> {
     );
   }
 
-  void _submitPost() {
-    // Implement your post submission logic here
-    print('Submitting post...');
-  }
 }
 
 

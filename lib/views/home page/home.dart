@@ -1,5 +1,5 @@
 import 'package:donornet/materials/app_colors.dart';
-import 'package:donornet/utilities/show_error_dialog.dart';
+import 'package:donornet/utilities/show_dialog.dart';
 import 'package:donornet/views/filter.dart';
 import 'package:donornet/views/home%20page/drawer.dart';
 import 'package:donornet/views/home%20page/post.dart';
@@ -48,7 +48,7 @@ void logoutUser() async {
     // Navigate to the login or welcome screen
   } catch (e) {
 
-    showerrorDialog(context, "Error logging out: $e");
+    showErrorDialog(context, "Error logging out: $e");
   }
 }
 
