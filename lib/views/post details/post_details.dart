@@ -1,6 +1,7 @@
 import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/services%20and%20provider/user_provider.dart';
 import 'package:donornet/views/qr_code_page.dart';
+import 'package:donornet/views/update_post_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -15,11 +16,11 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
   String postTitle = "Used Cricket Bat and Ball – Still Playable!";
   String postDescription = "Used cricket bat and ball in good condition. Suitable for practice or casual play. Please message before picking up";
   String postImage = "https://thumbs.dreamstime.com/b/cricket-bat-ball-26570619.jpg";
-   String pickupDate = "12 - Feb - 2025";
-   String pickupTime = "4:30 PM";
-   String distance = "5 Km";
-   String postDate = "11 Feb";
-   String rating = "3";
+   String pickupDate = "16 - Feb - 2025";
+   String pickupTime = "8:42 PM";
+   String distance = "1 Km";
+   String postDate = "16 Feb";
+   String rating = "4.5";
   // String map = "";
 
 
@@ -131,7 +132,7 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  '8 - Feb - 2025\n3:30 PM',
+                                  '${pickupDate}\n${pickupTime}',
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: Colors.grey[600],
@@ -178,7 +179,7 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
                           image: const DecorationImage(
-                            image: NetworkImage('https://i.postimg.cc/0jYLxTrg/map.png'),
+                            image: NetworkImage('https://i.postimg.cc/fLXWMhrs/Whats-App-Image-2025-02-16-at-18-50-00-9cc44a98.jpg'),
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -199,7 +200,12 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => UpadtePostPage()),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent, // Make button background transparent
                       shadowColor: Colors.transparent, // Remove shadow effect

@@ -190,41 +190,34 @@ class _ChatPageState extends State<ChatPage> {
   // Same static data for all tiles
   final List<Map<String, dynamic>> messageData = [
     {
-      'profileImage': 'https://c.stocksy.com/a/dTW500/z9/1316485.jpg',
-      'itemImage': 'https://storage.needpix.com/rsynced_images/old-jeans-3589262_1280.jpg',
-      'ownerName': 'Rajesh Sharma',
-      'postTitle': 'Warm Blanket',
-      'lastMessage': 'hii',
-      'lastMessageDate': 'Feb 8',
+      'profileImage': 'https://c8.alamy.com/comp/2AE4838/profile-of-a-teenage-indian-boy-looking-at-outsides-2AE4838.jpg',
+      'itemImage': 'https://4.bp.blogspot.com/-MO6lqm3QOGM/WNHSSHMqQ4I/AAAAAAABoVE/IepKWfWFrKEy66hlgS6zr_xN6QfNTBUMQCEw/s1600/032117buffet.jpg',
+      'ownerName': 'Arvind Verma',
+      'postTitle': 'Old Furniture in Good Condition',
+      'lastMessage': 'Is it still available?',
+      'lastMessageDate': 'Feb 10',
       'status': 'available',
     },
-    {
+       {
       'profileImage': 'https://i.pinimg.com/originals/83/bc/8b/83bc8b88cf6bc4b4e04d153a418cde62.jpg',
       'itemImage': 'https://collectmyclothes.co.uk/wp-content/uploads/2019/11/donation.jpg',
       'ownerName': 'Priya Iyer',
-      'postTitle': 'School Books',
+      'postTitle': 'Warm Blanket',
       'lastMessage': 'Thank you so much for sharing!',
-      'lastMessageDate': 'Feb 8',
+      'lastMessageDate': 'Feb 9',
       'status': 'claimed' ,
     },
     {
-      'profileImage': 'https://c8.alamy.com/comp/2AE4838/profile-of-a-teenage-indian-boy-looking-at-outsides-2AE4838.jpg',
-      'itemImage': 'https://4.bp.blogspot.com/-MO6lqm3QOGM/WNHSSHMqQ4I/AAAAAAABoVE/IepKWfWFrKEy66hlgS6zr_xN6QfNTBUMQCEw/s1600/032117buffet.jpg',
-      'ownerName': 'Arvind Verma',
-      'postTitle': 'Old Furniture in Good Condition',
-      'lastMessage': 'Is it still available?',
-      'lastMessageDate': 'Feb 10',
+      'profileImage': 'https://c.stocksy.com/a/dTW500/z9/1316485.jpg',
+      'itemImage': 'https://storage.needpix.com/rsynced_images/old-jeans-3589262_1280.jpg',
+      'ownerName': 'Rajesh Sharma',
+      'postTitle': 'Passing On My Old Jeans',
+      'lastMessage': 'That works! Thank you!',
+      'lastMessageDate': 'Feb 8',
       'status': 'available',
     },
-    {
-      'profileImage': 'https://c8.alamy.com/comp/2AE4838/profile-of-a-teenage-indian-boy-looking-at-outsides-2AE4838.jpg',
-      'itemImage': 'https://4.bp.blogspot.com/-MO6lqm3QOGM/WNHSSHMqQ4I/AAAAAAABoVE/IepKWfWFrKEy66hlgS6zr_xN6QfNTBUMQCEw/s1600/032117buffet.jpg',
-      'ownerName': 'Arvind Verma',
-      'postTitle': 'Old Furniture in Good Condition',
-      'lastMessage': 'Is it still available?',
-      'lastMessageDate': 'Feb 10',
-      'status': 'available',
-    },
+
+    
   ];
 
   @override

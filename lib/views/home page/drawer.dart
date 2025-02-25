@@ -67,7 +67,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     Icon(Icons.volunteer_activism, color: Colors.white, size: 20),
                     SizedBox(width: 5),
                     Text(
-                      'Donations: 25', // Replace with dynamic count
+                      'Donations: 1', // Replace with dynamic count
                       style: TextStyle(color: Colors.white70, fontSize: 14),
                     ),
                   ],
@@ -104,7 +104,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
         leading: Icon(Icons.account_circle, color: CustomDrawer.leadingColor),
         title: Text('Account', style: TextStyle(color: CustomDrawer.leadingColor)),
         onTap: () {
-          Navigator.pop(context);
+          Navigator.of(context).pushNamed('myAccountPageRoute');
         },
       ),
       ListTile(

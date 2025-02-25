@@ -139,6 +139,28 @@ class _MyAccountPageState extends State<MyAccountPage> {
                   ],
                 ),
               ),
+
+              SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // Handle save changes logic
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          backgroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          'Save Changes',
+                          style: TextStyle(fontSize: 16, color:AppColors.primaryColor),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 10,),
           
               // Form Fields
               Padding(

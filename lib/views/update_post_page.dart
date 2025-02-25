@@ -9,12 +9,12 @@ import 'dart:io';
 import 'package:latlong2/latlong.dart';
 import 'package:donornet/services%20and%20provider/map_service.dart';
 
-class AddItemPage extends StatefulWidget {
+class UpadtePostPage extends StatefulWidget {
   @override
-  _AddItemPageState createState() => _AddItemPageState();
+  _UpadtePostPageState createState() => _UpadtePostPageState();
 }
 
-class _AddItemPageState extends State<AddItemPage> {
+class _UpadtePostPageState extends State<UpadtePostPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final List<String> _categories = [
@@ -97,7 +97,7 @@ class _AddItemPageState extends State<AddItemPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Add Items',
+          'Edit Post',
           style: TextStyle(
             shadows: [
               Shadow(
@@ -320,7 +320,7 @@ class _AddItemPageState extends State<AddItemPage> {
                     ),
                   ),
                   child: Text(
-                    'Post', // Button text
+                    'Save Changes', // Button text
                     style: TextStyle(
                       color: Colors.white, // Text color
                       fontSize: 18.0, // Text size
@@ -334,56 +334,56 @@ class _AddItemPageState extends State<AddItemPage> {
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 5,
-              offset: Offset(0, -2),
-            ),
-          ],
-        ),
-        child:BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.primaryColor,
-        unselectedItemColor:const Color.fromARGB(179, 55, 170, 122),
-        currentIndex: 2, // Set initial index
-          onTap: (index) {
-            if(index == 0){
-               Navigator.of(context).pushNamedAndRemoveUntil('homePageRoute', (route) => false,);
-            }
-            if(index == 3){
-               Navigator.of(context).pushNamedAndRemoveUntil('chatPageRoute', (route) => false,);
-            }
-            if(index == 4){
-               Navigator.of(context).pushNamedAndRemoveUntil('myProfilePageRoute', (route) => false,);
-            }
-          },
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: ''),
-          BottomNavigationBarItem(
-            icon: Container(
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                    colors: [AppColors.primaryColor, AppColors.tertiaryColor], 
-                    begin: Alignment.topLeft, 
-                    end: Alignment.bottomRight,
-                ), 
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.add, color: Colors.white),
-            ),
-            label: '',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: ''),
-        ],
-      )),
+      // bottomNavigationBar: Container(
+      //   decoration: BoxDecoration(
+      //     color: Colors.white,
+      //     boxShadow: [
+      //       BoxShadow(
+      //         color: Colors.black.withOpacity(0.1),
+      //         spreadRadius: 1,
+      //         blurRadius: 5,
+      //         offset: Offset(0, -2),
+      //       ),
+      //     ],
+      //   ),
+      //   child:BottomNavigationBar(
+      //   type: BottomNavigationBarType.fixed,
+      //   selectedItemColor: AppColors.primaryColor,
+      //   unselectedItemColor:const Color.fromARGB(179, 55, 170, 122),
+      //   currentIndex: 2, // Set initial index
+      //     onTap: (index) {
+      //       if(index == 0){
+      //          Navigator.of(context).pushNamedAndRemoveUntil('homePageRoute', (route) => false,);
+      //       }
+      //       if(index == 3){
+      //          Navigator.of(context).pushNamedAndRemoveUntil('chatPageRoute', (route) => false,);
+      //       }
+      //       if(index == 4){
+      //          Navigator.of(context).pushNamedAndRemoveUntil('myProfilePageRoute', (route) => false,);
+      //       }
+      //     },
+      //   items: [
+      //     BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+      //     BottomNavigationBarItem(icon: Icon(Icons.location_on), label: ''),
+      //     BottomNavigationBarItem(
+      //       icon: Container(
+      //         padding: EdgeInsets.all(8),
+      //         decoration: BoxDecoration(
+      //           gradient: LinearGradient(
+      //               colors: [AppColors.primaryColor, AppColors.tertiaryColor], 
+      //               begin: Alignment.topLeft, 
+      //               end: Alignment.bottomRight,
+      //           ), 
+      //           shape: BoxShape.circle,
+      //         ),
+      //         child: Icon(Icons.add, color: Colors.white),
+      //       ),
+      //       label: '',
+      //     ),
+      //     BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: ''),
+      //     BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: ''),
+      //   ],
+      // )),
     );
   }
 

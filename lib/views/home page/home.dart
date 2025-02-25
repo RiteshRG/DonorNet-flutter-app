@@ -324,6 +324,9 @@ void _openFilterBottomSheet() {
         unselectedItemColor:const Color.fromARGB(179, 55, 170, 122),
         currentIndex: 0, // Set initial index
           onTap: (index) {
+            if(index == 1){
+               Navigator.of(context).pushNamed('mapPageRoute');
+            }
             if(index == 2){
                Navigator.of(context).pushNamed('addItemPageRoute');
             }

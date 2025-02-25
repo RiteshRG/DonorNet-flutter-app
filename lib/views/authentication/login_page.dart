@@ -275,14 +275,14 @@ class _LoginState extends State<Login> {
               
                             SizedBox(height: 4),
               
-                            //*********Forget Password? */
+                            //*********Forgot Password? */
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
                                 onPressed: () {
                                   Navigator.push(context, MaterialPageRoute(builder: (context) => EmailVerificationPage()));
                                 },
-                                child: Text('Forget Password?',
+                                child: Text('Forgot Password?',
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: AppColors.secondaryColor,

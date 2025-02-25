@@ -71,40 +71,40 @@ class _WelcomePage extends State<WelcomePage> {
           ],
         ),
             
-          Container(
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              children: [
-                // Logo Section
-                SizedBox(height: MediaQuery.of(context).size.height * 0.12),
-                Container(
-                  child: Image.network(
-                  '${AccessLink.logo}',
-                      height: 100,
-                      width: 100,
-                      fit: BoxFit.cover,
-                    ),
-                ),
-
-                const SizedBox(height: 16),
-                const Text(
-                  'DonorNet',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    decoration: TextDecoration.none,
-                    fontSize: 30, // Increased for emphasis
-                    color: Colors.white,
-                    fontFamily: 'Roboto-Bold',
-                    fontWeight: FontWeight.bold,
+          SafeArea(
+            child: Container(
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  // Logo Section
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.12),
+                  Container(
+                    child: Image.network(
+                    '${AccessLink.logo}',
+                        height: 100,
+                        width: 100,
+                        fit: BoxFit.cover,
+                      ),
                   ),
-                ),
-
-                SizedBox(height: MediaQuery.of(context).size.height * 0.2),
-
-                // Buttons Section
-                Expanded(
-                child: SafeArea(
+            
+                  const SizedBox(height: 16),
+                  const Text(
+                    'DonorNet',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      decoration: TextDecoration.none,
+                      fontSize: 30, // Increased for emphasis
+                      color: Colors.white,
+                      fontFamily: 'Roboto-Bold',
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+            
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+            
+                  // Buttons Section
+                  Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -158,9 +158,9 @@ class _WelcomePage extends State<WelcomePage> {
                         SizedBox(height: MediaQuery.of(context).size.height * 0.05),
                       ],
                     ),
-                ),
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
         ],

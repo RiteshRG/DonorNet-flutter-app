@@ -131,55 +131,256 @@ class _MessageBoxScreenState extends State<MessageBoxScreen> {
             ),
           ),
           Divider(),
+          // Expanded(
+          //   child: ListView.builder(
+          //     padding: EdgeInsets.all(10),
+          //     itemCount: messages.length,
+          //     itemBuilder: (context, index) {
+          //       final message = messages[index];
+          //       final isSender = message["sender"] == "user";
+          //       return Align(
+          //         alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
+          //         child: Container(
+          //           margin: EdgeInsets.symmetric(vertical: 5),
+          //           padding: EdgeInsets.all(12),
+          //           decoration: BoxDecoration(
+          //             color: isSender ? AppColors.primaryColor : Colors.grey.shade300,
+          //             borderRadius: BorderRadius.only(
+          //               topLeft: Radius.circular(20),  
+          //               topRight: Radius.circular(3),  
+          //               bottomLeft: Radius.circular(20),  
+          //               bottomRight: Radius.circular(20),  
+          //             ),
+          //           ),
+          //           child: Column(
+          //             crossAxisAlignment: CrossAxisAlignment.start, // Align text to left
+          //             children: [
+          //               Text(
+          //                 message["message"]!,
+          //                 style: TextStyle(
+          //                   color: isSender ? Colors.white : Colors.black,
+          //                   fontSize: 16, 
+          //                 ),
+          //               ),
+          //               SizedBox(height: 5),// Space between text and timestamp
+          //               Text(
+          //                 "12:30 PM · 09 Feb 2025", // Replace with actual date & time
+          //                 style: TextStyle(
+          //                   color: isSender ? Colors.white70 : Colors.black54, 
+          //                   fontSize: 12, 
+          //                 ),
+
+          //               ),
+          //             ],
+          //           ),
+          //         )
+
+
+          //       );
+          //     },
+          //   ),
+          // ),
           Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.all(10),
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                final message = messages[index];
-                final isSender = message["sender"] == "user";
-                return Align(
-                  alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: EdgeInsets.symmetric(vertical: 5),
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isSender ? AppColors.primaryColor : Colors.grey.shade300,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(20),  
-                        topRight: Radius.circular(3),  
-                        bottomLeft: Radius.circular(20),  
-                        bottomRight: Radius.circular(20),  
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start, // Align text to left
-                      children: [
-                        Text(
-                          message["message"]!,
-                          style: TextStyle(
-                            color: isSender ? Colors.white : Colors.black,
-                            fontSize: 16, 
-                          ),
-                        ),
-                        SizedBox(height: 5),// Space between text and timestamp
-                        Text(
-                          "12:30 PM · 09 Feb 2025", // Replace with actual date & time
-                          style: TextStyle(
-                            color: isSender ? Colors.white70 : Colors.black54, 
-                            fontSize: 12, 
-                          ),
-
-                        ),
-                      ],
-                    ),
-                  )
-
-
-                );
-              },
+  child: ListView(
+    padding: EdgeInsets.all(10),
+    children: [
+      // Recipient Message (You) - Now on the Left
+      
+      // Donor Message - Now on the Right
+      Align(
+        alignment: Alignment.centerRight,
+        child: Container(
+          margin: EdgeInsets.symmetric(vertical: 5),
+          padding: EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade300,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),  
+              topRight: Radius.circular(3),  
+              bottomLeft: Radius.circular(20),  
+              bottomRight: Radius.circular(20),  
             ),
           ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Hi! Are you giving away a warm blanket?",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                ),
+              ),
+              SizedBox(height: 5),
+              Text(
+                "08:33 AM · 09 Feb 2025",
+                style: TextStyle(
+                  color: Colors.black54,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          margin: EdgeInsets.symmetric(vertical: 5),
+          padding: EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(228, 38, 182, 122), // Your primary color
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(3),  
+              topRight: Radius.circular(20),  
+              bottomLeft: Radius.circular(20),  
+              bottomRight: Radius.circular(20),  
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Yes, I have one available.",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
+              SizedBox(height: 5),
+              Text(
+                "08:33 AM · 09 Feb 2025",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+
+
+      // Recipient Message (You) - Now on the Left
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          margin: EdgeInsets.symmetric(vertical: 5),
+          padding: EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(228, 38, 182, 122),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(3),  
+              topRight: Radius.circular(20),  
+              bottomLeft: Radius.circular(20),  
+              bottomRight: Radius.circular(20),  
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "You can come at 6 PM. Does that work for you?",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
+              SizedBox(height: 5),
+              Text(
+                "08:33 AM · 09 Feb 2025",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+
+      Align(
+        alignment: Alignment.centerRight,
+        child: Container(
+          margin: EdgeInsets.symmetric(vertical: 5),
+          padding: EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade300,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),  
+              topRight: Radius.circular(3),  
+              bottomLeft: Radius.circular(20),  
+              bottomRight: Radius.circular(20),  
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "yes",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                ),
+              ),
+              SizedBox(height: 5),
+              Text(
+                "08:33 AM · 09 Feb 2025",
+                style: TextStyle(
+                  color: Colors.black54,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+
+      // Donor Message - Now on the Right
+      Align(
+        alignment: Alignment.centerRight,
+        child: Container(
+          margin: EdgeInsets.symmetric(vertical: 5),
+          padding: EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade300,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),  
+              topRight: Radius.circular(3),  
+              bottomLeft: Radius.circular(20),  
+              bottomRight: Radius.circular(20),  
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Thank you so much for sharing",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                ),
+              ),
+              SizedBox(height: 5),
+              Text(
+                "06:33 PM · 09 Feb 2025",
+                style: TextStyle(
+                  color: Colors.black54,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+
+      
+    ],
+  ),
+),
+
+
           Padding(
             padding: EdgeInsets.all(8),
             child: widget.status == 'claimed'
@@ -286,3 +487,5 @@ class _MessageBoxScreenState extends State<MessageBoxScreen> {
     );
   }
 }
+
+

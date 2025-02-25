@@ -142,7 +142,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                       top: 35, 
                       bottom: 12
                       ),
-                    child: Text('Forget\nPassword ?',
+                    child: Text('Forgot\nPassword ?',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 29,

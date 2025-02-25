@@ -12,6 +12,7 @@ import 'package:donornet/views/authentication/welcome_page.dart';
 import 'package:donornet/views/add_item_page.dart';
 import 'package:donornet/views/chat_page.dart';
 import 'package:donornet/views/levels/my_level_page.dart';
+import 'package:donornet/views/map_page.dart';
 import 'package:donornet/views/my_account_page.dart';
 import 'package:donornet/views/post%20details/user_post_details_page.dart';
 import 'package:donornet/views/post%20details/post_details.dart';
@@ -20,6 +21,7 @@ import 'package:donornet/views/qr_code_page.dart';
 import 'package:donornet/views/rating_page.dart';
 import 'package:donornet/views/search/search_page.dart';
 import 'package:donornet/views/search/search_post_page.dart';
+import 'package:donornet/views/test/test.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -51,12 +53,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'DonorNet',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
        home: const WelcomePageSelector(),
-      //home: MyAccountPage(),
+      // home: ConfirmClaimPage(),
       routes: {
         'welcomePageRoute': (context) => WelcomePage(),
         'loginRoute': (context) => Login(),
@@ -70,6 +73,7 @@ class MyApp extends StatelessWidget {
         'myProfilePageRoute': (context) => Profile_page(),
         'myLevelPageRoute': (context) => MyLevelPage(),
         'myAccountPageRoute': (context) => MyAccountPage(),
+        'mapPageRoute': (context) => MapPage(),
       },
     );
   }
