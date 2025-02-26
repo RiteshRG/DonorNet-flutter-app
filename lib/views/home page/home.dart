@@ -1,4 +1,6 @@
 import 'package:donornet/materials/app_colors.dart';
+import 'package:donornet/services%20and%20provider/user_service.dart';
+import 'package:donornet/utilities/loading_indicator.dart';
 import 'package:donornet/utilities/show_dialog.dart';
 import 'package:donornet/views/filter.dart';
 import 'package:donornet/views/home%20page/drawer.dart';
@@ -21,24 +23,50 @@ class _HomePageState extends State<HomePage> {
   String search = "";
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _deleteExpiredPosts();
+    _searchController.addListener(_onSearchChanged);
+    print("Current input: ${_searchController.text}");
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  // Function to delete expired posts
+  Future<void> _deleteExpiredPosts() async {
+    UserService userService = UserService();
+    await userService.deleteExpiredPostsForUser(context);
+  }
+
+   Future<void> _refreshPage() async {
+    if (!mounted) return; // Prevents calling setState() on an unmounted widget
+
+    setState(() {
+      isLoading = true; // Show loading indicator
+    });
+
+    await _deleteExpiredPosts(); // Ensure expired posts are deleted when refreshing
+
+    if (!mounted) return;
+
+    setState(() {
+      isLoading = false; // Hide loading indicator
+    });
+  }
+
   void _onSearchChanged() {
   setState(() {
     search = _searchController.text;
   });
 }
 
-@override
-void initState() {
-  super.initState();
-  _searchController.addListener(_onSearchChanged);
-   print("Current input: ${_searchController.text}");
-}
-
-@override
-void dispose() {
-  _searchController.dispose();
-  super.dispose();
-}
 
 void logoutUser() async {
   try {
@@ -289,13 +317,18 @@ void _openFilterBottomSheet() {
                 
                     // Scrollable Post List
                     Expanded(
-                      child: Container(
-                        color: const Color.fromARGB(255, 255, 255, 255),
-                        child: ListView.builder(
-                          itemCount:  posts.length, // Replace with the dynamic post count
-                          itemBuilder: (context, index) {
-                           return Post(post: posts[index]);
-                          },
+                      child: RefreshIndicator(
+                        onRefresh: _refreshPage,
+                        color: AppColors.primaryColor, 
+                        backgroundColor: Colors.white, 
+                        child: Container(
+                          color: const Color.fromARGB(255, 255, 255, 255),
+                          child: ListView.builder(
+                            itemCount:  posts.length, // Replace with the dynamic post count
+                            itemBuilder: (context, index) {
+                             return Post(post: posts[index]);
+                            },
+                          ),
                         ),
                       ),
                     ),
@@ -304,6 +337,7 @@ void _openFilterBottomSheet() {
               ],
             ),
           ),
+          //LoadingIndicator(isLoading: isLoading),
         ],
       ),
       bottomNavigationBar: Container(

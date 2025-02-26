@@ -362,9 +362,9 @@ class _AddItemPageState extends State<AddItemPage> {
                           location: selectedLocation, 
                           context: context, 
                         );
-                         setState(() {
-                            isLoading = false;
-                          });
+                        //  setState(() {
+                        //     isLoading = false;
+                        //   });
             
                         if (isValid) {
                           UserService userService = UserService();
@@ -382,13 +382,25 @@ class _AddItemPageState extends State<AddItemPage> {
                         );
 
                         if(isInserted){
+                          setState(() {
+                            isLoading = false;
+                          });
                           showSuccessDialog(context, "Your post has been submitted successfully!");
                           print("Your post has been submitted successfully!");
+                          // ScaffoldMessenger.of(context).showSnackBar(
+                          //   SnackBar(content: Text("Post submitted successfully!"), backgroundColor:AppColors.primaryColor),
+                          // );
                         }else{
+                          setState(() {
+                            isLoading = false;
+                          });
                           showErrorDialog(context, "Somethig went wrong with firebase, try again later.");
                         }
 
                         } else {
+                          setState(() {
+                            isLoading = false;
+                          });
                           print("Post validation failed!");
                         }
                       },

@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/rendering.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:developer' as devtools show log;
 
 Future<String> generateAndUploadQRCode(String postId) async {
   try {
@@ -17,8 +18,10 @@ Future<String> generateAndUploadQRCode(String postId) async {
     );
 
     if (qrValidationResult.status != QrValidationStatus.valid) {
+      devtools.log("QR Code generation failed!");
       throw Exception("QR Code generation failed!");
     }
+    devtools.log("QR Code generation succcess");
 
     final qrCode = qrValidationResult.qrCode!;
     final painter = QrPainter.withQr(
@@ -35,11 +38,13 @@ Future<String> generateAndUploadQRCode(String postId) async {
     final tempDir = await getTemporaryDirectory();
     final qrFile = File("${tempDir.path}/$postId-qr.png");
     await qrFile.writeAsBytes(uint8List);
+    devtools.log("tempDir: ${tempDir.path}");
 
     // ✅ Upload QR Code to Firebase Storage
     UserService userService = UserService();
     String qrImageUrl = await userService.uploadQRCodeToFirebase(qrFile, postId);
 
+    devtools.log("return qrImageUrl;");
     return qrImageUrl; // Return the URL
   } catch (e) {
     print("Error generating QR Code: $e");

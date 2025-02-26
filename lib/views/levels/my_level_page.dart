@@ -147,7 +147,9 @@ void updateLevel() {
       body: Stack(
         children: [
 
-          RefreshIndicator( // Add pull-to-refresh feature
+          RefreshIndicator(
+            color: AppColors.primaryColor, 
+            backgroundColor: Colors.white,  
             onRefresh: _refreshPage,
             child: SingleChildScrollView(
               physics: AlwaysScrollableScrollPhysics(),

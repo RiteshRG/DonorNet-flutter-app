@@ -23,7 +23,7 @@ Future<void> showErrorDialog(BuildContext context, String text) {
   );
 }
 
-void showSuccessDialog(BuildContext context, String text) {
+showSuccessDialog(BuildContext context, String text) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -53,7 +53,7 @@ void showSuccessDialog(BuildContext context, String text) {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop(); // Close the dialog
+              Navigator.of(context).pushNamedAndRemoveUntil('homePageRoute', (route) => false,);
             },
             child: Text("OK", style: TextStyle(color: Colors.white)),
           ),
