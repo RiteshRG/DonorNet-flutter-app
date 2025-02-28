@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/api.dart';
 import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
@@ -6,6 +9,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'dart:developer' as devtools show log;
+import 'package:geolocator/geolocator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MapLocationService extends StatefulWidget {
   final Function(LatLng) onLocationSelected;  // Callback function
@@ -133,5 +139,38 @@ class _MapLocationServiceState extends State<MapLocationService> {
     }
 
     return markers;
+  }
+}
+
+
+class MapService {
+  /// Calculates the distance between the user's location and a post's location in kilometers.
+  double calculateDistance(Position userPosition, GeoPoint postLocation) {
+    double distanceInMeters = Geolocator.distanceBetween(
+      userPosition.latitude,
+      userPosition.longitude,
+      postLocation.latitude,
+      postLocation.longitude,
+    );
+    return distanceInMeters / 1000; // Convert meters to kilometers
+  }
+
+  List<Map<String, dynamic>> sortPostsByDistance(
+      Position userPosition, List<Map<String, dynamic>> posts) {
+    for (var post in posts) {
+      if (post.containsKey('location') && post['location'] is GeoPoint) {
+        // ✅ Convert distance to string with 1 decimal place
+        double distance = calculateDistance(userPosition, post['location']);
+        post['distance_km'] = distance.toStringAsFixed(1); // Store as String
+      } else {
+        post['distance_km'] = "9999.9"; // Set a very high distance if location is missing
+      }
+    }
+
+    // ✅ Sort posts by parsed distance
+    posts.sort((a, b) => double.parse(a['distance_km'])
+        .compareTo(double.parse(b['distance_km'])));
+
+    return posts;
   }
 }

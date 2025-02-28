@@ -33,7 +33,9 @@ class _AddItemPageState extends State<AddItemPage> {
   DateTime? _expiryDate;
   TimeOfDay? _expiryTime;
   bool isLoading = false;
+  bool isProcessing = false; 
 
+                      
   LatLng? selectedLocation;
 
   void _handleLocationSelected(LatLng location) {
@@ -346,80 +348,155 @@ class _AddItemPageState extends State<AddItemPage> {
                       ),
                     ),
                     child: ElevatedButton(
-                      onPressed: () async {
-                        setState(() {
-                        isLoading = true;
-                        });
-                        bool isValid = await validateAndSubmitPost(
-                          imageFile: _image,
-                          title: _titleController.text.trim(),
-                          description: _descriptionController.text.trim(),
-                          category: _selectedCategory,
-                          pickupDate: _pickupDate,
-                          pickupTime: _pickupTime,
-                          expiryDate: _expiryDate,
-                          expiryTime: _expiryTime,
-                          location: selectedLocation, 
-                          context: context, 
-                        );
-                        //  setState(() {
-                        //     isLoading = false;
-                        //   });
+                        onPressed: isProcessing
+                            ? null // Disable button if processing
+                            : () async {
+                                if (isProcessing) return; // Prevent duplicate submissions
+
+                                setState(() {
+                                  isProcessing = true;  // Prevent duplicate clicks
+                                  isLoading = true;  // Show loading indicator
+                                });
+
+                                bool isValid = await validateAndSubmitPost(
+                                  imageFile: _image,
+                                  title: _titleController.text.trim(),
+                                  description: _descriptionController.text.trim(),
+                                  category: _selectedCategory,
+                                  pickupDate: _pickupDate,
+                                  pickupTime: _pickupTime,
+                                  expiryDate: _expiryDate,
+                                  expiryTime: _expiryTime,
+                                  location: selectedLocation, 
+                                  context: context, 
+                                );
+
+                                if (isValid) {
+                                  UserService userService = UserService();
+                                  bool isInserted = await userService.createPost(
+                                    imageFile: _image,
+                                    title: _titleController.text.trim(),
+                                    description: _descriptionController.text.trim(),
+                                    category: _selectedCategory,
+                                    pickupDate: _pickupDate,
+                                    pickupTime: _pickupTime,
+                                    expiryDate: _expiryDate,
+                                    expiryTime: _expiryTime,
+                                    location: selectedLocation, 
+                                    context: context,
+                                  );
+
+                                  if (isInserted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Post submitted successfully!"), backgroundColor:AppColors.primaryColor),);
+                                    Navigator.of(context).pushNamedAndRemoveUntil('homePageRoute', (route) => false,);
+                                    // showSuccessDialog(context, "Your post has been submitted successfully!");
+                                    print("Your post has been submitted successfully!");
+                                  } else {
+                                    showErrorDialog(context, "Something went wrong with Firebase, try again later.");
+                                  }
+                                } else {
+                                  print("Post validation failed!");
+                                }
+
+                                // Reset state after process completion
+                                setState(() {
+                                  isProcessing = false; 
+                                  isLoading = false; 
+                                });
+                            },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isProcessing ? Colors.grey : Colors.transparent, // Disabled color
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        child: isLoading
+                            ? CircularProgressIndicator(color: Colors.white) // Show loading indicator when submitting
+                            : Text(
+                                'Post',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18.0,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    // ElevatedButton(
+                    //   onPressed: () async {
+                    //     setState(() {
+                    //     isLoading = true;
+                    //     });
+                    //     bool isValid = await validateAndSubmitPost(
+                    //       imageFile: _image,
+                    //       title: _titleController.text.trim(),
+                    //       description: _descriptionController.text.trim(),
+                    //       category: _selectedCategory,
+                    //       pickupDate: _pickupDate,
+                    //       pickupTime: _pickupTime,
+                    //       expiryDate: _expiryDate,
+                    //       expiryTime: _expiryTime,
+                    //       location: selectedLocation, 
+                    //       context: context, 
+                    //     );
+                    //     //  setState(() {
+                    //     //     isLoading = false;
+                    //     //   });
             
-                        if (isValid) {
-                          UserService userService = UserService();
-                           bool isInserted = await userService.createPost(
-                          imageFile: _image,
-                          title: _titleController.text.trim(),
-                          description: _descriptionController.text.trim(),
-                          category: _selectedCategory,
-                          pickupDate: _pickupDate,
-                          pickupTime: _pickupTime,
-                          expiryDate: _expiryDate,
-                          expiryTime: _expiryTime,
-                          location: selectedLocation, 
-                          context: context,
-                        );
+                    //     if (isValid) {
+                    //       UserService userService = UserService();
+                    //        bool isInserted = await userService.createPost(
+                    //       imageFile: _image,
+                    //       title: _titleController.text.trim(),
+                    //       description: _descriptionController.text.trim(),
+                    //       category: _selectedCategory,
+                    //       pickupDate: _pickupDate,
+                    //       pickupTime: _pickupTime,
+                    //       expiryDate: _expiryDate,
+                    //       expiryTime: _expiryTime,
+                    //       location: selectedLocation, 
+                    //       context: context,
+                    //     );
 
-                        if(isInserted){
-                          setState(() {
-                            isLoading = false;
-                          });
-                          showSuccessDialog(context, "Your post has been submitted successfully!");
-                          print("Your post has been submitted successfully!");
-                          // ScaffoldMessenger.of(context).showSnackBar(
-                          //   SnackBar(content: Text("Post submitted successfully!"), backgroundColor:AppColors.primaryColor),
-                          // );
-                        }else{
-                          setState(() {
-                            isLoading = false;
-                          });
-                          showErrorDialog(context, "Somethig went wrong with firebase, try again later.");
-                        }
+                    //     if(isInserted){
+                    //       setState(() {
+                    //         isLoading = false;
+                    //       });
+                    //       showSuccessDialog(context, "Your post has been submitted successfully!");
+                    //       print("Your post has been submitted successfully!");
+                    //       // ScaffoldMessenger.of(context).showSnackBar(
+                    //       //   SnackBar(content: Text("Post submitted successfully!"), backgroundColor:AppColors.primaryColor),
+                    //       // );
+                    //     }else{
+                    //       setState(() {
+                    //         isLoading = false;
+                    //       });
+                    //       showErrorDialog(context, "Somethig went wrong with firebase, try again later.");
+                    //     }
 
-                        } else {
-                          setState(() {
-                            isLoading = false;
-                          });
-                          print("Post validation failed!");
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent, // Make the button background transparent
-                        shadowColor: Colors.transparent, // Remove shadow
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30), // Rounded corners
-                        ),
-                      ),
-                      child: Text(
-                        'Post', // Button text
-                        style: TextStyle(
-                          color: Colors.white, // Text color
-                          fontSize: 18.0, // Text size
-                          fontWeight: FontWeight.bold, // Text boldness
-                        ),
-                      ),
-                    ),
+                    //     } else {
+                    //       setState(() {
+                    //         isLoading = false;
+                    //       });
+                    //       print("Post validation failed!");
+                    //     }
+                    //   },
+                    //   style: ElevatedButton.styleFrom(
+                    //     backgroundColor: Colors.transparent, // Make the button background transparent
+                    //     shadowColor: Colors.transparent, // Remove shadow
+                    //     shape: RoundedRectangleBorder(
+                    //       borderRadius: BorderRadius.circular(30), // Rounded corners
+                    //     ),
+                    //   ),
+                    //   child: Text(
+                    //     'Post', // Button text
+                    //     style: TextStyle(
+                    //       color: Colors.white, // Text color
+                    //       fontSize: 18.0, // Text size
+                    //       fontWeight: FontWeight.bold, // Text boldness
+                    //     ),
+                    //   ),
+                    // ),
                   )
                 ),
                 SizedBox(height: 10),

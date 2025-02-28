@@ -1,6 +1,7 @@
 class AccessLink{
   static const String logoFlip = 'https://i.postimg.cc/Ss49LVPS/logo-left-flip.png';
   static const String logo = 'https://i.postimg.cc/bwbd6kks/logo.png';
+  static const String logoPrimaryColor = 'https://i.postimg.cc/zBpTgcmX/mdi-donation.png';
 
   static const String coinBlack = 'https://i.postimg.cc/v895Jfns/black-coin.png';
   static const String coinGolden = 'https://i.postimg.cc/QtKcxWnc/golden-coin.png';

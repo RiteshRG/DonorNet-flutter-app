@@ -1,4 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/materials/app_colors.dart';
+import 'package:donornet/services%20and%20provider/map_service.dart';
+import 'package:donornet/services%20and%20provider/post_service.dart';
 import 'package:donornet/services%20and%20provider/user_service.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
 import 'package:donornet/utilities/show_dialog.dart';
@@ -8,6 +11,9 @@ import 'package:donornet/views/home%20page/post.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
+import 'dart:developer' as devtools show log;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,14 +27,18 @@ class _HomePageState extends State<HomePage> {
 
   TextEditingController _searchController = TextEditingController();
   String search = "";
-  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  bool isLoading = false;
+  final PostService _postService = PostService();
+  final MapService _mapService = MapService();
+  List<Map<String, dynamic>> _posts = [];
+  bool _isLoading = true;
+  bool _isFetchingMore = false;
 
   @override
   void initState() {
     super.initState();
     _deleteExpiredPosts();
+    _fetchPosts();
     _searchController.addListener(_onSearchChanged);
     print("Current input: ${_searchController.text}");
   }
@@ -39,6 +49,42 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
+   Future<void> _fetchPosts({bool loadMore = false}) async {
+    if (loadMore && _isFetchingMore) return;
+
+    setState(() {
+      _isFetchingMore = loadMore;
+    });
+
+    Position position = await Geolocator.getCurrentPosition();
+    
+    // Fetch posts (which now include user details)
+    List<Map<String, dynamic>> newPosts = await _postService.getAvailablePosts();
+
+    if (newPosts.isNotEmpty) {
+      // Ensure location exists before sorting
+      newPosts = _mapService.sortPostsByDistance(position, newPosts);
+
+      setState(() {
+        _posts = newPosts;  // ✅ Replace instead of adding
+        // _posts.addAll(newPosts);
+        _isLoading = false;
+        _isFetchingMore = false;
+      });
+
+      for (var i = 0; i < _posts.length; i++) {
+  devtools.log("Post $i Data Types: ${_posts[i].map((key, value) => MapEntry(key, value.runtimeType))}");
+}
+
+    } else {
+      setState(() {
+        _posts = [];  // ✅ Clear posts if no data
+        _isLoading = false;
+        _isFetchingMore = false;
+      });
+    }
+  }
+
   // Function to delete expired posts
   Future<void> _deleteExpiredPosts() async {
     UserService userService = UserService();
@@ -46,19 +92,13 @@ class _HomePageState extends State<HomePage> {
   }
 
    Future<void> _refreshPage() async {
-    if (!mounted) return; // Prevents calling setState() on an unmounted widget
-
-    setState(() {
-      isLoading = true; // Show loading indicator
-    });
-
-    await _deleteExpiredPosts(); // Ensure expired posts are deleted when refreshing
-
+    if (!mounted) return; 
+    await _deleteExpiredPosts(); 
+     setState(() {
+    _isLoading = true;  // ✅ Show loading indicator
+  });
+    await _fetchPosts();  // ✅ Wait for posts to refres
     if (!mounted) return;
-
-    setState(() {
-      isLoading = false; // Hide loading indicator
-    });
   }
 
   void _onSearchChanged() {
@@ -68,47 +108,6 @@ class _HomePageState extends State<HomePage> {
 }
 
 
-void logoutUser() async {
-  try {
-    await _auth.signOut();
-     Navigator.of(context).pushNamedAndRemoveUntil('welcomePageRoute', (route) => false,);
-    print("User successfully logged out");
-    // Navigate to the login or welcome screen
-  } catch (e) {
-
-    showErrorDialog(context, "Error logging out: $e");
-  }
-}
-
- List<PostDataList> posts =[
-    PostDataList(
-      postImage: 'https://storage.needpix.com/rsynced_images/old-jeans-3589262_1280.jpg',
-      profileImage: 'https://i.pinimg.com/originals/5d/a8/76/5da8768c07eb3db7dbf5f394ab4444a6.jpg',
-      date: '8 feb',
-      name: 'Rajesh Sharma',
-      rating: '4.2',
-      distance: '10km',
-      postTitle: 'Good Condition Jeans Pants', 
-    ),
-    PostDataList(
-      postImage: 'https://4.bp.blogspot.com/-MO6lqm3QOGM/WNHSSHMqQ4I/AAAAAAABoVE/IepKWfWFrKEy66hlgS6zr_xN6QfNTBUMQCEw/s1600/032117buffet.jpg',
-      profileImage: 'https://c8.alamy.com/comp/2AE4838/profile-of-a-teenage-indian-boy-looking-at-outsides-2AE4838.jpg',
-      date: '10 feb',
-      name: 'Arvind Verma',
-      rating: '4.3',
-      distance: '12km',
-      postTitle: 'Old Furniture in Good Condition'
-    ),
-    PostDataList(
-      postImage: "https://tse1.mm.bing.net/th?id=OIP.bBNhDMx06zyK_Q_9hN35IAHaFl&pid=Api&P=0&h=180",
-      profileImage: "https://e1.pxfuel.com/desktop-wallpaper/224/8/desktop-wallpaper-smart-indian-boy-pic.jpg",
-      date: "10 Feb",
-      name: "Vikram Patel",
-      rating: "4.3",
-      distance: "12km",
-      postTitle: "Old Sneakers in Good Condition"
-    )
-   ];
 void _openFilterBottomSheet() {
   showFilterBottomSheet(context); // Call the filter bottom sheet function
 }
@@ -118,6 +117,7 @@ void _openFilterBottomSheet() {
     return Scaffold(
        key: _scaffoldKey,
       drawer: CustomDrawer(),
+       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       body: Stack(
         children: [
           Positioned(
@@ -143,6 +143,7 @@ void _openFilterBottomSheet() {
 
           SafeArea(
             child: Stack(
+              
               children: [
                  Container(
                   width: double.infinity,
@@ -221,7 +222,7 @@ void _openFilterBottomSheet() {
                       ),
                     ),
                     // Search and Filter Section
-                    Padding(
+                    Container(
                       padding: const EdgeInsets.only(
                         left: 12,
                         right: 12,
@@ -316,22 +317,64 @@ void _openFilterBottomSheet() {
                     ),
                 
                     // Scrollable Post List
-                    Expanded(
-                      child: RefreshIndicator(
-                        onRefresh: _refreshPage,
-                        color: AppColors.primaryColor, 
-                        backgroundColor: Colors.white, 
-                        child: Container(
-                          color: const Color.fromARGB(255, 255, 255, 255),
-                          child: ListView.builder(
-                            itemCount:  posts.length, // Replace with the dynamic post count
-                            itemBuilder: (context, index) {
-                             return Post(post: posts[index]);
-                            },
-                          ),
-                        ),
+                   Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: _refreshPage,
+                      color: AppColors.primaryColor, 
+                      backgroundColor: const Color.fromARGB(255, 255, 255, 255), 
+                      child: Container(
+                        color: const Color.fromARGB(255, 255, 255, 255),
+                        child: _isLoading
+                            ? LoadingIndicator(isLoading: _isLoading)
+                            : _posts.isEmpty
+                                ? Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min, // Centers content vertically
+                                children: [
+                                  Opacity(
+                                    opacity: 0.8, // Adjust this value (0.0 to 1.0) for desired transparency
+                                    child: Image.network(
+                                      'https://i.postimg.cc/zBpTgcmX/mdi-donation.png', // Your image URL
+                                      width: 48, // Adjust width as needed
+                                      height: 48, // Adjust height as needed
+                                      color: Color.fromARGB(44, 35, 151, 103), // Apply color overlay
+                                    ),
+                                  ),
+                                  SizedBox(height: 8), // Spacing between image and text
+                                  Text(
+                                    "No posts available",
+                                    style: TextStyle(
+                                      fontSize: 18, 
+                                      fontWeight: FontWeight.bold, 
+                                      color: Color.fromARGB(44, 35, 151, 103),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+
+                                : ListView.builder(
+                                    itemCount: _posts.length,
+                                    itemBuilder: (context, index) {
+                                      devtools.log("********${_posts.length}");
+                                      try {
+                                        devtools.log('*******************PostCard(post: _posts[index])');
+                                        return PostCard(post: _posts[index]);
+                                      } catch (e) {
+                                        devtools.log("Error rendering PostCard: $e");
+                                        return Center(
+                                          child: Text(
+                                            "Error loading post",
+                                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: const Color.fromARGB(255, 252, 252, 252)),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                  ),
                       ),
                     ),
+                  ),
+
                   ],
                 ),
               ],
@@ -397,4 +440,5 @@ void _openFilterBottomSheet() {
     );
   }
 }
+
 
