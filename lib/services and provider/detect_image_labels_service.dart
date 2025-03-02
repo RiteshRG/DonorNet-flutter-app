@@ -5,6 +5,7 @@ import 'package:donornet/utilities/show_dialog.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:donornet/api.dart';
+import 'dart:developer' as devtools show log;
 
 // Function to analyze the image and return detected labels
 Future<List<String>> detectImageLabels(BuildContext context, File imageFile) async {
@@ -41,7 +42,7 @@ Future<List<String>> detectImageLabels(BuildContext context, File imageFile) asy
           .map<String>((label) => label["description"].toString().toLowerCase().trim())
           .toList();
       
-      print("Detected labels: $detectedLabels");
+      devtools.log("Detected labels: $detectedLabels");
       return detectedLabels;
     } else {
       print("Error: Failed to analyze the image. Status Code: ${response.statusCode}");

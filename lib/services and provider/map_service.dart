@@ -10,8 +10,9 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:developer' as devtools show log;
-import 'package:geolocator/geolocator.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'package:url_launcher/url_launcher.dart';
+
 
 class MapLocationService extends StatefulWidget {
   final Function(LatLng) onLocationSelected;  // Callback function
@@ -142,51 +143,191 @@ class _MapLocationServiceState extends State<MapLocationService> {
   }
 }
 
+class MapBoxMapView extends StatefulWidget {
+  final double latitude;
+  final double longitude;
+
+  const MapBoxMapView({
+    Key? key,
+    required this.latitude,
+    required this.longitude,
+  }) : super(key: key);
+
+  @override
+  _MapBoxMapViewState createState() => _MapBoxMapViewState();
+}
+
+class _MapBoxMapViewState extends State<MapBoxMapView> {
+  late final MapController mapController;
+
+  @override
+  void initState() {
+    super.initState();
+    mapController = MapController();
+  }
+
+  // Function to open Google Maps with coordinates
+
+void _openGoogleMaps(double lat, double lng) async {
+  // Construct the URL to open Google Maps with the provided coordinates
+  final Uri uri = Uri.https(
+    'www.google.com', // Google domain
+    '/maps',           // Path to maps
+    {
+      'q': '$lat,$lng',  // Query parameter for location
+    },
+  );
+
+  try {
+    // Launch the URL in an external browser
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      devtools.log("Could not open Google Maps");
+    }
+  } catch (e) {
+    devtools.log("Error launching URL: $e");
+  }
+}
+
+
+  @override
+  Widget build(BuildContext context) {
+    final marker = Marker(
+      point: LatLng(widget.latitude, widget.longitude),
+      width: 40,
+      height: 40,
+      child: GestureDetector(
+        onTap: () {
+          devtools.log("Marker clicked at: ${widget.latitude}, ${widget.longitude}");
+           _openGoogleMaps(widget.latitude, widget.longitude);
+        },
+        child: ShaderMask(
+            shaderCallback: (bounds) {
+              return LinearGradient(
+                colors: [const Color.fromARGB(255, 255, 0, 0), const Color.fromARGB(255, 176, 1, 1)],  
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ).createShader(bounds);
+            },
+            child: Icon(
+              Icons.location_on_rounded,
+              color: Colors.white,  
+              size: 40,
+            ),
+          ),
+      ),
+    );
+
+    return Container(
+      height: 200, // Increased for better zooming
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: FlutterMap(
+        mapController: mapController,
+        options: MapOptions(
+          initialCenter: LatLng(widget.latitude, widget.longitude),
+          initialZoom: 15.0,
+          minZoom: 5.0,
+          maxZoom: 20.0,
+          onPositionChanged: (position, hasGesture) {
+            if (hasGesture) {
+              // Reset position to prevent movement
+              mapController.move(LatLng(widget.latitude, widget.longitude), position.zoom);
+            }
+          },
+        ),
+        children: [
+          TileLayer(
+            urlTemplate:
+                "https://api.mapbox.com/styles/v1/mapbox/outdoors-v11/tiles/{z}/{x}/{y}?access_token=${APIKey.mapBox}",
+            additionalOptions: {
+              'accessToken': APIKey.mapBox,
+            },
+          ),
+          MarkerLayer(
+            markers: [marker],
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class MapService {
-  /// Calculates the distance between the user's location and a post's location in kilometers.
-  double calculateDistance(Position userPosition, GeoPoint postLocation) {
-    double distanceInMeters = Geolocator.distanceBetween(
-      userPosition.latitude,
-      userPosition.longitude,
-      postLocation.latitude,
-      postLocation.longitude,
-    );
-    return distanceInMeters / 1000; // Convert meters to kilometers
+
+Future<Position?> _getCurrentPosition() async {
+  try {
+    return await Geolocator.getCurrentPosition();
+  } catch (e) {
+    devtools.log("Error fetching location: $e");
+    return null;
   }
+}
+
+/// Calculates the distance between the user's location and a post's location in kilometers.
+Future<double?> calculateDistance(GeoPoint postLocation) async {
+  Position? userPosition = await _getCurrentPosition(); // Await the position
+
+  if (userPosition == null) {
+    devtools.log("User location is unavailable. Cannot calculate distance.");
+    return null; // Return null if the location is not available
+  }
+
+  double distanceInMeters = Geolocator.distanceBetween(
+    userPosition.latitude,
+    userPosition.longitude,
+    postLocation.latitude,
+    postLocation.longitude,
+  );
+
+  return distanceInMeters / 1000; // Convert meters to kilometers
+}
+
 
   /// Sorts posts by distance and filters them based on the selected distance.
-  List<Map<String, dynamic>> sortPostsByDistance(
-      Position userPosition, List<Map<String, dynamic>> posts, String selectedDistance) {
-    
-    double maxDistance = _getMaxDistanceFromString(selectedDistance);
+  Future<List<Map<String, dynamic>>> sortPostsByDistance(
+    List<Map<String, dynamic>> posts, String selectedDistance) async {
 
-    // Create a new list to store posts within the selected distance
-    List<Map<String, dynamic>> filteredPosts = [];
+  Position? userPosition = await _getCurrentPosition(); // Fetch user location
 
-    for (var post in posts) {
-      if (post.containsKey('location') && post['location'] is GeoPoint) {
-        // Calculate the distance from the user to the post
-        double distance = calculateDistance(userPosition, post['location']);
-        post['distance_km'] = distance.toStringAsFixed(1); // Store the distance as a string with 1 decimal place
-
-        // Add the post to the filtered list if it's within the selected distance
-        if (distance <= maxDistance) {
-          filteredPosts.add(post);
-        }
-      } else {
-        // If no location is available, set a very high distance or skip the post
-        post['distance_km'] = "9999.9"; // Assign a large value to posts without location
-        filteredPosts.add(post); // Add to filtered list if needed, or just skip this post
-      }
-    }
-
-    // Sort the filtered posts by distance
-    filteredPosts.sort((a, b) => double.parse(a['distance_km'])
-        .compareTo(double.parse(b['distance_km'])));
-
-    return filteredPosts;
+  if (userPosition == null) {
+    devtools.log("User location is unavailable. Returning unsorted posts.");
+    return posts; // Return original posts if location is unavailable
   }
+
+  double maxDistance = _getMaxDistanceFromString(selectedDistance);
+  List<Map<String, dynamic>> filteredPosts = [];
+
+  for (var post in posts) {
+    if (post.containsKey('location') && post['location'] is GeoPoint) {
+      double? distance = await calculateDistance(post['location']); // Await async function
+
+      if (distance == null) {
+        post['distance_km'] = "9999.9"; // Assign a large value if distance calculation fails
+      } else {
+        post['distance_km'] = distance.toStringAsFixed(1);
+      }
+
+      // Add post if within the selected distance
+      if (distance != null && distance <= maxDistance) {
+        filteredPosts.add(post);
+      }
+    } else {
+      post['distance_km'] = "9999.9"; // Assign large value if location is missing
+      filteredPosts.add(post);
+    }
+  }
+
+  // Sort posts by distance
+  filteredPosts.sort((a, b) => double.parse(a['distance_km'])
+      .compareTo(double.parse(b['distance_km'])));
+
+  return filteredPosts;
+}
+
 
   /// Convert the selected distance string to a numeric value in kilometers.
   double _getMaxDistanceFromString(String selectedDistance) {

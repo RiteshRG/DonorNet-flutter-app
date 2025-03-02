@@ -81,30 +81,24 @@ class _HomePageState extends State<HomePage>  {
     }
   }
 
-Future<void> _fetchPosts({bool loadMore = false}) async {
+  Future<void> _fetchPosts({bool loadMore = false}) async {
   if (loadMore && _isFetchingMore) return;
 
   setState(() {
     _isFetchingMore = loadMore;
   });
 
-  Position? position;
-  try {
-    position = await Geolocator.getCurrentPosition();
-  } catch (e) {
-    devtools.log("Error fetching location: $e");
-  }
+  devtools.log('Fetching posts with selected categories: $selectedCategories');
 
- devtools.log('fetch   ${selectedCategories}');
   // Fetch posts (which now include user details)
-  List<Map<String, dynamic>> newPosts = await _postService.getAvailablePosts(loadMore: loadMore,
-      selectedCategories: selectedCategories);
+  List<Map<String, dynamic>> newPosts = await _postService.getAvailablePosts(
+      loadMore: loadMore, selectedCategories: selectedCategories);
 
   if (newPosts.isNotEmpty) {
-    if (position != null) {
-       devtools.log("dis  filter $selectedDistance");
-      newPosts = _mapService.sortPostsByDistance(position, newPosts, selectedDistance);
-    }
+    devtools.log("Applying distance filter: $selectedDistance");
+
+    // ✅ Await the sorted posts
+    newPosts = await _mapService.sortPostsByDistance(newPosts, selectedDistance);
 
     setState(() {
       if (loadMore) {
@@ -118,7 +112,7 @@ Future<void> _fetchPosts({bool loadMore = false}) async {
 
     // Debugging: Log each post's data type
     for (var i = 0; i < _posts.length; i++) {
-      devtools.log("Post $i Data Types: ${_posts}");
+      devtools.log("Post $i Data: ${_posts[i]}"); // ✅ Logs each post separately
     }
   } else {
     setState(() {
@@ -128,6 +122,7 @@ Future<void> _fetchPosts({bool loadMore = false}) async {
     });
   }
 }
+
 
 
     Future<void> _checkInternetStatus() async {

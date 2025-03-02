@@ -1,190 +1,6 @@
 
 
 // import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'dart:developer' as devtools show log;
-
-
-// Future<String> getUserRating(String userId) async {
-//   double totalRating = 0.0;
-//   int ratingCount = 0;
-
-//   try {
-//     // Fetch all ratings where the user is the rated one
-//     QuerySnapshot ratingsSnapshot = await FirebaseFirestore.instance
-//         .collection('ratings')
-//         .where('rated_user_id', isEqualTo: userId)
-//         .get();
-
-//     if (ratingsSnapshot.docs.isEmpty) {
-//       return "0.0"; // Return "0.0" if no ratings found
-//     }
-
-//     for (var doc in ratingsSnapshot.docs) {
-//       totalRating += (doc['rating'] as num).toDouble();
-//       ratingCount++;
-//     }
-
-//     // Calculate the average rating
-//     double averageRating = ratingCount > 0 ? totalRating / ratingCount : 0.0;
-
-//     return averageRating.toString(); // Convert to string before returning
-//   } catch (e) {
-//     print('Error fetching user rating: $e');
-//     return "0.0"; // Return "0.0" in case of an error
-//   }
-// }
-
-// class PostService {
-//   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-//   static const int pageSize = 6; // Number of posts per page
-//   DocumentSnapshot? _lastDocument;
-
-//   Future<List<Map<String, dynamic>>> getAvailablePosts({bool loadMore = false}) async {
-//     try {
-//       DateTime currentTime = DateTime.now();
-//       Query query = _firestore
-//           .collection('posts')
-//           .where('status', isEqualTo: 'available')
-//           .where('expiry_date_time', isGreaterThan: Timestamp.fromDate(currentTime))
-//           .orderBy('expiry_date_time', descending: false)
-//           .limit(pageSize);
-
-//       if (loadMore && _lastDocument != null) {
-//         query = query.startAfterDocument(_lastDocument!);
-//       }
-
-//       QuerySnapshot querySnapshot = await query.get();
-//       if (querySnapshot.docs.isNotEmpty) {
-//         _lastDocument = querySnapshot.docs.last;
-//       }
-
-//       List<Map<String, dynamic>> posts = [];
-
-//       for (var doc in querySnapshot.docs) {
-//         var data = doc.data() as Map<String, dynamic>;
-//         data['id'] = doc.id; // Include document ID if needed
-
-//         // Fetch user details for each post
-//         if (data.containsKey('user_id')) {
-//           DocumentSnapshot userSnapshot =
-//               await _firestore.collection('users').doc(data['user_id']).get();
-
-//           if (userSnapshot.exists) {
-//             data['user'] = userSnapshot.data(); // Store user data inside the post
-//             // Fetch and store user rating
-//             data['user_rating'] = await getUserRating(data['user_id']);
-//           }
-//         }
-
-//         posts.add(data);
-//       }
-
-//       return posts;
-//     } catch (e) {
-//       devtools.log('Error fetching posts: $e');
-//       return [];
-//     }
-//   }
-// }
-
-
-// import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'dart:developer' as devtools;
-
-// class PostService {
-//   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-//   static const int pageSize = 6; // Number of posts per page
-//   DocumentSnapshot? _lastDocument;
-//   final Map<String, Map<String, dynamic>> _userCache = {}; // ✅ Cache to avoid redundant queries
-
-//   Future<String> getUserRating(String userId) async {
-//     double totalRating = 0.0;
-//     int ratingCount = 0;
-
-//     try {
-//       QuerySnapshot ratingsSnapshot = await _firestore
-//           .collection('ratings')
-//           .where('rated_user_id', isEqualTo: userId)
-//           .get();
-
-//       if (ratingsSnapshot.docs.isEmpty) {
-//         return "0.0"; // Return default rating
-//       }
-
-//       for (var doc in ratingsSnapshot.docs) {
-//         totalRating += (doc['rating'] as num).toDouble();
-//         ratingCount++;
-//       }
-
-//       double averageRating = ratingCount > 0 ? totalRating / ratingCount : 0.0;
-//       return averageRating.toString();
-//     } catch (e) {
-//       devtools.log('Error fetching user rating: $e');
-//       return "0.0"; // Return default rating in case of an error
-//     }
-//   }
-
-//   Future<List<Map<String, dynamic>>> getAvailablePosts({bool loadMore = false}) async {
-//     try {
-//       DateTime currentTime = DateTime.now();
-//       Query query = _firestore
-//           .collection('posts')
-//           .where('status', isEqualTo: 'available')
-//           .where('expiry_date_time', isGreaterThan: Timestamp.fromDate(currentTime))
-//           .orderBy('expiry_date_time', descending: false)
-//           .limit(pageSize);
-
-//       if (loadMore && _lastDocument != null) {
-//         query = query.startAfterDocument(_lastDocument!);
-//       }
-
-//       QuerySnapshot querySnapshot = await query.get();
-//       if (querySnapshot.docs.isNotEmpty) {
-//         _lastDocument = querySnapshot.docs.last;
-//       }
-
-//       List<Map<String, dynamic>> posts = [];
-
-//       // ✅ Process each post efficiently
-//       for (var doc in querySnapshot.docs) {
-//         var data = doc.data() as Map<String, dynamic>;
-//         data['id'] = doc.id;
-
-//         if (data.containsKey('user_id')) {
-//           String userId = data['user_id'];
-
-//           // ✅ Check Cache before making a Firestore call
-//           if (!_userCache.containsKey(userId)) {
-//             var userFuture = _firestore.collection('users').doc(userId).get();
-//             var ratingFuture = getUserRating(userId);
-
-//             var results = await Future.wait([userFuture, ratingFuture]);
-
-//             // ✅ Proper casting to avoid 'exists' error
-//             DocumentSnapshot userSnapshot = results[0] as DocumentSnapshot;
-//             if (userSnapshot.exists) {
-//               _userCache[userId] = userSnapshot.data() as Map<String, dynamic>;
-//             }
-//             _userCache[userId]?['user_rating'] = results[1];
-//           }
-
-//           data['user'] = _userCache[userId] ?? {};
-//           data['user_rating'] = _userCache[userId]?['user_rating'] ?? "0.0";
-//         }
-
-//         posts.add(data);
-//       }
-
-//       return posts;
-//     } catch (e) {
-//       devtools.log('Error fetching posts: $e');
-//       return [];
-//     }
-//   }
-// }
-
-
-// import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'dart:developer' as devtools;
 
 // class PostService {
@@ -309,6 +125,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:developer' as devtools;
 
+import 'package:donornet/services%20and%20provider/map_service.dart';
+
 class PostService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static const int pageSize = 10; // Number of posts per page
@@ -426,4 +244,62 @@ class PostService {
       return [];
     }
   }
+
+
+  
+  Future<List<Map<String, dynamic>>> getPostWithUserDetails(String postId) async {
+  List<Map<String, dynamic>> postDetailsList = [];
+
+  try {
+    // Fetch post details
+    DocumentSnapshot postSnapshot =
+        await _firestore.collection('posts').doc(postId).get();
+
+    if (!postSnapshot.exists) {
+      print("Post not found");
+      return [];
+    }
+
+    Map<String, dynamic> postData = postSnapshot.data() as Map<String, dynamic>;
+
+    // Fetch user details
+    String userId = postData['user_id'];
+    DocumentSnapshot userSnapshot =
+        await _firestore.collection('users').doc(userId).get();
+
+    if (!userSnapshot.exists) {
+      print("User not found");
+      return [];
+    }
+
+    Map<String, dynamic> userData = userSnapshot.data() as Map<String, dynamic>;
+
+    // Fetch user rating
+    String userRating = await getUserRating(userId);
+
+    // Calculate distance (only if 'location' exists and is a GeoPoint)
+    double? distance;
+    if (postData['location'] != null && postData['location'] is GeoPoint) {
+      GeoPoint postLocation = postData['location'];
+      distance = await MapService().calculateDistance(postLocation);
+    } else {
+      print("Invalid location data for post: $postId");
+      distance = null; // Default to null if location is missing or invalid
+    }
+
+    // Merge post, user details, rating, and distance
+    postDetailsList.add({
+      "post": postData,
+      "user": userData,
+      "rating": userRating, // ✅ Store user rating
+      "distance": distance, // ✅ Store distance in km (null if invalid)
+    });
+
+  } catch (e) {
+    print("Error fetching post and user details: $e");
+  }
+
+  return postDetailsList;
+}
+
 }

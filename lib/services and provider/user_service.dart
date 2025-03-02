@@ -18,6 +18,9 @@ class UserService {
   // Get current user ID
   String? get currentUserId => _auth.currentUser?.uid;
   
+  bool isCurrentUser(String userIdToCheck) {
+  return currentUserId == userIdToCheck;
+  }
 
   // Fetch user details from Firestore
   Future<Map<String, dynamic>?> getUserDetails() async {

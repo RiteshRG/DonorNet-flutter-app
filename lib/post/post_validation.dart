@@ -130,7 +130,7 @@ if (!isMatch) {
 // Step 1️⃣: Check if the title matches any detected labels
 bool titleMatch = isTitleMatch(title, detectedLabels);
 if (!titleMatch) {
-  showErrorDialog(context, "The title should be relevant to the image content.");
+  showErrorDialog(context, "The title should be relevant to the image content. Consider using words that best describe the image.\n\nSuggested keywords: $detectedLabels.");
   return false;
 }
 

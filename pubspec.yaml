@@ -45,6 +45,7 @@ dependencies:
   geolocator: ^13.0.2
   flutter_map: ^8.0.0
   latlong2: ^0.9.1
+  url_launcher: ^6.0.20
   uuid: ^4.5.1
   qr_flutter: ^4.1.0
   path_provider: ^2.1.5
@@ -85,7 +86,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/icons/logo.svg
+    - assets/icons/logo.png
     - assets/icons/filter.svg  
     - assets/icons/search.svg     
     - assets/icons/add.svg

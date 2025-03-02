@@ -4,7 +4,7 @@ import 'package:donornet/services%20and%20provider/user_provider.dart';
 import 'package:donornet/materials/access_throught_link.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
 import 'package:donornet/views/home%20page/drawer.dart';
-import 'package:donornet/views/post%20details/post_details.dart';
+import 'package:donornet/views/post%20details/User_post_details.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -275,11 +275,11 @@ class _Profile_pageState extends State<Profile_page> {
       
       return GestureDetector(
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => UserPostDetailPage(),
-          ),
-        );
+        // Navigator.of(context).push(
+        //   MaterialPageRoute(
+        //     builder: (context) => UserPostDetailPage(),
+        //   ),
+        // );
       },
       child: Container(
         decoration: BoxDecoration(

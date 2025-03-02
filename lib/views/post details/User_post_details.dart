@@ -1,43 +1,82 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/materials/app_colors.dart';
+import 'package:donornet/services%20and%20provider/map_service.dart';
+import 'package:donornet/services%20and%20provider/post_service.dart';
 import 'package:donornet/services%20and%20provider/user_provider.dart';
+import 'package:donornet/utilities/shimmer_loading.dart';
 import 'package:donornet/views/qr_code_page.dart';
 import 'package:donornet/views/update_post_page.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'dart:developer' as devtools;
 
 class UserPostDetailPage extends StatefulWidget {
-  const UserPostDetailPage({super.key});
+  final String postId;
+  const UserPostDetailPage(this.postId, {Key? key}) : super(key: key);
 
   @override
   State<UserPostDetailPage> createState() => _UserPostDetailPageState();
 }
 
 class _UserPostDetailPageState extends State<UserPostDetailPage> {
-  String postTitle = "Used Cricket Bat and Ball – Still Playable!";
-  String postDescription = "Used cricket bat and ball in good condition. Suitable for practice or casual play. Please message before picking up";
-  String postImage = "https://thumbs.dreamstime.com/b/cricket-bat-ball-26570619.jpg";
-   String pickupDate = "16 - Feb - 2025";
-   String pickupTime = "8:42 PM";
-   String distance = "1 Km";
-   String postDate = "16 Feb";
-   String rating = "4.5";
-  // String map = "";
+String title = "";
+  String profile = "";
+  String description = "";
+  String imageUrl = "";
+  String userName = "";
+  String userRating = "0.0";
+  double? distance;
+  DateTime? createdAt;
+  GeoPoint? postLocation;
+  bool isLoading = true;
 
-
-      @override
+  @override
   void initState() {
     super.initState();
-    // Fetch user data when the screen is initialized
-    Provider.of<UserProvider>(context, listen: false).fetchUserDetails();
+    fetchPostDetails();
   }
+
+  Future<void> fetchPostDetails() async {
+    try {
+      List<Map<String, dynamic>> data = await PostService().getPostWithUserDetails(widget.postId);
+      if (data.isNotEmpty) {
+        var postData = data.first;
+
+        setState(() {
+          title = postData['post']['title'] ?? "No Title";
+          description = postData['post']['description'] ?? "No Description";
+          imageUrl = postData['post']['image_url'] ?? ""; // Ensure it doesn't break
+          userName = "${postData['user']['first_name']} ${postData['user']['last_name']}";
+          userRating = postData['rating'] ?? "0.0";
+          distance = double.parse(postData['distance'].toStringAsFixed(1));
+          createdAt = (postData['post']['created_at'] as Timestamp).toDate(); 
+          profile = postData['user']['profile_image'];
+          postLocation = postData['post']['location'];
+          devtools.log("${postLocation!.latitude}");
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print("Error fetching post details: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context);
-    final userData = userProvider.userData;
-    final isLoading = userProvider.isLoading;
+    // final userProvider = Provider.of<UserProvider>(context);
+    // final userData = userProvider.userData;
+    // final isLoading = userProvider.isLoading;
     return Scaffold(
-      body: Stack(
+      body: isLoading ? BuildShimmerEffect() : Stack(
         children: [
           SingleChildScrollView(
             child: Column(
@@ -45,12 +84,25 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
               children: [
                 Stack(
                   children: [
-                    Image.network(
-                      '${postImage}',
-                      height: 300,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
+                     imageUrl.isNotEmpty
+                    ? Image.network(
+                        imageUrl,
+                        height: 300,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.image_not_supported, // Image error icon
+                            size: 100,
+                            color: Colors.grey,
+                          );
+                        },
+                      )
+                    : const Icon(
+                        Icons.image, // Default image icon when no URL is available
+                        size: 100,
+                        color: Colors.grey,
+                      ),
                     Positioned(
                       top: 40,
                       left: 16,
@@ -94,7 +146,7 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                        Text(
-                       "${postTitle}",
+                       "${title}",
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -102,7 +154,7 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '${distance} · ${postDate}',
+                         '${distance}km · ${createdAt != null ? DateFormat("d MMM").format(createdAt!) : 'Unknown'}',
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.grey[600],
@@ -110,7 +162,7 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        '${postDescription}',
+                        '${description}',
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.grey[600],
@@ -132,7 +184,7 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  '${pickupDate}\n${pickupTime}',
+                                   '${createdAt != null ? DateFormat("d - MMM - yyyy").format(createdAt!) : 'Unknown'}\n${createdAt != null ? DateFormat("h:mm a").format(createdAt!) : "Unknown"}',
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: Colors.grey[600],
@@ -148,15 +200,20 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
                         children: [
                            CircleAvatar(
                             radius: 20,
-                            backgroundImage: userData != null && userData['profile_image'] != null
-                      ? NetworkImage(userData['profile_image']): null,
+                            backgroundImage: (profile != null && profile!.isNotEmpty)
+                                ? NetworkImage(profile!)
+                                : null, // No image if profile is null or empty
+                            child: (profile == null || profile!.isEmpty)
+                                ? Icon(Icons.person, size: 20, color: Colors.white) // Default icon
+                                : null,
+                            backgroundColor: Colors.grey[400], // Optional background color
                           ),
                           const SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                                Text(
-                                '${userData?['first_name']} ${userData?['last_name']}',
+                                '${userName}',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -166,7 +223,7 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
                                 children:  [
                                   Icon(Icons.star, size: 16, color: Colors.amber),
                                   SizedBox(width: 4),
-                                  Text('${rating}'),
+                                  Text('${userRating}'),
                                 ],
                               ),
                             ],
@@ -178,11 +235,13 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
                         height: 200,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          image: const DecorationImage(
-                            image: NetworkImage('https://i.postimg.cc/fLXWMhrs/Whats-App-Image-2025-02-16-at-18-50-00-9cc44a98.jpg'),
-                            fit: BoxFit.cover,
-                          ),
                         ),
+                        child: postLocation != null
+                      ? MapBoxMapView(
+                          latitude: postLocation!.latitude,
+                          longitude: postLocation!.longitude,
+                        )
+                      : Center(child: Text("Location not available")),
                       ),
                     ],
                   ),
@@ -237,7 +296,58 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            backgroundColor: const Color.fromARGB(255, 209, 62, 62), // Set background color
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10), // Rounded corners
+                            ),
+                            title: Column(
+                              children: [
+                                // Logo image
+                              Icon(
+                                  Icons.delete, // Replace with the desired icon from the Icons class
+                                  size: 50, // Set the size of the icon
+                                  color: Colors.white, // Set the color of the icon
+                                ),
+                                SizedBox(height: 10),
+                                // Title text
+                                Text(
+                                  "Delete",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            content: Text(
+                              'Are you sure you want to delete this post? This action cannot be undone.', // Dynamic message
+                              style: TextStyle(color: Colors.white, fontSize: 15),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  
+                                   Navigator.of(context).pushNamedAndRemoveUntil(
+                                    'homePageRoute', // Replace with your home page route name
+                                    (route) => false, // Remove all previous routes
+                                  );
+                                },
+                                child: Text(
+                                  "OK",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent, // Make button background transparent
                       shadowColor: Colors.transparent, // Remove shadow effect
@@ -256,7 +366,7 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
                     ),
                   ),
                 ),
-                
+                SizedBox(height: 20,)
               ],
             ),
           ),

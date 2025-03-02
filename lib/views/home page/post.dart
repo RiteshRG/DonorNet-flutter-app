@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/materials/app_colors.dart';
+import 'package:donornet/services%20and%20provider/user_service.dart';
+import 'package:donornet/views/post%20details/User_post_details.dart';
+import 'package:donornet/views/post%20details/post_details_page.dart';
 import 'package:donornet/views/user_profile.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as devtools show log;
@@ -34,6 +37,20 @@ class PostCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
+        UserService userService = UserService();
+        if (userService.isCurrentUser(user['userId']?? 'Unknown')) {
+          devtools.log("User can edit/delete this post.");
+           Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => UserPostDetailPage(post['postId'])),
+          );
+        } else {
+          devtools.log("User can only view this post.");
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => PostDetailsPage(post['postId'])),
+          );
+        }
         print('post clicked');
       },
       child: Container(
