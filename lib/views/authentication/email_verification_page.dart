@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/services%20and%20provider/OTP_service.dart';
-import 'package:donornet/utilities/access_throught_link.dart';
+import 'package:donornet/materials/access_throught_link.dart';
 
 import 'package:donornet/utilities/loading_indicator.dart';
 import 'package:donornet/utilities/show_dialog.dart';

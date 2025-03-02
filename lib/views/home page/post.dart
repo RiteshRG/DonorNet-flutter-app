@@ -11,8 +11,6 @@ class PostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ Extract and ensure correct data types
-      devtools.log('*******************PostCard');
     final String title = post['title'] ?? 'Untitled';
     final String imageUrl = post['image_url'] ?? '';
     final DateTime createdAt = post['created_at'] is Timestamp
@@ -30,9 +28,9 @@ class PostCard extends StatelessWidget {
     final String profileImage = user['profile_image'] ?? '';
     final String user_rating = post['user_rating']?? '';
 
-    // 🔍 Debugging log
-     devtools.log("Post Data Types: ${post}");
-    devtools.log("Post Data Types: ${user['user_rating']}");
+    // // 🔍 Debugging log
+    //  devtools.log("Post Data Types: ${post}");
+    // devtools.log("Post Data Types: ${user['user_rating']}");
 
     return GestureDetector(
       onTap: () {
@@ -74,7 +72,7 @@ class PostCard extends StatelessWidget {
                               width: double.infinity,
                               color: Colors.grey[300],
                               child: const Icon(
-                                Icons.broken_image,
+                                Icons.image,
                                 size: 50,
                                 color: Colors.grey,
                               ),
@@ -141,16 +139,18 @@ class PostCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.only(left: 40.5, top: 3),
+                  padding: EdgeInsets.only(left: 35.5, top: 3, right: 5),
                   alignment: Alignment.centerLeft,
-                  child: FittedBox(
-                    child: Text("$title",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400
-                      ),
+                  child: Text(
+                    "$title",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
                     ),
-                  ),
+                    overflow: TextOverflow.ellipsis,  // Adds ellipsis when text overflows
+                    maxLines: 1,  // Optional: limits to one line of text
+                  )
+
                 )
               ],
             ),
@@ -210,6 +210,13 @@ class PostCard extends StatelessWidget {
                       height: 35,
                       width: 35,
                       fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => ClipOval( // ✅ Corrected from "lipOval" to "ClipOval"
+                        child: Icon(
+                          Icons.person, // Placeholder icon when image fails to load
+                          size: 35,
+                          color: Colors.grey,
+                        ),
+                      ),
                     ),
                   ),
                 ),

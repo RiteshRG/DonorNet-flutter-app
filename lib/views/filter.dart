@@ -1,8 +1,11 @@
 import 'package:donornet/materials/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:developer' as devtools show log;
 
 // Function to show filter bottom sheet
-void showFilterBottomSheet(BuildContext context) {
+void showFilterBottomSheet(BuildContext context, Function refreshPageCallback) async {
+  final filters = await loadFilters(); // Load saved filters
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -11,36 +14,64 @@ void showFilterBottomSheet(BuildContext context) {
       initialChildSize: 0.8,
       minChildSize: 0.5,
       maxChildSize: 0.95,
-      builder: (_, controller) => FilterBottomSheet(),
+      builder: (_, controller) => FilterBottomSheet(
+        initialDistance: filters['distance'],
+        initialCategories: filters['categories'],
+        refreshPageCallback: refreshPageCallback,
+      ),
     ),
   ).then((result) {
     if (result != null) {
-      print('Selected Distance: ${result['distance']}');
-      print('Selected Categories: ${result['categories']}');
+      devtools.log('Selected Distance: ${result['distance']}');
+      devtools.log('Selected Categories: ${result['categories']}');
     }
   });
 }
 
+
+// Function to Save Filters in SharedPreferences
+Future<void> saveFilters(String distance, List<String> categories) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('selected_distance', distance);
+  await prefs.setStringList('selected_categories', categories);
+}
+
+// Function to Load Filters from SharedPreferences
+Future<Map<String, dynamic>> loadFilters() async {
+  final prefs = await SharedPreferences.getInstance();
+  String distance = prefs.getString('selected_distance') ?? '∞';
+  List<String> categories = prefs.getStringList('selected_categories') ?? ['All'];
+  return {'distance': distance, 'categories': categories};
+}
+
+
 class FilterBottomSheet extends StatefulWidget {
+  final String initialDistance;
+  final List<String> initialCategories;
+  final Function refreshPageCallback;
+
+  FilterBottomSheet({required this.initialDistance, required this.initialCategories,  required this.refreshPageCallback,});
+
   @override
   _FilterBottomSheetState createState() => _FilterBottomSheetState();
 }
 
 class _FilterBottomSheetState extends State<FilterBottomSheet> {
-  String selectedDistance = '∞';
-  Set<String> selectedCategories = {'All'};
+  late String selectedDistance;
+  late Set<String> selectedCategories;
 
-  final List<String> distances = ['∞', '1Km', '5Km', '10Km'];
+  final List<String> distances = ['infinity', '1', '5', '10', '20', '50', '100'];
   final List<String> categories = [
-    'All',
-    'Food',
-    'Toys',
-    'Clothing and Textiles',
-    'Footwear',
-    'Furniture',
-    'Sports Equipment',
-    'Pet Supplies'
+    'All', 'Food', 'Footwear', 'Furniture', 'Toy',
+    'Pet Supply', 'Clothing and Textile', 'Sports Equipment', 'Stationery'
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    selectedDistance = widget.initialDistance;
+    selectedCategories = widget.initialCategories.toSet();
+  }
 
   void _handleDistanceSelection(String distance) {
     setState(() {
@@ -54,7 +85,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
         if (selectedCategories.contains('All')) {
           selectedCategories.clear();
         } else {
-          selectedCategories = Set.from(['All']);
+          selectedCategories = {'All'};
         }
       } else {
         if (selectedCategories.contains('All')) {
@@ -89,25 +120,21 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       padding: EdgeInsets.all(16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start, // Align everything to left
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Title Bar
-          SizedBox(height: 10,),
+          SizedBox(height: 10),
           Stack(
-            alignment: Alignment.center, // Center the title
+            alignment: Alignment.center,
             children: [
               Center(
                 child: Text(
                   'Filters',
-                  style: TextStyle(
-                    fontSize: 20,
-                   
-                    color: AppColors.secondaryColor,
-                  ),
+                  style: TextStyle(fontSize: 20, color: AppColors.secondaryColor),
                 ),
               ),
               Positioned(
-                right: 0, // Keep close button at the right
+                right: 0,
                 child: IconButton(
                   icon: Icon(Icons.close, color: Colors.black54),
                   onPressed: () => Navigator.pop(context),
@@ -115,14 +142,11 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
               ),
             ],
           ),
-          SizedBox(height: 5,),
+          SizedBox(height: 5),
           Divider(),
 
           // Distance Filter
-          Text(
-            'Maximum Distance',
-            style: TextStyle(fontSize: 16, ),
-          ),
+          Text('Maximum Distance', style: TextStyle(fontSize: 16)),
           SizedBox(height: 10),
           Wrap(
             spacing: 8,
@@ -142,11 +166,9 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                         : [],
                   ),
                   child: Text(
-                    distance,
+                    distance == "infinity" ? "∞" : "$distance km",
                     style: TextStyle(
-                      color: selectedDistance == distance
-                          ? Colors.white
-                          : Colors.black,
+                      color: selectedDistance == distance ? Colors.white : Colors.black,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -159,10 +181,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           SizedBox(height: 24),
 
           // Category Filter
-          Text(
-            'Categories',
-            style: TextStyle(fontSize: 16, ),
-          ),
+          Text('Categories', style: TextStyle(fontSize: 16)),
           SizedBox(height: 10),
           Wrap(
             spacing: 8,
@@ -184,9 +203,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                   child: Text(
                     category,
                     style: TextStyle(
-                      color: selectedCategories.contains(category)
-                          ? Colors.white
-                          : Colors.black,
+                      color: selectedCategories.contains(category) ? Colors.white : Colors.black,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -201,36 +218,41 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           // Apply Button
           Center(
             child: SizedBox(
-              width: double.infinity, // Make button full width
+              width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context, {
-                    'distance': selectedDistance,
-                    'categories': selectedCategories.toList(),
-                  });
+                   String storedDistance = selectedDistance == "∞" ? "infinity" : selectedDistance;
+                  saveFilters(storedDistance, selectedCategories.toList()); // Save filters
+                  widget.refreshPageCallback();
+                  Navigator.pop(context, {});
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(200),
-                  ),
-                  padding: EdgeInsets.symmetric(vertical: 12), // Remove horizontal padding
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(200)),
+                  padding: EdgeInsets.symmetric(vertical: 12),
                   elevation: 5,
                 ),
                 child: Text(
                   'Apply Filters',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white, // Ensure text is white
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ),
-            )
+            ),
           ),
         ],
       ),
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
 

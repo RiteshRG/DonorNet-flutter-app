@@ -21,7 +21,7 @@ import 'package:donornet/views/qr_code_page.dart';
 import 'package:donornet/views/rating_page.dart';
 import 'package:donornet/views/search/search_page.dart';
 import 'package:donornet/views/search/search_post_page.dart';
-import 'package:donornet/views/test/test.dart';
+import 'package:donornet/services%20and%20provider/detect_image_labels_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';

@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:donornet/services%20and%20provider/internet_checker.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
 import 'package:donornet/views/home%20page/drawer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:donornet/utilities/access_throught_link.dart';
+import 'package:donornet/materials/access_throught_link.dart';
 import 'package:donornet/materials/app_colors.dart';
 
 
@@ -16,6 +17,7 @@ class _MyLevelPageState extends State<MyLevelPage> {
   int currentPoints = 0;
   int currentLevel = 0;
   bool isLoading = false; // Loading state
+  bool isConnected = true; 
 
   final List<Map<String, dynamic>> levels = [
     {'level': 1, 'points': 10},
@@ -33,9 +35,26 @@ class _MyLevelPageState extends State<MyLevelPage> {
   @override
   void initState() {
     super.initState();
+      _checkInternetStatus();
+     InternetChecker.init((bool connected) {
+      setState(() {
+        isConnected = connected;
+      });
+    });
     fetchUserPoints();
     updateLevel();
   }
+
+  void dispose() {
+    InternetChecker.dispose();
+    super.dispose();
+  }
+
+    Future<void> _checkInternetStatus() async {
+    isConnected = await InternetChecker.hasInternet();
+    setState(() {});
+  }
+
 
    Future<void> fetchUserPoints() async {
     try {
@@ -75,6 +94,11 @@ class _MyLevelPageState extends State<MyLevelPage> {
     updateLevel(); 
     isLoading = false; // Hide loading indicator
   });
+
+   Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => MyLevelPage()), // Replace with your page
+  );
 }
 
 
@@ -144,7 +168,7 @@ void updateLevel() {
       ),
       drawer: CustomDrawer(),
       backgroundColor: Colors.white,
-      body: Stack(
+      body: !isConnected ? _buildNoInternetWidget(): Stack(
         children: [
 
           RefreshIndicator(
@@ -220,11 +244,19 @@ void updateLevel() {
             child: Row(
               mainAxisSize: MainAxisSize.min, // Keeps content compact
               children: [
-                Image.network(
+               Image.network(
                   '${AccessLink.coinGolden}',  
                   height: 22,
                   width: 22,
-                ), // Coin icon
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      Icons.copyright_outlined, // Fallback icon
+                      size: 22,
+                      color: Colors.grey, // Optional color
+                    );
+                  },
+                ),
+ // Coin icon
                 SizedBox(width: 10),
                 Text(
                   '${currentPoints}', // Replace with actual points variable
@@ -239,6 +271,52 @@ void updateLevel() {
       ),
     );
   }
+
+      // Widget for "No Internet Connection"
+ Widget _buildNoInternetWidget() {
+  return Center(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.wifi_off, size: 60, color: const Color.fromARGB(128, 38, 182, 122)),
+        SizedBox(height: 8),
+        Text(
+          "No Internet Connection",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: const Color.fromARGB(128, 38, 182, 122)),
+        ),
+        SizedBox(height: 4),
+        Text(
+          "Please check your connection and try again.",
+          style: TextStyle(fontSize: 14, color: const Color.fromARGB(146, 158, 158, 158)),
+        ),
+        SizedBox(height: 16),
+        ElevatedButton.icon(
+          onPressed: () async {
+            bool isConnected = await InternetChecker.hasInternet();
+            if (isConnected) {
+              // Restart the page
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => MyLevelPage()), // Replace with your actual page
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Still no internet connection. Please try again later."),backgroundColor:const Color.fromARGB(255, 222, 78, 78)),
+              );
+            }
+          },
+          icon: Icon(Icons.refresh, color: Colors.white,),
+          label: Text("Retry"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color.fromARGB(255, 38, 182, 122), // Button color
+            foregroundColor: Colors.white, // Text & icon color
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 
   Widget _buildCurrentLevel() {
     return Column(
@@ -257,6 +335,13 @@ void updateLevel() {
                     AccessLink.getLevelImage(currentLevel),
                     height: 120,
                     width: 120,
+                    errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      Icons.emoji_events_outlined, // Fallback icon
+                      size: 120,
+                      color: Colors.grey, // Optional color
+                    );
+                  },
                   ),
           ],
         ),
@@ -316,6 +401,13 @@ void updateLevel() {
                   AccessLink.getLevelImage(level['level']),
                   height: 50,
                   width: 50,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      Icons.emoji_events_rounded, // Fallback icon
+                      size: 50,
+                      color: Colors.grey, // Optional color
+                    );
+                  },
                 ),
                 const SizedBox(width: 16),
                 Text(
@@ -327,6 +419,13 @@ void updateLevel() {
                   '${AccessLink.coinBlack}',  
                   height: 22,
                   width: 22,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      Icons.copyright_outlined, // Fallback icon
+                      size: 22,
+                      color: const Color.fromARGB(255, 183, 139, 18), // Optional color
+                    );
+                  },
                 ),
                 const SizedBox(width: 16),
                 Text(

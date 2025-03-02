@@ -1,5 +1,5 @@
 import 'package:donornet/materials/app_colors.dart';
-import 'package:donornet/utilities/access_throught_link.dart';
+import 'package:donornet/materials/access_throught_link.dart';
 import 'package:donornet/views/authentication/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';

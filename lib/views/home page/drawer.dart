@@ -90,7 +90,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
         leading: Icon(Icons.auto_graph_rounded, color: CustomDrawer.leadingColor),
         title: Text('My Levels', style: TextStyle(color: CustomDrawer.leadingColor)),
         onTap: () {
-          Navigator.of(context).pushNamed('myLevelPageRoute');
+          Navigator.pushNamed(context, 'myLevelPageRoute');
         },
       ),
       ListTile(

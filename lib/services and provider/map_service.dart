@@ -155,22 +155,93 @@ class MapService {
     return distanceInMeters / 1000; // Convert meters to kilometers
   }
 
+  /// Sorts posts by distance and filters them based on the selected distance.
   List<Map<String, dynamic>> sortPostsByDistance(
-      Position userPosition, List<Map<String, dynamic>> posts) {
+      Position userPosition, List<Map<String, dynamic>> posts, String selectedDistance) {
+    
+    double maxDistance = _getMaxDistanceFromString(selectedDistance);
+
+    // Create a new list to store posts within the selected distance
+    List<Map<String, dynamic>> filteredPosts = [];
+
     for (var post in posts) {
       if (post.containsKey('location') && post['location'] is GeoPoint) {
-        // ✅ Convert distance to string with 1 decimal place
+        // Calculate the distance from the user to the post
         double distance = calculateDistance(userPosition, post['location']);
-        post['distance_km'] = distance.toStringAsFixed(1); // Store as String
+        post['distance_km'] = distance.toStringAsFixed(1); // Store the distance as a string with 1 decimal place
+
+        // Add the post to the filtered list if it's within the selected distance
+        if (distance <= maxDistance) {
+          filteredPosts.add(post);
+        }
       } else {
-        post['distance_km'] = "9999.9"; // Set a very high distance if location is missing
+        // If no location is available, set a very high distance or skip the post
+        post['distance_km'] = "9999.9"; // Assign a large value to posts without location
+        filteredPosts.add(post); // Add to filtered list if needed, or just skip this post
       }
     }
 
-    // ✅ Sort posts by parsed distance
-    posts.sort((a, b) => double.parse(a['distance_km'])
+    // Sort the filtered posts by distance
+    filteredPosts.sort((a, b) => double.parse(a['distance_km'])
         .compareTo(double.parse(b['distance_km'])));
 
-    return posts;
+    return filteredPosts;
+  }
+
+  /// Convert the selected distance string to a numeric value in kilometers.
+  double _getMaxDistanceFromString(String selectedDistance) {
+    switch (selectedDistance) {
+      case '1':
+        return 1.0;
+      case '5':
+        return 5.0;
+      case '10':
+        return 10.0;
+      case '20':
+        return 20.0;
+      case '50':
+        return 50.0;
+      case '100':
+        return 100.0;
+      case 'infinity':
+        return double.infinity; // No distance limit (all posts are included)
+      default:
+        return double.infinity; // Default to 'infinity' if invalid value
+    }
   }
 }
+
+
+
+
+// class MapService {
+//   /// Calculates the distance between the user's location and a post's location in kilometers.
+//   double calculateDistance(Position userPosition, GeoPoint postLocation) {
+//     double distanceInMeters = Geolocator.distanceBetween(
+//       userPosition.latitude,
+//       userPosition.longitude,
+//       postLocation.latitude,
+//       postLocation.longitude,
+//     );
+//     return distanceInMeters / 1000; // Convert meters to kilometers
+//   }
+
+//   List<Map<String, dynamic>> sortPostsByDistance(
+//       Position userPosition, List<Map<String, dynamic>> posts) {
+//     for (var post in posts) {
+//       if (post.containsKey('location') && post['location'] is GeoPoint) {
+//         // ✅ Convert distance to string with 1 decimal place
+//         double distance = calculateDistance(userPosition, post['location']);
+//         post['distance_km'] = distance.toStringAsFixed(1); // Store as String
+//       } else {
+//         post['distance_km'] = "9999.9"; // Set a very high distance if location is missing
+//       }
+//     }
+
+//     // ✅ Sort posts by parsed distance
+//     posts.sort((a, b) => double.parse(a['distance_km'])
+//         .compareTo(double.parse(b['distance_km'])));
+
+//     return posts;
+//   }
+// }

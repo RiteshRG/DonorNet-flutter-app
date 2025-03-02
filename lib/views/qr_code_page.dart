@@ -1,5 +1,5 @@
 import 'package:donornet/materials/app_colors.dart';
-import 'package:donornet/utilities/access_throught_link.dart';
+import 'package:donornet/materials/access_throught_link.dart';
 import 'package:flutter/material.dart';
 
 class QRCodeScreen extends StatelessWidget {

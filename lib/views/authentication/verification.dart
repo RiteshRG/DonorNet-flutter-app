@@ -1,6 +1,6 @@
 
 import 'package:donornet/materials/app_colors.dart';
-import 'package:donornet/utilities/access_throught_link.dart';
+import 'package:donornet/materials/access_throught_link.dart';
 import 'package:donornet/utilities/show_dialog.dart';
 import 'package:donornet/views/authentication/login_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';

@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/utilities/show_dialog.dart';
-import 'package:donornet/views/test/test.dart';
+import 'package:donornet/services%20and%20provider/detect_image_labels_service.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:image_picker/image_picker.dart';
@@ -54,68 +54,8 @@ Future<bool> validateAndSubmitPost({
 
   // 3️⃣ Validate Title & Description (Advanced Restricted Word Check)
   List<String> restrictedWords = [
-  "gun", "weapon", "knife", "dagger", "bomb", "explosive", "firearm", "pistol", "rifle",  
-  "shotgun", "ammunition", "bullet", "grenade", "machete", "sword", "crossbow", "taser",  
-  "stun gun", "baton", "nunchaku", "brass knuckles", "pepper spray", "tear gas", "molotov",  
-  "landmine", "rocket launcher", "missile", "torpedo", "silencer", "assault rifle", "sniper",  
-
-  "illegal", "contraband", "counterfeit", "forged", "fraudulent", "stolen", "black market",  
-  "smuggled", "scam", "fake id", "human trafficking", "prostitution", "bribery",  
-  "extortion", "hijack", "kidnap", "ransom", "embezzlement", "hacking", "cybercrime",  
-  "money laundering", "terrorism", "gang", "cartel", "mafia", "drug cartel",  
-
-  "drugs", "cocaine", "heroin", "meth", "marijuana", "weed", "ecstasy", "lsd", "opioid",  
-  "fentanyl", "morphine", "crystal meth", "hashish", "psychedelic", "amphetamine", "steroids",  
-  "narcotic", "ketamine", "shrooms", "pills", "xanax", "adderall", "oxycontin",  
-  "mdma", "ghb", "lean", "codeine", "opium", "synthetic drugs", "bath salts", "dmt", "methaqualone",  
-  "herbal high", "k2", "spice", "cough syrup abuse",  
- 
-  "alcohol", "vodka", "whiskey", "rum", "tequila", "brandy", "beer", "wine", "moonshine",  
-  "cigarette", "tobacco", "vape", "e-cigarette", "cigar", "hookah", "shisha", "rolling paper",  
-  "nicotine", "e-liquid", "binge drinking", "alcohol poisoning", "drunk driving",  
- 
-  "poison", "toxic", "radioactive", "hazardous", "chemical weapon", "bioweapon", "cyanide",  
-  "arsenic", "mercury", "lead", "chloroform", "asbestos", "methanol", "napalm",  
-  "mustard gas", "sarin", "anthrax", "ricin", "nerve gas", "plutonium", "uranium",  
- 
-  "chainsaw", "razor blade", "shank", "fist weapon", "projectile", "slingshot",  
-  "explosive device", "firework", "torch", "acid", "flamethrower", "spike",  
-  "syringe", "needle", "sharp object", "garrote", "ballistic knife", "bayonet",  
-
-  "sex", "porn", "pornography", "nude", "naked", "strip", "stripper", "escort", "brothel",  
-  "erotic", "fetish", "bdsm", "bondage", "orgy", "masturbation", "vibrator", "dildo",  
-  "adult toy", "sex toy", "explicit", "xxx", "hardcore", "softcore", "onlyfans", "camgirl",  
-  "cam model", "webcam sex", "incest", "bestiality", "child porn", "cp", "pedo", "pedophile",  
-  "underage sex", "rape", "molestation", "abuse", "sexual assault", "prostitute", "escort service",  
-  "lingerie model", "sugar daddy", "sugar baby", "sexting", "lewd", "hentai", "smut", "cam show",  
-  "peeping tom", "voyeur", "flasher", "exhibitionist", "public indecency", "revenge porn",  
-  "grooming", "non-consensual", "date rape", "groping", "lewd act", "voyeurism",  
-
-  "self-harm", "suicide", "cutting", "burning", "choking", "asphyxiation",  
-  "bloodletting", "scarring", "pain olympics", "hanging", "overdose",  
-  "torture", "animal cruelty", "cockfight", "dogfight",  
-  "child abuse", "domestic violence", "human sacrifice", "organ harvesting",  
-
-  "doxxing", "blackmail", "sextortion", "cyberbullying", "phishing", "identity theft",  
-  "dark web", "illegal streaming", "hacking tools", "trojan", "ransomware",  
-  "deepfake porn", "catfishing", "scam site", "malware",  
-
-  "racial slur", "hate speech", "ethnic cleansing", "genocide", "supremacy",  
-  "white power", "nazi", "kkk", "neo-nazi", "hate crime", "bigotry", "xenophobia",  
-  "homophobia", "transphobia", "misogyny", "sexist",  
- 
-  "credit card fraud", "money mule", "identity fraud", "fake passport", "fake visa",  
-  "counterfeit currency", "pyramid scheme", "ponzi scheme", "wire fraud",  
-
-  "child labor", "child abuse", "human smuggling", "forced labor", "grooming",  
-  "underage exploitation", "child soldier", "orphans for sale",  
- 
-  "dog fighting", "cock fighting", "animal cruelty", "illegal betting", "fixed match",  
-  "race fixing", "blood sport",  
- 
-  "black magic", "voodoo", "satanic ritual", "witchcraft", "sorcery", "cursed item",  
-  "human sacrifice", "necromancy",  
-];
+    'gun', 'weapon', 'knife', 'dagger', 'bomb', 'explosive', 'firearm', 'pistol', 'rifle', 'shotgun', 'ammunition', 'bullet', 'grenade', 'machete', 'sword', 'crossbow', 'taser', 'stun gun', 'baton', 'nunchaku', 'brass knuckles', 'pepper spray', 'tear gas', 'molotov', 'landmine', 'rocket launcher', 'missile', 'torpedo', 'silencer', 'assault rifle', 'sniper', 'illegal', 'contraband', 'counterfeit', 'forged', 'fraudulent', 'stolen', 'black market', 'smuggled', 'scam', 'fake id', 'human trafficking', 'prostitution', 'bribery', 'extortion', 'hijack', 'kidnap', 'ransom', 'embezzlement', 'hacking', 'cybercrime', 'money laundering', 'terrorism', 'gang', 'cartel', 'mafia', 'drug cartel', 'drugs', 'cocaine', 'heroin', 'meth', 
+  'marijuana', 'weed', 'ecstasy', 'lsd', 'opioid', 'fentanyl', 'morphine', 'crystal meth', 'hashish', 'psychedelic', 'amphetamine', 'steroids', 'narcotic', 'ketamine', 'shrooms', 'pills', 'xanax', 'adderall', 'oxycontin', 'mdma', 'ghb', 'lean', 'codeine', 'opium', 'synthetic drugs', 'bath salts', 'dmt', 'methaqualone', 'herbal high', 'k2', 'spice', 'cough syrup abuse', 'alcohol', 'vodka', 'whiskey', 'rum', 'tequila', 'brandy', 'beer', 'wine', 'moonshine', 'cigarette', 'tobacco', 'vape', 'e-cigarette', 'cigar', 'hookah', 'shisha', 'rolling paper', 'nicotine', 'e-liquid', 'binge drinking', 'alcohol poisoning', 'drunk driving', 'poison', 'toxic', 'radioactive', 'hazardous', 'chemical weapon', 'bioweapon', 'cyanide', 'arsenic', 'mercury', 'lead', 'chloroform', 'asbestos', 'methanol', 'napalm', 'mustard gas', 'sarin', 'anthrax', 'ricin', 'nerve gas', 'plutonium', 'uranium', 'chainsaw', 'razor blade', 'shank', 'fist weapon', 'projectile', 'slingshot', 'explosive device', 'firework', 'torch', 'acid', 'flamethrower', 'spike', 'syringe', 'needle', 'sharp object', 'garrote', 'ballistic knife', 'bayonet', 'sex', 'porn', 'pornography', 'nude', 'naked', 'strip', 'stripper', 'escort', 'brothel', 'erotic', 'fetish', 'bdsm', 'bondage', 'orgy', 'masturbation', 'vibrator', 'dildo', 'adult toy', 'sex toy', 'explicit', 'xxx', 'hardcore', 'softcore', 'onlyfans', 'camgirl', 'cam model', 'webcam sex', 'incest', 'bestiality', 'child porn', 'cp', 'pedo', 'pedophile', 'underage sex', 'rape', 'molestation', 'abuse', 'sexual assault', 'prostitute', 'escort service', 'lingerie model', 'sugar daddy', 'sugar baby', 'sexting', 'lewd', 'hentai', 'smut', 'cam show', 'peeping tom', 'voyeur', 'flasher', 'exhibitionist', 'public indecency', 'revenge porn', 'grooming', 'non-consensual', 'date rape', 'groping', 'lewd act', 'voyeurism', 'self-harm', 'suicide', 'cutting', 'burning', 'choking', 'asphyxiation', 'bloodletting', 'scarring', 'pain olympics', 'hanging', 'overdose', 'torture', 'animal cruelty', 'cockfight', 'dogfight', 'child abuse', 'domestic violence', 'human sacrifice', 'organ harvesting', 'doxxing', 'blackmail', 'sextortion', 'cyberbullying', 'phishing', 'identity theft', 'dark web', 'illegal streaming', 'hacking tools', 'trojan', 'ransomware', 'deepfake porn', 'catfishing', 'scam site', 'malware', 'racial slur', 'hate speech', 'ethnic cleansing', 'genocide', 'supremacy', 'white power', 'nazi', 'kkk', 'neo-nazi', 'hate crime', 'bigotry', 'xenophobia', 'homophobia', 'transphobia', 'misogyny', 'sexist', 'credit card fraud', 'money mule', 'identity fraud', 'fake passport', 'fake visa', 'counterfeit currency', 'pyramid scheme', 'ponzi scheme', 'wire fraud', 'child labor', 'human smuggling', 'forced labor', 'underage exploitation', 'child soldier', 'orphans for sale', 'dog fighting', 'cock fighting', 'illegal betting', 'fixed match', 'race fixing', 'blood sport', 'black magic', 'voodoo', 'satanic ritual', 'fuck', 'witchcraft', 'milf', 'sorcery', 'cursed item', 'necromancy', 'bhanchod', 'gand', 'gandmar', 'chutiya', 'randi', 'madarchod', 'behenchod', 'lanat', 'kutti', 'bhenki', 'jhaant', 'chikni', 'gandu', 'patli gali', 'gaali', 'bakka', 'saala', 'madharchod', 'fake', 'banned', 'unauthorized', 'restricted', 'adult', 'intimate', 'sensual', 'lingerie', 'blood', 'sperm', 'organs', 'human tissue', 'plasma', 'bone marrow', 'medicine', 'weapons', 'explosives', 'hazardous materials', 'pussy', 'boobs', 'boob', 'dick', 'penis', 'vagina', 'clit', 'breasts', 'nipples', 'butt', 'ass', 'anus', 'cock', 'bitch', 'slut', 'whore', 'fucker', 'shit', 'bastard', 'cunt', 'nigga', 'nigger', 'chink', 'spic', 'fag', 'faggot', 'tranny', 'retard', 'gook', 'wetback', 'simp', 'thot', 'fuckboy', 'hoe', 'bussy', 'stfu', 'lmao', 'roast', 'yeet', 'lit', 'deadass', 'sus', 'cap', 'no cap', 'finna', 'clout', 'stan', 'cringe', 'slay', 'vibe check', 'slaps', 'capper', 'bae', 'fam', 'mc', 'bc', 'banger', 'skrrt', 'woke', 'cancelled', 'flamed', 'twerk', 'booty'];
 
    bool containsRestrictedWords(String text) {
     String cleanText = text.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');

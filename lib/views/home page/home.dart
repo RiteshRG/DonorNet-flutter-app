@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/materials/app_colors.dart';
+import 'package:donornet/services%20and%20provider/internet_checker.dart';
 import 'package:donornet/services%20and%20provider/map_service.dart';
 import 'package:donornet/services%20and%20provider/post_service.dart';
 import 'package:donornet/services%20and%20provider/user_service.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
+import 'package:donornet/utilities/shimmer_loading.dart';
 import 'package:donornet/utilities/show_dialog.dart';
 import 'package:donornet/views/filter.dart';
 import 'package:donornet/views/home%20page/drawer.dart';
@@ -22,10 +24,11 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>  {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   String search = "";
 
   final PostService _postService = PostService();
@@ -33,56 +36,103 @@ class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> _posts = [];
   bool _isLoading = true;
   bool _isFetchingMore = false;
+  bool _isConnected = true;
+
+   String selectedDistance = "infinity";
+  List<String> selectedCategories = ["All"];
 
   @override
   void initState() {
     super.initState();
+     _checkInternetStatus();
     _deleteExpiredPosts();
     _fetchPosts();
     _searchController.addListener(_onSearchChanged);
     print("Current input: ${_searchController.text}");
+     _scrollController.addListener(_onScroll);
+    _loadFilters();
+     // Listen for real-time network changes
+    InternetChecker.init((bool isConnected) {  // ✅ Updated Function Signature
+      setState(() {
+        _isConnected = isConnected;
+      });
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
+    InternetChecker.dispose();
     super.dispose();
   }
 
-   Future<void> _fetchPosts({bool loadMore = false}) async {
-    if (loadMore && _isFetchingMore) return;
+   Future<void> _loadFilters() async {
+    final filters = await loadFilters();
+    setState(() {
+      selectedDistance = filters['distance'];
+      selectedCategories = List<String>.from(filters['categories']);
+    });
+  }
+
+   void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 100) {
+      _fetchPosts(loadMore: true); // ✅ Load more posts when reaching bottom
+    }
+  }
+
+Future<void> _fetchPosts({bool loadMore = false}) async {
+  if (loadMore && _isFetchingMore) return;
+
+  setState(() {
+    _isFetchingMore = loadMore;
+  });
+
+  Position? position;
+  try {
+    position = await Geolocator.getCurrentPosition();
+  } catch (e) {
+    devtools.log("Error fetching location: $e");
+  }
+
+ devtools.log('fetch   ${selectedCategories}');
+  // Fetch posts (which now include user details)
+  List<Map<String, dynamic>> newPosts = await _postService.getAvailablePosts(loadMore: loadMore,
+      selectedCategories: selectedCategories);
+
+  if (newPosts.isNotEmpty) {
+    if (position != null) {
+       devtools.log("dis  filter $selectedDistance");
+      newPosts = _mapService.sortPostsByDistance(position, newPosts, selectedDistance);
+    }
 
     setState(() {
-      _isFetchingMore = loadMore;
+      if (loadMore) {
+        _posts.addAll(newPosts); // ✅ Append instead of replacing
+      } else {
+        _posts = newPosts; // ✅ Replace only on first load or refresh
+      }
+      _isLoading = false;
+      _isFetchingMore = false;
     });
 
-    Position position = await Geolocator.getCurrentPosition();
-    
-    // Fetch posts (which now include user details)
-    List<Map<String, dynamic>> newPosts = await _postService.getAvailablePosts();
-
-    if (newPosts.isNotEmpty) {
-      // Ensure location exists before sorting
-      newPosts = _mapService.sortPostsByDistance(position, newPosts);
-
-      setState(() {
-        _posts = newPosts;  // ✅ Replace instead of adding
-        // _posts.addAll(newPosts);
-        _isLoading = false;
-        _isFetchingMore = false;
-      });
-
-      for (var i = 0; i < _posts.length; i++) {
-  devtools.log("Post $i Data Types: ${_posts[i].map((key, value) => MapEntry(key, value.runtimeType))}");
+    // Debugging: Log each post's data type
+    for (var i = 0; i < _posts.length; i++) {
+      devtools.log("Post $i Data Types: ${_posts}");
+    }
+  } else {
+    setState(() {
+      if (!loadMore) _posts = []; // ✅ Clear only on first load
+      _isLoading = false;
+      _isFetchingMore = false;
+    });
+  }
 }
 
-    } else {
-      setState(() {
-        _posts = [];  // ✅ Clear posts if no data
-        _isLoading = false;
-        _isFetchingMore = false;
-      });
-    }
+
+    Future<void> _checkInternetStatus() async {
+    _isConnected = await InternetChecker.hasInternet();
+    setState(() {});
   }
 
   // Function to delete expired posts
@@ -94,6 +144,7 @@ class _HomePageState extends State<HomePage> {
    Future<void> _refreshPage() async {
     if (!mounted) return; 
     await _deleteExpiredPosts(); 
+    _loadFilters();
      setState(() {
     _isLoading = true;  // ✅ Show loading indicator
   });
@@ -109,7 +160,7 @@ class _HomePageState extends State<HomePage> {
 
 
 void _openFilterBottomSheet() {
-  showFilterBottomSheet(context); // Call the filter bottom sheet function
+  showFilterBottomSheet(context, _refreshPage); // Call the filter bottom sheet function
 }
 
   @override
@@ -326,51 +377,37 @@ void _openFilterBottomSheet() {
                         color: const Color.fromARGB(255, 255, 255, 255),
                         child: _isLoading
                             ? LoadingIndicator(isLoading: _isLoading)
-                            : _posts.isEmpty
-                                ? Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min, // Centers content vertically
-                                children: [
-                                  Opacity(
-                                    opacity: 0.8, // Adjust this value (0.0 to 1.0) for desired transparency
-                                    child: Image.network(
-                                      'https://i.postimg.cc/zBpTgcmX/mdi-donation.png', // Your image URL
-                                      width: 48, // Adjust width as needed
-                                      height: 48, // Adjust height as needed
-                                      color: Color.fromARGB(44, 35, 151, 103), // Apply color overlay
-                                    ),
-                                  ),
-                                  SizedBox(height: 8), // Spacing between image and text
-                                  Text(
-                                    "No posts available",
-                                    style: TextStyle(
-                                      fontSize: 18, 
-                                      fontWeight: FontWeight.bold, 
-                                      color: Color.fromARGB(44, 35, 151, 103),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-
+                            : !_isConnected
+                                ? _buildNoInternetWidget()
+                                : _posts.isEmpty
+                                    ?  _buildNoPostsWidget()
                                 : ListView.builder(
-                                    itemCount: _posts.length,
-                                    itemBuilder: (context, index) {
-                                      devtools.log("********${_posts.length}");
-                                      try {
-                                        devtools.log('*******************PostCard(post: _posts[index])');
-                                        return PostCard(post: _posts[index]);
-                                      } catch (e) {
-                                        devtools.log("Error rendering PostCard: $e");
-                                        return Center(
-                                          child: Text(
-                                            "Error loading post",
-                                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: const Color.fromARGB(255, 252, 252, 252)),
-                                          ),
-                                        );
-                                      }
-                                    },
-                                  ),
+                                controller: _scrollController,
+                                itemCount: _posts.length + (_isFetchingMore ? 1 : 0), // Extra item for loading
+                                itemBuilder: (context, index) {
+                                  if (index == _posts.length) {
+                                    // Show loading indicator at bottom while fetching more posts
+                                    return Center(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(10.0),
+                                        child: PostLoadingAnimation(), // Loading indicator
+                                      ),
+                                    );
+                                  }
+                                  try {
+                                    return PostCard(post: _posts[index]);
+                                  } catch (e) {
+                                    devtools.log("Error rendering PostCard: $e");
+                                    return Center(
+                                      child: Text(
+                                        "Error loading post",
+                                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+
                       ),
                     ),
                   ),
@@ -439,6 +476,96 @@ void _openFilterBottomSheet() {
       )),
     );
   }
+    // Widget for "No Internet Connection"
+  Widget _buildNoInternetWidget() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.wifi_off, size: 60, color:  const Color.fromARGB(128, 38, 182, 122)),
+          SizedBox(height: 8),
+          Text(
+            "No Internet Connection",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color:const Color.fromARGB(128, 38, 182, 122)),
+          ),
+          SizedBox(height: 4),
+          Text("Please check your connection and try again.", style: TextStyle(fontSize: 14, color: const Color.fromARGB(146, 158, 158, 158))),
+            SizedBox(height: 16),
+        ElevatedButton.icon(
+          onPressed: () async {
+            bool isConnected = await InternetChecker.hasInternet();
+            if (isConnected) {
+              // Restart the page
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => HomePage()), // Replace with your actual page
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Still no internet connection. Please try again later."),backgroundColor:const Color.fromARGB(255, 222, 78, 78)),
+              );
+            }
+          },
+          icon: Icon(Icons.refresh, color: Colors.white,),
+          label: Text("Retry"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color.fromARGB(255, 38, 182, 122), // Button color
+            foregroundColor: Colors.white, // Text & icon color
+          ),
+        ),
+        ],
+      ),
+    );
+  }
+
+  // Widget for "No Posts Available"
+  Widget _buildNoPostsWidget() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.post_add, size: 60, color: const Color.fromARGB(128, 38, 182, 122)),
+          SizedBox(height: 8),
+          Text(
+            "No posts available",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: const Color.fromARGB(128, 38, 182, 122)),),SizedBox(height: 16),
+            ElevatedButton.icon(
+          onPressed: () async {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => HomePage()), // Replace with your actual page
+              );
+          },
+          icon: Icon(Icons.refresh, color: Colors.white,),
+          label: Text("Refresh"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color.fromARGB(255, 38, 182, 122), // Button color
+            foregroundColor: Colors.white, // Text & icon color
+          ),
+        ),
+        ],
+      ),
+    );
+  }
 }
 
-
+                    
+                                // : ListView.builder(
+                                //    controller: _scrollController,
+                                //     itemCount: _posts.length+1,
+                                //     itemBuilder: (context, index) {
+                                //       devtools.log("********${_posts.length}");
+                                //       try {
+                                //         devtools.log('*******************PostCard(post: _posts[index])');
+                                //         return PostCard(post: _posts[index]);
+                                //       } catch (e) {
+                                //         devtools.log("Error rendering PostCard: $e");
+                                //         return Center(
+                                //           child: Text(
+                                //             "Error loading post",
+                                //             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: const Color.fromARGB(255, 252, 252, 252)),
+                                //           ),
+                                //         );
+                                //       }
+                                //     },
+                                //   ),
