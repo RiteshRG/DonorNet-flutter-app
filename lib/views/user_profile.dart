@@ -1,19 +1,16 @@
+import 'package:donornet/materials/access_throught_link.dart';
 import 'package:donornet/materials/app_colors.dart';
+import 'package:donornet/services%20and%20provider/post_service.dart';
+import 'package:donornet/services%20and%20provider/user_service.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
 import 'package:donornet/views/home%20page/drawer.dart';
+import 'package:donornet/views/post%20details/post_details_page.dart';
 import 'package:flutter/material.dart';
 
 class UserProfile extends StatefulWidget {
-  final String profileImage;
-  final String name;
-  final String rating;
+  final String userId;
 
-  const UserProfile({
-    Key? key,
-    required this.profileImage,
-    required this.name,
-    required this.rating,
-  }) : super(key: key);
+   const UserProfile({Key? key, required this.userId}) : super(key: key);
 
 
   @override
@@ -22,14 +19,52 @@ class UserProfile extends StatefulWidget {
 
 class _UserProfileState extends State<UserProfile> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  
+  Map<String, dynamic>? userDetails; // ✅ Use nullable variable
+  bool isLoading = false;
+  late Future<List<Map<String, dynamic>>> _futurePosts;
+  late Future<List<String>> claimedPost;
+
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      drawer: CustomDrawer(),
-      body: Stack(
-        children: [
+  void initState() {
+    super.initState();
+     _futurePosts = PostService().fetchAvailablePosts(widget.userId);
+    claimedPost = PostService().getClaimedPostImages(widget.userId);
+    _fetchUserData();
+  }
+
+  void _fetchUserData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final fetchedUserDetails = await UserService().fetchUserDetailsAndLevel(widget.userId);
+
+      if (mounted) {
+        setState(() {
+          userDetails = fetchedUserDetails; // ✅ Ensure safe assignment
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error fetching user data: $e');
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    key: _scaffoldKey,
+    drawer: CustomDrawer(),
+    body: Stack(
+      children: [
+        if (isLoading)
+          Center(child: LoadingIndicator(isLoading: true))
+        else
           Column(
             children: [
               // Profile Header Section
@@ -48,11 +83,14 @@ class _UserProfileState extends State<UserProfile> {
                       Container(
                         height: 280,
                         width: double.infinity,
-                        child:Image.network(
-                            "${widget.profileImage}", // Load from Firebase or any URL
-                            opacity: AlwaysStoppedAnimation(0.1),
-                            fit: BoxFit.cover,
-                          )
+                        child: userDetails?['profile_image'] != null &&
+                                userDetails!['profile_image'].isNotEmpty
+                            ? Image.network(
+                                userDetails!['profile_image'],
+                                opacity: AlwaysStoppedAnimation(0.1),
+                                fit: BoxFit.cover,
+                              )
+                            : SizedBox(),
                       ),
                       Column(
                         children: [
@@ -62,18 +100,16 @@ class _UserProfileState extends State<UserProfile> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 InkWell(
-                                  onTap: (){
-                                      Navigator.pop(context);
+                                  onTap: () {
+                                    Navigator.pop(context);
                                   },
-                                  child: Icon(Icons.arrow_back, color: Color.fromARGB(255, 255, 255, 255)),
+                                  child: Icon(Icons.arrow_back, color: Colors.white),
                                 ),
                                 InkWell(
-                                  onTap: (){
-                                      _scaffoldKey.currentState?.openDrawer();
+                                  onTap: () {
+                                    _scaffoldKey.currentState?.openDrawer();
                                   },
-                                  child: Icon(Icons.menu,
-                                color: Colors.white,
-                                ),
+                                  child: Icon(Icons.menu, color: Colors.white),
                                 ),
                               ],
                             ),
@@ -84,46 +120,54 @@ class _UserProfileState extends State<UserProfile> {
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: const Color.fromARGB(255, 197, 223, 212), // White border color
-                                    width: 2.0, // Border thickness
+                                    color: const Color.fromARGB(255, 197, 223, 212),
+                                    width: 2.0,
                                   ),
                                 ),
-                                child:  CircleAvatar(
-                                    radius: 50,
-                                    backgroundImage: NetworkImage(widget.profileImage),
-                                  )
+                                child: userDetails != null && userDetails!['profile_image'] != null
+                                    ? CircleAvatar(
+                                        radius: 50,
+                                        backgroundImage: NetworkImage(userDetails!['profile_image']),
+                                      )
+                                    : CircleAvatar(
+                                        radius: 50,
+                                        child: Icon(Icons.person, size: 50),
+                                      ),
                               ),
                               Positioned(
-                                right: -4,
-                                top: -4,
-                                child: Container(
-                                  height: 40,
-                                  width: 40,
-                                  padding: EdgeInsets.all(1),
-                                  decoration: BoxDecoration(
-                                    color: const Color.fromARGB(0, 255, 153, 0),
-                                    borderRadius: BorderRadius.all(Radius.circular(100)),
-                                     boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1), // Shadow color
-                                        spreadRadius: 0, // How much the shadow spreads
-                                        blurRadius: 0.5, // How blurry the shadow is
-                                        offset: Offset(0, 3), // Shadow position (x, y)
+                              right: -4,
+                              top: -4,
+                              child: (userDetails != null && userDetails!["level"] != null && userDetails!["level"] > 0)
+                                  ? Container(
+                                      height: 40,
+                                      width: 40,
+                                      padding: EdgeInsets.all(1),
+                                      decoration: BoxDecoration(
+                                        color: Colors.transparent,
+                                        borderRadius: BorderRadius.all(Radius.circular(100)),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.1),
+                                            spreadRadius: 0,
+                                            blurRadius: 0.5,
+                                            offset: Offset(0, 2),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                  child: Image.asset(
-                                    'assets/level_1-removebg-preview.png',
-                                    height: 40,
-                                  width: 40,
-                                  ),
-                                ),
-                              ),
+                                      child: Image.network(
+                                        AccessLink.getLevelImage(userDetails!['level']), // Dynamically load correct level image
+                                        height: 40,
+                                        width: 40,
+                                      ),
+                                    )
+                                  : SizedBox(), // Empty widget if level is 0 or null
+                            ),
+
                             ],
                           ),
                           SizedBox(height: 12),
                           Text(
-                            '${widget.name}',
+                            '${userDetails?['first_name'] ?? 'User'} ${userDetails?['last_name'] ?? 'Name'}',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 20,
@@ -135,13 +179,13 @@ class _UserProfileState extends State<UserProfile> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'Level 1',
+                                'Level ${userDetails?['level'] ?? ' '}',
                                 style: TextStyle(color: Colors.white70),
                               ),
                               SizedBox(width: 8),
                               Icon(Icons.star, size: 16, color: Colors.amber),
                               Text(
-                                '  ${widget.rating}',
+                                '  ${userDetails?['rating'] ?? ''}',
                                 style: TextStyle(color: Colors.white70),
                               ),
                             ],
@@ -152,7 +196,6 @@ class _UserProfileState extends State<UserProfile> {
                   ),
                 ),
               ),
-          
               // Tabs Section
               Expanded(
                 child: DefaultTabController(
@@ -166,7 +209,7 @@ class _UserProfileState extends State<UserProfile> {
                         ],
                         labelColor: AppColors.primaryColor,
                         unselectedLabelColor: Colors.grey,
-                        indicatorColor:  AppColors.secondaryColor,
+                        indicatorColor: AppColors.secondaryColor,
                       ),
                       Expanded(
                         child: TabBarView(
@@ -182,75 +225,111 @@ class _UserProfileState extends State<UserProfile> {
               ),
             ],
           ),
-         // LoadingIndicator(isLoading: isLoading,loaderColor: const Color.fromARGB(255, 235, 72, 72)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDonationsGrid(String section) {
-    return  GridView.builder(
-    padding: EdgeInsets.all(8),
-    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: 3,
-      mainAxisSpacing: 8,
-      crossAxisSpacing: 8,
+      ],
     ),
-    itemCount: 3, // Show 2 images
-    itemBuilder: (context, index) {
-      List<String> imageUrls = [
-        'https://storage.needpix.com/rsynced_images/old-jeans-3589262_1280.jpg',
-        'https://i.etsystatic.com/8620333/r/il/43095d/1184899900/il_570xN.1184899900_71l0.jpg',
-        'https://tse4.mm.bing.net/th?id=OIP.rnfpkchacq1HmYS6oiY3NwHaJ4&pid=Api&P=0&h=180'
-      ];
-      
-      return GestureDetector(
-      onTap: () {
-      
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: Image.network(
-            imageUrls[index],
-            fit: BoxFit.cover,
-          ),
-        ),
-      ),
-    );
-    },
   );
+}
+
+  
+  Widget _buildDonationsGrid(String section) {
+     return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _futurePosts,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+           return LoadingIndicator(isLoading: true);
+        }
+        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(child: Text('No available posts'));
+        }
+
+        List<Map<String, dynamic>> posts = snapshot.data!;
+        return GridView.builder(
+          padding: EdgeInsets.all(8),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+          ),
+          itemCount: posts.length,
+          itemBuilder: (context, index) {
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PostDetailsPage( posts[index]['postId'])),
+                );
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: Image.network(
+                    posts[index]['image_url'],
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   
   Widget _buildDonationsClaimedGrid(String section) {
-  return GridView.builder(
-    padding: EdgeInsets.all(8),
-    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: 3,
-      mainAxisSpacing: 8,
-      crossAxisSpacing: 8,
-    ),
-    itemCount: 1, // Show 2 images
-    itemBuilder: (context, index) {
-      List<String> imageUrls = [
-        'https://tse3.mm.bing.net/th?id=OIP.AkBJECD9LR5tjUnpIp1cfgHaFj&pid=Api&P=0&h=180',
-      ];
-      
-      return Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
+   return FutureBuilder<List<String>>(
+    future: claimedPost,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        // Show loading indicator while fetching data
+        return LoadingIndicator(isLoading: true);
+      }
+
+      if (snapshot.hasError) {
+        // Show an error message if fetching fails
+        return Center(child: Text("Failed to load images"));
+      }
+
+      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+        // Show a message if there are no claimed post images
+        return Center(child: Text("No claimed posts found"));
+      }
+
+      // Get the list of images
+      List<String> imageUrls = snapshot.data!;
+
+      return GridView.builder(
+        padding: EdgeInsets.all(8),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: Image.network(
-            imageUrls[index], // Display images dynamically
-            fit: BoxFit.cover,
-          ),
-        ),
+        itemCount: imageUrls.length, // Use the actual number of images
+        itemBuilder: (context, index) {
+          return Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Image.network(
+                imageUrls[index], // Display fetched images
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return LoadingIndicator(isLoading: true); // Show loading indicator for images
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(Icons.broken_image, size: 50, color: Colors.grey); // Show error icon if image fails to load
+                },
+              ),
+            ),
+          );
+        },
       );
     },
   );

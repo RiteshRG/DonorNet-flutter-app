@@ -34,6 +34,7 @@ class _AddItemPageState extends State<AddItemPage> {
   TimeOfDay? _expiryTime;
   bool isLoading = false;
   bool isProcessing = false; 
+    String imageUrl = "";
 
                       
   LatLng? selectedLocation;
@@ -359,6 +360,7 @@ class _AddItemPageState extends State<AddItemPage> {
                                 });
 
                                 bool isValid = await validateAndSubmitPost(
+                                  imageUrl: imageUrl,
                                   imageFile: _image,
                                   title: _titleController.text.trim(),
                                   description: _descriptionController.text.trim(),
@@ -368,6 +370,7 @@ class _AddItemPageState extends State<AddItemPage> {
                                   expiryDate: _expiryDate,
                                   expiryTime: _expiryTime,
                                   location: selectedLocation, 
+                                  task: 'add',
                                   context: context, 
                                 );
 

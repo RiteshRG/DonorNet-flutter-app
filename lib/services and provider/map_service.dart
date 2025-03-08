@@ -3,7 +3,12 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/api.dart';
 import 'package:donornet/materials/app_colors.dart';
+import 'package:donornet/services%20and%20provider/post_service.dart';
+import 'package:donornet/services%20and%20provider/user_service.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
+import 'package:donornet/utilities/show_dialog.dart';
+import 'package:donornet/views/post%20details/User_post_details.dart';
+import 'package:donornet/views/post%20details/post_details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -12,6 +17,250 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:developer' as devtools show log;
 
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
+
+
+class ShowMapService extends StatefulWidget {
+  const ShowMapService({super.key});
+
+  @override
+  State<ShowMapService> createState() => _ShowMapServiceState();
+}
+
+class _ShowMapServiceState extends State<ShowMapService> {
+  late Future<List<Map<String, dynamic>>> availablePosts;
+  Position? _currentPosition;
+  // final String mapboxAccessToken = "YOUR_MAPBOX_ACCESS_TOKEN";
+
+  @override
+  void initState() {
+    super.initState();
+    availablePosts = PostService().getAvailablePostsLocation(); // Use PostService
+    _getCurrentLocation();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.deniedForever) return;
+    }
+
+    Position position = await Geolocator.getCurrentPosition();
+    setState(() {
+      _currentPosition = position;
+    });
+  }
+
+void _showPostDetails(BuildContext context, Map<String, dynamic> post, Map<String, dynamic> posts) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    builder: (context) {
+      return GestureDetector(
+            onTap: () {
+              final DateTime expiryDate = posts["expiry_date_time"] is Timestamp
+              ? (posts["expiry_date_time"] as Timestamp).toDate()
+              : DateTime.now();
+              if (expiryDate.isAfter(DateTime.now())){
+              if (UserService().isCurrentUser(post['user_id']?? 'Unknown')) {
+                devtools.log("User can edit/delete this post.");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => UserPostDetailPage(post['postId'])),
+                );
+              } else {
+                devtools.log("User can only view this post.");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PostDetailsPage(post['postId'])),
+                );
+              }}else{
+                showExpiryDialog(context);
+              }
+            },
+        child: Container(
+          padding: EdgeInsets.all(15),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.black87, Colors.black54], // Dark gradient background
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Post Image
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  posts['image_url'],
+                  width: 120,
+                  height: 80,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Icon(Icons.image_not_supported, size: 80, color: Colors.white),
+                ),
+              ),
+              SizedBox(width: 15),
+              
+              // Post Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      posts['title'],
+                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    // SizedBox(height: 5),
+                    // Text(
+                    //   post['description'],
+                    //   style: TextStyle(color: Colors.white70, fontSize: 14),
+                    //   maxLines: 2,
+                    //   overflow: TextOverflow.ellipsis,
+                    // ),
+                    SizedBox(height: 10),
+                    FutureBuilder<double?>(
+                      future: MapService().calculateDistance(post['location']),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return Text(
+                            "📍 Calculating...",
+                            style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+                          );
+                        } else if (snapshot.hasError || snapshot.data == null) {
+                          return Text(
+                            "📍 -- km",
+                            style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+                          );
+                        } else {
+                          return Text(
+                            "📍 ${snapshot.data!.toStringAsFixed(2)} km",
+                            style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: availablePosts,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || _currentPosition == null) {
+          return const Center(child: LoadingIndicator(isLoading: true));
+        }
+
+        List<Marker> markers = snapshot.data!.map((post) {
+          GeoPoint location = post['location'];
+          return Marker(
+            point: LatLng(location.latitude, location.longitude),
+            width: 50,
+            height: 50,
+            child: ShaderMask(
+            shaderCallback: (bounds) {
+              return LinearGradient(
+                colors: [AppColors.primaryColor, AppColors.tertiaryColor],  
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ).createShader(bounds);
+            },
+            child: GestureDetector(
+              onTap: () async { // Ensure async is used for awaiting
+              Map<String, dynamic>? posts = await PostService().getPostDetailsForMapPopUp(post['postId']); 
+              if (posts != null) {
+                Timestamp expiryTimestamp = posts["expiry_date_time"];
+                DateTime expiryDate = expiryTimestamp.toDate(); // Convert Timestamp to DateTime
+                DateTime now = DateTime.now();
+
+                if (expiryDate.isBefore(now)) {
+                  // Post is expired, show dialog
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text("Post Expired"),
+                        content: Text("This post is no longer available as it has already expired."),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop(); // Close the dialog
+                            },
+                            child: Text("OK"),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                } else {
+                  // Post is still valid, show details
+                  _showPostDetails(context, post, posts);
+                }
+              }
+            },
+              child: Icon(
+              Icons.location_pin,
+              color: Colors.white,  
+              size: 50,
+            ),
+            ), 
+          ),
+          );
+        }).toList();
+
+        // Add user's current location marker
+        markers.add(
+          Marker(
+            point: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+            width: 30,
+            height: 30,
+            child: const Icon(
+              Icons.my_location,
+              color: Color.fromARGB(255, 0, 0, 0),
+              size: 30,
+            ),
+          ),
+        );
+
+        return FlutterMap(
+          options: MapOptions(
+            initialCenter: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+            initialZoom: 13.0,
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: "https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${APIKey.mapBox}",
+            ),
+            MarkerLayer(markers: markers),
+          ],
+        );
+      },
+    );
+  }
+}
+
 
 
 class MapLocationService extends StatefulWidget {

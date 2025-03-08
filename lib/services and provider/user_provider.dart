@@ -4,6 +4,7 @@ import 'package:donornet/utilities/show_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'dart:developer' as devtools show log;
 
 class UserProvider with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -58,30 +59,81 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Upload Profile Picture and Update Firestore
-  Future<void> updateProfilePicture(File imageFile, Map<String, dynamic> updatedData) async {
-    _isLoading = true;
-    notifyListeners();
+Future<List<Map<String, dynamic>>> fetchAvailablePosts() async {
+  try {
+    User? user = _auth.currentUser;
+    
+    QuerySnapshot querySnapshot = await _firestore
+        .collection('posts')
+        .where('status', isEqualTo: 'available')
+        .where('expiry_date_time', isGreaterThan: Timestamp.now())
+        .where('user_id', isEqualTo: user?.uid)
+        .orderBy('created_at', descending: true) // Sort by most recent
+        .get(const GetOptions(source: Source.serverAndCache)); // Use cache first, then update
 
-    try {
-      User? user = _auth.currentUser;
-      if (user == null) {
-        _errorMessage = "No authenticated user found.";
-      } else {
-        String filePath = 'profile_pictures/${user.uid}.jpg';
-        TaskSnapshot snapshot = await _storage.ref(filePath).putFile(imageFile);
-        String downloadURL = await snapshot.ref.getDownloadURL();
-        updatedData['profile_image'] = downloadURL;
-        await _firestore.collection('users').doc(user.uid).update(updatedData);
-        _userData = {...?_userData, ...updatedData};
-      }
-    } catch (e) {
-      _errorMessage = "Error updating profile: ${e.toString()}";
-    }
-
+    List<Map<String, dynamic>> posts = querySnapshot.docs.map((doc) {
+      return {
+        'image_url': doc['image_url'] ?? '',
+        'postId': doc['postId'] ?? '',
+      };
+    }).toList();
     _isLoading = false;
-    notifyListeners();
+    return posts;
+  } catch (e) {
+    debugPrint('Error fetching available posts: $e');
+    return [];
   }
+}
+
+Future<List<String>> getClaimedPostImages() async {
+  try {
+    User? user = _auth.currentUser;
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection('posts')
+        .where('user_id', isEqualTo: user?.uid) // Filter by userId
+        .where('status', isEqualTo: "claimed") // Only claimed posts
+        .orderBy('created_at', descending: true) // Order by newest first
+        .get();
+
+    // Extract only image_url from each document
+    List<String> imageUrls = querySnapshot.docs
+        .map((doc) => doc['image_url'] as String)
+        .where((url) => url.isNotEmpty) // Ensure URLs are valid
+        .toList();
+
+    return imageUrls;
+  } catch (e) {
+    print("Error fetching images: $e");
+    return [];
+  }
+}
+
+
+
+  // Upload Profile Picture and Update Firestore
+  // Future<void> updateProfilePicture(File imageFile, Map<String, dynamic> updatedData) async {
+  //   _isLoading = true;
+  //   notifyListeners();
+
+  //   try {
+  //     User? user = _auth.currentUser;
+  //     if (user == null) {
+  //       _errorMessage = "No authenticated user found.";
+  //     } else {
+  //       String filePath = 'profile_pictures/${user.uid}.jpg';
+  //       TaskSnapshot snapshot = await _storage.ref(filePath).putFile(imageFile);
+  //       String downloadURL = await snapshot.ref.getDownloadURL();
+  //       updatedData['profile_image'] = downloadURL;
+  //       await _firestore.collection('users').doc(user.uid).update(updatedData);
+  //       _userData = {...?_userData, ...updatedData};
+  //     }
+  //   } catch (e) {
+  //     _errorMessage = "Error updating profile: ${e.toString()}";
+  //   }
+
+  //   _isLoading = false;
+  //   notifyListeners();
+  // }
 
   // Fetch User Levels
   Future<void> fetchUserLevels(BuildContext context) async {

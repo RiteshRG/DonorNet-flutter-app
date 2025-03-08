@@ -79,6 +79,31 @@ class PostLoadingAnimation extends StatelessWidget {
   }
 }
 
+Widget buildShimmerGrid() {
+  return GridView.builder(
+    padding: EdgeInsets.all(8),
+    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: 3,
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
+    ),
+    itemCount: 6, // Number of shimmer placeholders
+    itemBuilder: (context, index) {
+      return Shimmer.fromColors(
+        baseColor: Colors.grey[300]!,
+        highlightColor: Colors.grey[100]!,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+
 
 class BuildShimmerEffect extends StatelessWidget {
   const BuildShimmerEffect({super.key});

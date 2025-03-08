@@ -23,6 +23,65 @@ Future<void> showErrorDialog(BuildContext context, String text) {
   );
 }
 
+void showExpiryDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        contentPadding: EdgeInsets.zero, // Remove default padding
+        backgroundColor: Colors.transparent, // Make dialog background transparent
+        content: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.primaryColor, AppColors.tertiaryColor], // Gradient colors
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(15), // Rounded corners
+          ),
+          padding: EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Post Expired",
+                style: TextStyle(
+                  color: Colors.white, // White text
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 10),
+              Text(
+                "This post is no longer available as it has already expired.",
+                style: TextStyle(color: Colors.white, fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 20),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close the dialog
+                },
+                child: Text(
+                  "OK",
+                  style: TextStyle(color: Colors.white),
+                ),
+                style: TextButton.styleFrom( // Button background
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+
 showSuccessDialog(BuildContext context, String text) {
   showDialog(
     context: context,

@@ -1,4 +1,5 @@
 import 'package:donornet/materials/app_colors.dart';
+import 'package:donornet/services%20and%20provider/map_service.dart';
 import 'package:flutter/material.dart';
 
 class MapPage extends StatefulWidget {
@@ -15,10 +16,7 @@ class _MapPageState extends State<MapPage> {
       body: Container(
         width: double.infinity, 
         height: double.infinity, 
-        child: Image.network(
-          'https://i.postimg.cc/0j3dWfpz/Whats-App-Image-2025-02-12-at-01-38-43-c912963a.jpg',
-          fit: BoxFit.cover, 
-        ),
+        child: ShowMapService()
       ),
 
       bottomNavigationBar: Container(

@@ -3,7 +3,9 @@ import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/services%20and%20provider/user_provider.dart';
 import 'package:donornet/materials/access_throught_link.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
+import 'package:donornet/utilities/shimmer_loading.dart';
 import 'package:donornet/views/home%20page/drawer.dart';
+import 'package:donornet/views/my_account_page.dart';
 import 'package:donornet/views/post%20details/User_post_details.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +18,8 @@ class Profile_page extends StatefulWidget {
 
 class _Profile_pageState extends State<Profile_page> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
+  late Future<List<Map<String, dynamic>>> _futurePosts;
+  late Future<List<String>> claimedPost;
 
     @override
   void initState() {
@@ -29,6 +32,8 @@ class _Profile_pageState extends State<Profile_page> {
       if (userProvider.userData != null && userProvider.userData!['uid'] != null) {
         userProvider.fetchUserRating(userProvider.userData!['uid']); 
       }
+       _futurePosts = UserProvider().fetchAvailablePosts();
+       claimedPost = UserProvider().getClaimedPostImages();
     });
   }
 
@@ -79,7 +84,18 @@ class _Profile_pageState extends State<Profile_page> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Icon(Icons.mode_edit_outline_outlined, color: Colors.white, size: 25,),
+                                 InkWell(
+                                  onTap: (){
+                                    Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => MyAccountPage()),
+                                    (Route<dynamic> route) => false, // Removes all previous routes
+                                  );
+                                  },
+                                  child:Icon(Icons.mode_edit_outline_outlined, color: Colors.white, size: 25,),
+
+                                ),
+                                
                                 InkWell(
                                   onTap: (){
                                       _scaffoldKey.currentState?.openDrawer();
@@ -114,20 +130,20 @@ class _Profile_pageState extends State<Profile_page> {
                               Positioned(
                                 right: -4,
                                 top: -4,
-                                child: userProvider.userLevel > 0 // Show only if level > 0
+                                child: userProvider.userLevel > 0 
                                     ? Container(
                                         height: 40,
                                         width: 40,
                                         padding: EdgeInsets.all(1),
                                         decoration: BoxDecoration(
-                                          color: Colors.transparent, // Transparent background
+                                          color: Colors.transparent, 
                                           borderRadius: BorderRadius.all(Radius.circular(100)),
                                           boxShadow: [
                                             BoxShadow(
                                               color: Colors.black.withOpacity(0.1), // Shadow color
                                               spreadRadius: 0, // How much the shadow spreads
                                               blurRadius: 0.5, // How blurry the shadow is
-                                              offset: Offset(0, 3), // Shadow position (x, y)
+                                              offset: Offset(0, 2), // Shadow position (x, y)
                                             ),
                                           ],
                                         ),
@@ -202,7 +218,7 @@ class _Profile_pageState extends State<Profile_page> {
               ),
             ],
           ),
-          LoadingIndicator(isLoading: isLoading,loaderColor: const Color.fromARGB(255, 235, 72, 72)),
+          LoadingIndicator(isLoading: isLoading),
         ],
       ),
       bottomNavigationBar: Container(
@@ -259,71 +275,104 @@ class _Profile_pageState extends State<Profile_page> {
   }
 
   Widget _buildDonationsGrid(String section) {
-    return  GridView.builder(
-    padding: EdgeInsets.all(8),
-    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: 3,
-      mainAxisSpacing: 8,
-      crossAxisSpacing: 8,
-    ),
-    itemCount: 2, // Show 2 images
-    itemBuilder: (context, index) {
-      List<String> imageUrls = [
-        'https://thumbs.dreamstime.com/b/cricket-bat-ball-26570619.jpg',
-        'https://staticcookist.akamaized.net/wp-content/uploads/sites/22/2023/06/iStock-1430271338.jpg',
-      ];
-      
-      return GestureDetector(
-      onTap: () {
-        // Navigator.of(context).push(
-        //   MaterialPageRoute(
-        //     builder: (context) => UserPostDetailPage(),
-        //   ),
-        // );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: Image.network(
-            imageUrls[index],
-            fit: BoxFit.cover,
+     return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _futurePosts,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+           return LoadingIndicator(isLoading: true);
+        }
+        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(child: Text('No available posts'));
+        }
+
+        List<Map<String, dynamic>> posts = snapshot.data!;
+        return GridView.builder(
+          padding: EdgeInsets.all(8),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
           ),
-        ),
-      ),
+          itemCount: posts.length,
+          itemBuilder: (context, index) {
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => UserPostDetailPage( posts[index]['postId'])),
+                );
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: Image.network(
+                    posts[index]['image_url'],
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
-    },
-  );
   }
 
   
   Widget _buildDonationsClaimedGrid(String section) {
-  return GridView.builder(
-    padding: EdgeInsets.all(8),
-    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: 3,
-      mainAxisSpacing: 8,
-      crossAxisSpacing: 8,
-    ),
-    itemCount: 1, // Show 2 images
-    itemBuilder: (context, index) {
-      List<String> imageUrls = [
-        'https://collectmyclothes.co.uk/wp-content/uploads/2019/11/donation.jpg',
-      ];
-      
-      return Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
+   return FutureBuilder<List<String>>(
+    future: Provider.of<UserProvider>(context, listen: false).getClaimedPostImages(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        // Show loading indicator while fetching data
+        return LoadingIndicator(isLoading: true);
+      }
+
+      if (snapshot.hasError) {
+        // Show an error message if fetching fails
+        return Center(child: Text("Failed to load images"));
+      }
+
+      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+        // Show a message if there are no claimed post images
+        return Center(child: Text("No claimed posts found"));
+      }
+
+      // Get the list of images
+      List<String> imageUrls = snapshot.data!;
+
+      return GridView.builder(
+        padding: EdgeInsets.all(8),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: Image.network(
-            imageUrls[index], // Display images dynamically
-            fit: BoxFit.cover,
-          ),
-        ),
+        itemCount: imageUrls.length, // Use the actual number of images
+        itemBuilder: (context, index) {
+          return Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Image.network(
+                imageUrls[index], // Display fetched images
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return LoadingIndicator(isLoading: true); // Show loading indicator for images
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(Icons.broken_image, size: 50, color: Colors.grey); // Show error icon if image fails to load
+                },
+              ),
+            ),
+          );
+        },
       );
     },
   );

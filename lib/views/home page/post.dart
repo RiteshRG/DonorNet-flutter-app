@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/services%20and%20provider/user_service.dart';
+import 'package:donornet/utilities/show_dialog.dart';
 import 'package:donornet/views/post%20details/User_post_details.dart';
 import 'package:donornet/views/post%20details/post_details_page.dart';
+import 'package:donornet/views/profile_page.dart';
 import 'package:donornet/views/user_profile.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as devtools show log;
@@ -20,7 +22,9 @@ class PostCard extends StatelessWidget {
         ? (post['created_at'] as Timestamp).toDate()
         : DateTime.now();
     final String formattedDate = DateFormat("d MMM").format(createdAt);
-
+      final DateTime expiryDate = post["expiry_date_time"] is Timestamp
+      ? (post["expiry_date_time"] as Timestamp).toDate()
+      : DateTime.now();
     // ✅ Handle distance safely
     final String distanceKm = post['distance_km']?.toString() ?? "N/A";
 
@@ -30,6 +34,7 @@ class PostCard extends StatelessWidget {
     final String lastName = user['last_name'] ?? '';
     final String profileImage = user['profile_image'] ?? '';
     final String user_rating = post['user_rating']?? '';
+    final String userId = user['userId'] ?? '';
 
     // // 🔍 Debugging log
     //  devtools.log("Post Data Types: ${post}");
@@ -37,8 +42,8 @@ class PostCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        UserService userService = UserService();
-        if (userService.isCurrentUser(user['userId']?? 'Unknown')) {
+        if (expiryDate.isAfter(DateTime.now())){
+        if (UserService().isCurrentUser(user['userId']?? 'Unknown')) {
           devtools.log("User can edit/delete this post.");
            Navigator.push(
             context,
@@ -50,6 +55,8 @@ class PostCard extends StatelessWidget {
             context,
             MaterialPageRoute(builder: (context) => PostDetailsPage(post['postId'])),
           );
+        }}else{
+          showExpiryDialog(context);
         }
         print('post clicked');
       },
@@ -193,16 +200,19 @@ class PostCard extends StatelessWidget {
               bottom: 42.5,
               child: GestureDetector(
                 onTap: () {
+                if (UserService().isCurrentUser(user['userId']?? 'Unknown')) {
+                  devtools.log("User can edit/delete this post.");
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => UserProfile(
-                        profileImage: profileImage,
-                        name: "$firstName $lastName",
-                        rating: user_rating
-                      ),
-                    ),
+                    MaterialPageRoute(builder: (context) => Profile_page()),
                   );
+                } else {
+                  devtools.log("User can only view this post.");
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UserProfile(userId: userId)),
+                  );
+                }  
                 },
                 child: Container(
                   margin: EdgeInsets.only(left: 18),

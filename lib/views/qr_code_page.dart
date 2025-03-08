@@ -3,7 +3,9 @@ import 'package:donornet/materials/access_throught_link.dart';
 import 'package:flutter/material.dart';
 
 class QRCodeScreen extends StatelessWidget {
-  const QRCodeScreen({super.key});
+  final String qrCode;
+  final String imageUrl;
+  const QRCodeScreen({required this.qrCode, required this.imageUrl});
 
   @override
   Widget build(BuildContext context) {
@@ -12,9 +14,17 @@ class QRCodeScreen extends StatelessWidget {
         children: [
           Positioned.fill(
             child: Image.network(
-              'https://thumbs.dreamstime.com/b/cricket-bat-ball-26570619.jpg', 
-              fit: BoxFit.cover,  // Covers the whole screen
-            ),
+              imageUrl,
+              fit: BoxFit.cover, // Covers the whole screen
+              errorBuilder: (context, error, stackTrace) {
+                return Icon(
+                  Icons.image, // Fallback icon when image fails to load
+                  size: 100,
+                  color: Colors.grey,
+                );
+              },
+            )
+
           ),
           Container(
             decoration: const BoxDecoration(
@@ -35,12 +45,15 @@ class QRCodeScreen extends StatelessWidget {
                     right: -20,
                     child: Opacity(
                     opacity: 0.7,
-                    child: Image.network(
+                    child:Image.network(
                           '${AccessLink.logoFlip}',
-                            height: 180,
-                            width: 180,
-                            fit: BoxFit.cover,
-                          ),
+                          height: 180,
+                          width: 180,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return SizedBox.shrink(); // Returns an empty widget if an error occurs
+                          },
+                        )
                       ),
                   ),
                   Positioned(
@@ -84,9 +97,16 @@ class QRCodeScreen extends StatelessWidget {
                         ],
                       ),
                       child: Image.network(
-                        'https://i.postimg.cc/qRdpHVGr/qr-code.png',
+                        qrCode,
                         fit: BoxFit.contain,
-                      ),
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.image, // Fallback icon when the image fails to load
+                            size: 100,
+                            color: Colors.grey,
+                          );
+                        },
+                      )
                     ),
                   ),
           

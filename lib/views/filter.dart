@@ -34,6 +34,8 @@ Future<void> saveFilters(String distance, List<String> categories) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setString('selected_distance', distance);
   await prefs.setStringList('selected_categories', categories);
+  devtools.log("Saved Distance: $distance");
+devtools.log("Saved Categories: ${categories.toList()}");
 }
 
 // Function to Load Filters from SharedPreferences

@@ -90,6 +90,7 @@ class _HomePageState extends State<HomePage>  {
 
   devtools.log('Fetching posts with selected categories: $selectedCategories');
 
+  await _loadFilters();
   // Fetch posts (which now include user details)
   List<Map<String, dynamic>> newPosts = await _postService.getAvailablePosts(
       loadMore: loadMore, selectedCategories: selectedCategories);
@@ -139,11 +140,10 @@ class _HomePageState extends State<HomePage>  {
    Future<void> _refreshPage() async {
     if (!mounted) return; 
     await _deleteExpiredPosts(); 
-    _loadFilters();
      setState(() {
     _isLoading = true;  // ✅ Show loading indicator
   });
-    await _fetchPosts();  // ✅ Wait for posts to refres
+    _fetchPosts();  // ✅ Wait for posts to refres
     if (!mounted) return;
   }
 

@@ -3,7 +3,9 @@ import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/services%20and%20provider/map_service.dart';
 import 'package:donornet/services%20and%20provider/post_service.dart';
 import 'package:donornet/services%20and%20provider/user_provider.dart';
+import 'package:donornet/services%20and%20provider/user_service.dart';
 import 'package:donornet/utilities/shimmer_loading.dart';
+import 'package:donornet/views/home%20page/home.dart';
 import 'package:donornet/views/qr_code_page.dart';
 import 'package:donornet/views/update_post_page.dart';
 import 'package:flutter/material.dart';
@@ -20,16 +22,19 @@ class UserPostDetailPage extends StatefulWidget {
 }
 
 class _UserPostDetailPageState extends State<UserPostDetailPage> {
-String title = "";
+  bool _isDeleting = false;
+  String title = "";
   String profile = "";
   String description = "";
   String imageUrl = "";
   String userName = "";
+  String postId = "";
   String userRating = "0.0";
   double? distance;
   DateTime? createdAt;
   GeoPoint? postLocation;
   bool isLoading = true;
+  String qrCode = "";
 
   @override
   void initState() {
@@ -42,8 +47,9 @@ String title = "";
       List<Map<String, dynamic>> data = await PostService().getPostWithUserDetails(widget.postId);
       if (data.isNotEmpty) {
         var postData = data.first;
-
+   
         setState(() {
+          postId = postData['post']['postId'];
           title = postData['post']['title'] ?? "No Title";
           description = postData['post']['description'] ?? "No Description";
           imageUrl = postData['post']['image_url'] ?? ""; // Ensure it doesn't break
@@ -53,6 +59,7 @@ String title = "";
           createdAt = (postData['post']['created_at'] as Timestamp).toDate(); 
           profile = postData['user']['profile_image'];
           postLocation = postData['post']['location'];
+          qrCode = postData['post']['qr_code_url'];
           devtools.log("${postLocation!.latitude}");
           isLoading = false;
         });
@@ -66,6 +73,25 @@ String title = "";
       setState(() {
         isLoading = false;
       });
+    }
+  }
+
+    Future<void> _deletePost() async {
+    setState(() {
+      _isDeleting = true; // Show loading
+    });
+
+    bool isDeleted = await UserService().deletePostById(context, postId);
+
+    setState(() {
+      _isDeleting = false; // Hide loading
+    });
+
+    if (isDeleted) {
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        'homePageRoute', // Replace with your home page route name
+        (route) => false, // Remove all previous routes
+      );
     }
   }
 
@@ -107,7 +133,16 @@ String title = "";
                       top: 40,
                       left: 16,
                       child: InkWell(
-                        onTap: () => Navigator.pop(context),
+                        onTap: () {if (Navigator.canPop(context)) {
+                          Navigator.pop(context);
+                        } else {
+                          // Show a message, prevent app from closing, or navigate elsewhere
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (context) => HomePage()),
+                            (route) => false, // Removes all previous routes
+                          );
+                        }},
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
@@ -123,11 +158,9 @@ String title = "";
                       right: 16,
                       child: InkWell(
                         onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => QRCodeScreen(), // Navigate to QR Code Screen
+                            context,
+                            MaterialPageRoute(builder: (context) => QRCodeScreen(qrCode: qrCode, imageUrl: imageUrl)),
                           ),
-                        ),
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
@@ -260,10 +293,12 @@ String title = "";
                   ),
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => UpadtePostPage()),
-                      );
+                     Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UpadtePostPage(postId: postId, postLocation: postLocation),
+                      ),
+                    );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent, // Make button background transparent
@@ -285,87 +320,121 @@ String title = "";
                 ),
 
                 Container(
-                  margin: EdgeInsets.only(top: 10, bottom: 10,left: 20, right: 20),
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [const Color.fromARGB(255, 201, 84, 84), const Color(0xFFff5e5e)], // Customize your gradient colors
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            backgroundColor: const Color.fromARGB(255, 209, 62, 62), // Set background color
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10), // Rounded corners
+      margin: EdgeInsets.only(top: 10, bottom: 10, left: 20, right: 20),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color.fromARGB(255, 201, 84, 84),
+            const Color(0xFFff5e5e),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: ElevatedButton(
+        onPressed: _isDeleting
+            ? null
+            : () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      backgroundColor: const Color.fromARGB(255, 209, 62, 62), // Red background
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10), // Rounded corners
+                      ),
+                      title: Column(
+                        children: [
+                          Icon(
+                            Icons.delete,
+                            size: 50,
+                            color: Colors.white, // Icon color
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            "Delete",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
                             ),
-                            title: Column(
-                              children: [
-                                // Logo image
-                              Icon(
-                                  Icons.delete, // Replace with the desired icon from the Icons class
-                                  size: 50, // Set the size of the icon
-                                  color: Colors.white, // Set the color of the icon
-                                ),
-                                SizedBox(height: 10),
-                                // Title text
-                                Text(
-                                  "Delete",
-                                  style: TextStyle(
+                          ),
+                        ],
+                      ),
+                      content: Text(
+                        'Are you sure you want to delete this post? This action cannot be undone.',
+                        style: TextStyle(color: Colors.white, fontSize: 15),
+                      ),
+                      actions: [
+                        // Cancel Button
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(); // Close the dialog
+                          },
+                          child: Text(
+                            "Cancel",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        // Delete Button
+                        TextButton(
+                          onPressed: _isDeleting ? null : () async {
+                            Navigator.of(context).pop(); // Close dialog
+                            await _deletePost(); // Start delete process
+                          },
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all<Color>(
+                              _isDeleting ? Colors.grey : Colors.red, // Grey when disabled
+                            ),
+                          ),
+                          child: _isDeleting
+                              ? SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
                                     color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20,
+                                    strokeWidth: 2.5,
                                   ),
-                                ),
-                              ],
-                            ),
-                            content: Text(
-                              'Are you sure you want to delete this post? This action cannot be undone.', // Dynamic message
-                              style: TextStyle(color: Colors.white, fontSize: 15),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  
-                                   Navigator.of(context).pushNamedAndRemoveUntil(
-                                    'homePageRoute', // Replace with your home page route name
-                                    (route) => false, // Remove all previous routes
-                                  );
-                                },
-                                child: Text(
-                                  "OK",
+                                )
+                              : Text(
+                                  "Delete",
                                   style: TextStyle(color: Colors.white),
                                 ),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent, // Make button background transparent
-                      shadowColor: Colors.transparent, // Remove shadow effect
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(
-                      'Delete',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
+                        )
+                      ],
+                    );
+                  },
+                );
+              },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent, // Transparent button background
+          shadowColor: Colors.transparent, // Remove shadow effect
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: _isDeleting
+            ? SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.5,
                 ),
+              )
+            : const Text(
+                'Delete',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+      ),
+    ),
                 SizedBox(height: 20,)
               ],
             ),
