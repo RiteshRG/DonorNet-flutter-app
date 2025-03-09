@@ -91,29 +91,31 @@ Future<Map<String, dynamic>?> fetchUserDetailsAndLevel(String userId) async {
 }
 
 
-
   Future<String> getUserRating(String userId) async {
     double totalRating = 0.0;
     int ratingCount = 0;
 
     try {
+      // ✅ Correct collection name ('rating' instead of 'ratings')
       QuerySnapshot ratingsSnapshot = await _firestore
-          .collection('ratings')
+          .collection('rating') 
           .where('rated_user_id', isEqualTo: userId)
           .get();
 
-      if (ratingsSnapshot.docs.isEmpty) return "0.0"; // Default rating
+      if (ratingsSnapshot.docs.isEmpty) return "0.0"; // Default rating if no ratings exist
 
       for (var doc in ratingsSnapshot.docs) {
         totalRating += (doc['rating'] as num).toDouble();
         ratingCount++;
       }
 
-      double averageRating = ratingCount > 0 ? totalRating / ratingCount : 0.0;
+      // ✅ Corrected calculation (no need for `ratingCount > 0` check)
+      double averageRating = totalRating / ratingCount;
+
       return averageRating.toStringAsFixed(1); // ✅ Standardized format (e.g., "4.5")
     } catch (e) {
       devtools.log('Error fetching user rating: $e');
-      return "0.0"; // Default rating in case of an error
+      return "N/A"; // ✅ Better than returning "0.0" on failure
     }
   }
 
@@ -534,6 +536,94 @@ Future<void> _deleteFileFromStorage(String fileUrl) async {
   }
 }
 
+Future<Map<String, dynamic>?> checkAndClaimPost(String postId) async {
+  try {
+    // Fetch post details
+    DocumentSnapshot postSnapshot = await _firestore.collection('posts').doc(postId).get();
 
+    if (!postSnapshot.exists) {
+      return {'error': 'Post not found.'};
+    }
 
+    Map<String, dynamic> postData = postSnapshot.data() as Map<String, dynamic>;
+
+    // Check if the post belongs to the current user
+    if (postData['user_id'] == currentUserId) {
+      return {'error': 'You cannot claim your own donation post.'};
+    }
+
+    // Check if the post is expired
+    Timestamp expiryTimestamp = postData['expiry_date_time'];
+    DateTime expiryDate = expiryTimestamp.toDate();
+    if (expiryDate.isBefore(DateTime.now())) {
+      return {'error': 'This donation post has expired and cannot be claimed.'};
+    }
+
+    // Check if the post is available
+    if (postData['status'] != 'available') {
+      return {'error': 'This post is no longer available for claiming.'};
+    }
+
+    // Fetch user details (Donor's profile image)
+    DocumentSnapshot userSnapshot = await _firestore.collection('users').doc(postData['user_id']).get();
+
+    if (!userSnapshot.exists) {
+      return {'error': 'Donor details not found.'};
+    }
+
+    Map<String, dynamic> userData = userSnapshot.data() as Map<String, dynamic>;
+
+    // Return post details with donor's profile image
+    return {
+      'postId': postData['postId'],
+      'user_id': postData['user_id'],
+      'image_url': postData['image_url'],
+      'profile_image': userData['profile_image'], // Donor's profile image
+    };
+  } catch (e) {
+    return {'error': 'An error occurred: $e'};
+  }
 }
+
+
+  Future<bool> rateUser(String ratedUserId, int ratingValue) async {
+    String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+    final CollectionReference ratingsCollection = _firestore.collection('rating');
+
+    try {
+      // Check if the current user has already rated the post owner
+      QuerySnapshot existingRatings = await ratingsCollection
+          .where('rater_id', isEqualTo: currentUserId)
+          .where('rated_user_id', isEqualTo: ratedUserId)
+          .limit(1) // We need only one record if it exists
+          .get();
+
+      if (existingRatings.docs.isNotEmpty) {
+        // Rating exists, update it
+        String ratingId = existingRatings.docs.first.id; // Get the document ID
+        await ratingsCollection.doc(ratingId).update({
+          'rating': ratingValue.toDouble(), // Store rating as float
+          'timestamp': FieldValue.serverTimestamp(), // Update timestamp
+        });
+        print("Rating updated successfully!");
+      } else {
+        // No rating exists, create a new one
+        DocumentReference newRatingRef = ratingsCollection.doc(); // Auto-generate ID
+        await newRatingRef.set({
+          'ratingId': newRatingRef.id, // Store generated ID
+          'rater_id': currentUserId,
+          'rated_user_id': ratedUserId,
+          'rating': ratingValue.toDouble(), // Convert int to float
+          'timestamp': FieldValue.serverTimestamp(), // Store server timestamp
+        });
+        print("Rating added successfully!");
+      }
+      
+      return true; // ✅ Always return success when operation completes
+    } catch (error) {
+      print("Error adding/updating rating: $error");
+      return false; // ❌ Return false on error
+    }
+  }
+}
+

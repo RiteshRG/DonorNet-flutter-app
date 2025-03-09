@@ -79,6 +79,9 @@ late final TextEditingController _titleController;
 
   Future<void> fetchPostDetails() async {
   try {
+    setState(() {
+        isLoading = true;
+      });
     List<Map<String, dynamic>> data = await PostService().getPostWithUserDetails(widget.postId);
     if (data.isNotEmpty) {
       var postData = data.first;
@@ -589,7 +592,7 @@ late final TextEditingController _titleController;
                         child: isLoading
                             ? CircularProgressIndicator(color: Colors.white) // Show loading indicator when submitting
                             : Text(
-                                'Post',
+                                'Save Changes',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 18.0,
@@ -603,7 +606,11 @@ late final TextEditingController _titleController;
               ],
             ),
           ),
-            LoadingIndicator(isLoading: isLoading),
+          Container(
+            color: Colors.white,
+            child:  LoadingIndicator(isLoading: isLoading),
+          )
+           
         ],
       ),
       bottomNavigationBar: Container(

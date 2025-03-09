@@ -1,9 +1,14 @@
 
 import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/services%20and%20provider/user_provider.dart';
+import 'package:donornet/services%20and%20provider/user_service.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
+import 'package:donornet/utilities/show_dialog.dart';
+import 'package:donornet/views/confirm_claim_page.dart';
+import 'package:donornet/views/qr_scanner_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:developer' as devtools;
 
 class CustomDrawer extends StatefulWidget {
   const CustomDrawer({super.key});
@@ -13,6 +18,32 @@ class CustomDrawer extends StatefulWidget {
 }
 
 class _CustomDrawerState extends State<CustomDrawer> {
+
+  String scannedResult = "";
+ // bool isLoading = false;
+
+  void _scanQRCode() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => QrScannerPage()),
+    );
+
+    if (result != null && result is String && result.isNotEmpty) {
+      setState(() {
+        scannedResult = result;
+        devtools.log('$scannedResult');
+        //isLoading = true;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ConfirmClaimPage(postId: scannedResult,),
+          ),
+        );
+        //isLoading = false;
+      });
+    }
+  }
+
 
   @override
   void initState() {
@@ -25,113 +56,118 @@ class _CustomDrawerState extends State<CustomDrawer> {
     final userProvider = Provider.of<UserProvider>(context);
     final userData = userProvider.userData;
     final isLoading = userProvider.isLoading;
-    return Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            DrawerHeader(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.primaryColor, AppColors.secondaryColor], // Define your gradient colors
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Stack(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return Stack(
+      children: [
+        Drawer(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: <Widget>[
+                DrawerHeader(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.primaryColor, AppColors.secondaryColor], // Define your gradient colors
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Stack(
               children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: const Color.fromARGB(255, 101, 101, 101), // Fallback background color
-                  backgroundImage: userData != null && userData['profile_image'] != null
-                      ? NetworkImage(userData['profile_image'],) // Correct way to use NetworkImage
-                      : null, 
-                  child: userData == null || userData['profile_image'] == null
-                      ? Icon(Icons.person, color: Colors.white, size: 30) // Default icon if no image
-                      : null, // No child if image is available
-                ),
-                SizedBox(height: 10),
-                Text(
-                  '${userData?['first_name']} ${userData?['last_name']}',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Spacer(),
-                Row(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.volunteer_activism, color: Colors.white, size: 20),
-                    SizedBox(width: 5),
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: const Color.fromARGB(255, 101, 101, 101), // Fallback background color
+                      backgroundImage: userData != null && userData['profile_image'] != null
+                          ? NetworkImage(userData['profile_image'],) // Correct way to use NetworkImage
+                          : null, 
+                      child: userData == null || userData['profile_image'] == null
+                          ? Icon(Icons.person, color: Colors.white, size: 30) // Default icon if no image
+                          : null, // No child if image is available
+                    ),
+                    SizedBox(height: 10),
                     Text(
-                      'Donations: 1', // Replace with dynamic count
-                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                      '${userData?['first_name']} ${userData?['last_name']}',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Spacer(),
+                    Row(
+                      children: [
+                        Icon(Icons.volunteer_activism, color: Colors.white, size: 20),
+                        SizedBox(width: 5),
+                        Text(
+                          'Donations: 1', // Replace with dynamic count
+                          style: TextStyle(color: Colors.white70, fontSize: 14),
+                        ),
+                      ],
                     ),
                   ],
                 ),
+                LoadingIndicator(isLoading: isLoading, loaderColor: const Color.fromARGB(255, 255, 255, 255)),
               ],
             ),
-            LoadingIndicator(isLoading: isLoading, loaderColor: const Color.fromARGB(255, 255, 255, 255)),
-          ],
+          ),
+        
+          ListTile(
+            leading: Icon(Icons.home, color: CustomDrawer.leadingColor),
+            title: Text('Home', style: TextStyle(color: CustomDrawer.leadingColor)),
+            onTap: () {
+              Navigator.of(context).pushNamedAndRemoveUntil('homePageRoute', (route) => false,);
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.auto_graph_rounded, color: CustomDrawer.leadingColor),
+            title: Text('My Levels', style: TextStyle(color: CustomDrawer.leadingColor)),
+            onTap: () {
+              Navigator.pushNamed(context, 'myLevelPageRoute');
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.qr_code_scanner, color: CustomDrawer.leadingColor),
+            title: Text('Scan & Collect', style: TextStyle(color: CustomDrawer.leadingColor)),
+            onTap: () {
+                _scanQRCode();
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.account_circle, color: CustomDrawer.leadingColor),
+            title: Text('Account', style: TextStyle(color: CustomDrawer.leadingColor)),
+            onTap: () {
+              Navigator.of(context).pushNamed('myAccountPageRoute');
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.notifications, color: CustomDrawer.leadingColor),
+            title: Text('Notification Settings', style: TextStyle(color: CustomDrawer.leadingColor)),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.info, color: CustomDrawer.leadingColor),
+            title: Text('About Us', style: TextStyle(color: CustomDrawer.leadingColor)),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.logout, color: Colors.red),
+            title: Text('Logout', style: TextStyle(color: Colors.red)),
+            onTap: () {
+              Provider.of<UserProvider>(context, listen: false).logoutUser(context);
+            },
+          ),
+        ],
+          ),
         ),
-      ),
-
-      ListTile(
-        leading: Icon(Icons.home, color: CustomDrawer.leadingColor),
-        title: Text('Home', style: TextStyle(color: CustomDrawer.leadingColor)),
-        onTap: () {
-          Navigator.of(context).pushNamedAndRemoveUntil('homePageRoute', (route) => false,);
-        },
-      ),
-      ListTile(
-        leading: Icon(Icons.auto_graph_rounded, color: CustomDrawer.leadingColor),
-        title: Text('My Levels', style: TextStyle(color: CustomDrawer.leadingColor)),
-        onTap: () {
-          Navigator.pushNamed(context, 'myLevelPageRoute');
-        },
-      ),
-      ListTile(
-        leading: Icon(Icons.qr_code_scanner, color: CustomDrawer.leadingColor),
-        title: Text('Scan & Collect', style: TextStyle(color: CustomDrawer.leadingColor)),
-        onTap: () {
-          Navigator.pop(context);
-        },
-      ),
-      ListTile(
-        leading: Icon(Icons.account_circle, color: CustomDrawer.leadingColor),
-        title: Text('Account', style: TextStyle(color: CustomDrawer.leadingColor)),
-        onTap: () {
-          Navigator.of(context).pushNamed('myAccountPageRoute');
-        },
-      ),
-      ListTile(
-        leading: Icon(Icons.notifications, color: CustomDrawer.leadingColor),
-        title: Text('Notification Settings', style: TextStyle(color: CustomDrawer.leadingColor)),
-        onTap: () {
-          Navigator.pop(context);
-        },
-      ),
-      ListTile(
-        leading: Icon(Icons.info, color: CustomDrawer.leadingColor),
-        title: Text('About Us', style: TextStyle(color: CustomDrawer.leadingColor)),
-        onTap: () {
-          Navigator.pop(context);
-        },
-      ),
-      Divider(),
-      ListTile(
-        leading: Icon(Icons.logout, color: Colors.red),
-        title: Text('Logout', style: TextStyle(color: Colors.red)),
-        onTap: () {
-          Provider.of<UserProvider>(context, listen: false).logoutUser(context);
-        },
-      ),
-    ],
-  ),
-);
+    
+      ],
+    );
 
   }
 }

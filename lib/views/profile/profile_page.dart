@@ -309,8 +309,17 @@ class _Profile_pageState extends State<Profile_page> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(6),
                   child: Image.network(
-                    posts[index]['image_url'],
+                  posts[index]['image_url'], // Display fetched images
                     fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Icon(Icons.image, size: 18, color: const Color.fromARGB(255, 110, 110, 110),);
+                      //LoadingIndicator(isLoading: true); // Show loading indicator for images
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(Icons.image, size: 18,color:const Color.fromARGB(255, 110, 110, 110));
+                      //LoadingIndicator(isLoading: true); // Show error icon if image fails to load
+                    },
                   ),
                 ),
               ),

@@ -157,101 +157,205 @@ class PostService {
 }
 
 
-Future<List<Map<String, dynamic>>> getAvailablePostsLocation() async {
-  List<Map<String, dynamic>> availablePosts = [];
-  DateTime now = DateTime.now();
+  Future<List<Map<String, dynamic>>> getAvailablePostsLocation() async {
+    List<Map<String, dynamic>> availablePosts = [];
+    DateTime now = DateTime.now();
 
-  try {
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-        .collection('posts')
-        .where('expiry_date_time', isGreaterThan: Timestamp.fromDate(now))
-        .where('status', isEqualTo: 'available')
-        .get();
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('posts')
+          .where('expiry_date_time', isGreaterThan: Timestamp.fromDate(now))
+          .where('status', isEqualTo: 'available')
+          .get();
 
-    for (var doc in querySnapshot.docs) {
-      availablePosts.add({
-        'postId': doc['postId'],
-        'user_id': doc['user_id'],
-        'location': doc['location'],
-      });
+      for (var doc in querySnapshot.docs) {
+        availablePosts.add({
+          'postId': doc['postId'],
+          'user_id': doc['user_id'],
+          'location': doc['location'],
+        });
+      }
+    } catch (e) {
+      print('Error fetching posts: $e');
     }
-  } catch (e) {
-    print('Error fetching posts: $e');
+
+    return availablePosts;
   }
 
-  return availablePosts;
-}
 
+  Future<Map<String, dynamic>?> getPostDetailsForMapPopUp(String postId) async {
+    try {
+      DocumentSnapshot postSnapshot = 
+          await FirebaseFirestore.instance.collection('posts').doc(postId).get();
 
-Future<Map<String, dynamic>?> getPostDetailsForMapPopUp(String postId) async {
-  try {
-    DocumentSnapshot postSnapshot = 
-        await FirebaseFirestore.instance.collection('posts').doc(postId).get();
+      if (postSnapshot.exists) {
+        Map<String, dynamic> postData = postSnapshot.data() as Map<String, dynamic>;
 
-    if (postSnapshot.exists) {
-      Map<String, dynamic> postData = postSnapshot.data() as Map<String, dynamic>;
-
-      return {
-        "expiry_date_time": postData["expiry_date_time"], // Timestamp
-        "image_url": postData["image_url"], // String
-        "title": postData["title"], // String
-      };
-    } else {
-      print("Post not found!");
+        return {
+          "expiry_date_time": postData["expiry_date_time"], // Timestamp
+          "image_url": postData["image_url"], // String
+          "title": postData["title"], // String
+        };
+      } else {
+        print("Post not found!");
+        return null;
+      }
+    } catch (e) {
+      print("Error fetching post details: $e");
       return null;
     }
-  } catch (e) {
-    print("Error fetching post details: $e");
-    return null;
   }
-}
 
-Future<List<Map<String, dynamic>>> fetchAvailablePosts(String userId) async {
-  try {
-    
-    QuerySnapshot querySnapshot = await _firestore
-        .collection('posts')
-        .where('status', isEqualTo: 'available')
-        .where('expiry_date_time', isGreaterThan: Timestamp.now())
-        .where('user_id', isEqualTo: userId)
-        .orderBy('created_at', descending: true) // Sort by most recent
-        .get(const GetOptions(source: Source.serverAndCache)); // Use cache first, then update
+  Future<List<Map<String, dynamic>>> fetchAvailablePosts(String userId) async {
+    try {
+      
+      QuerySnapshot querySnapshot = await _firestore
+          .collection('posts')
+          .where('status', isEqualTo: 'available')
+          .where('expiry_date_time', isGreaterThan: Timestamp.now())
+          .where('user_id', isEqualTo: userId)
+          .orderBy('created_at', descending: true) // Sort by most recent
+          .get(const GetOptions(source: Source.serverAndCache)); // Use cache first, then update
 
-    List<Map<String, dynamic>> posts = querySnapshot.docs.map((doc) {
-      return {
-        'image_url': doc['image_url'] ?? '',
-        'postId': doc['postId'] ?? '',
-      };
-    }).toList();
-    return posts;
-  } catch (e) {
-    devtools.log('Error fetching available posts: $e');
-    return [];
+      List<Map<String, dynamic>> posts = querySnapshot.docs.map((doc) {
+        return {
+          'image_url': doc['image_url'] ?? '',
+          'postId': doc['postId'] ?? '',
+        };
+      }).toList();
+      return posts;
+    } catch (e) {
+      devtools.log('Error fetching available posts: $e');
+      return [];
+    }
   }
-}
 
-Future<List<String>> getClaimedPostImages(String userId) async {
+  Future<List<String>> getClaimedPostImages(String userId) async {
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('posts')
+          .where('user_id', isEqualTo: userId) // Filter by userId
+          .where('status', isEqualTo: "claimed") // Only claimed posts
+          .orderBy('created_at', descending: true) // Order by newest first
+          .get();
+
+      // Extract only image_url from each document
+      List<String> imageUrls = querySnapshot.docs
+          .map((doc) => doc['image_url'] as String)
+          .where((url) => url.isNotEmpty) // Ensure URLs are valid
+          .toList();
+
+      return imageUrls;
+    } catch (e) {
+      print("Error fetching images: $e");
+      return [];
+    }
+  }
+
+Future<bool> markPostAsClaimed(String postId, String postOwnerId) async {
   try {
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-        .collection('posts')
-        .where('user_id', isEqualTo: userId) // Filter by userId
-        .where('status', isEqualTo: "claimed") // Only claimed posts
-        .orderBy('created_at', descending: true) // Order by newest first
+    WriteBatch batch = _firestore.batch(); // Firestore batch for atomic operations
+
+    // Reference to the post document
+    DocumentReference postRef = _firestore.collection('posts').doc(postId);
+
+    // Update post status to "claimed"
+    batch.update(postRef, {'status': 'claimed'});
+
+    // Fetch the points document where user_id == postOwnerId
+    QuerySnapshot pointsQuery = await _firestore
+        .collection('points')
+        .where('user_id', isEqualTo: postOwnerId)
+        .limit(1)
         .get();
 
-    // Extract only image_url from each document
-    List<String> imageUrls = querySnapshot.docs
-        .map((doc) => doc['image_url'] as String)
-        .where((url) => url.isNotEmpty) // Ensure URLs are valid
-        .toList();
+    int updatedPoints = 10; // Default points to be added
 
-    return imageUrls;
+    if (pointsQuery.docs.isNotEmpty) {
+      // If document exists, increment points
+      DocumentReference pointsRef = pointsQuery.docs.first.reference;
+      int currentPoints = (pointsQuery.docs.first['points_earned'] as num).toInt();
+      updatedPoints = currentPoints + 10; // Add 10 points
+
+      batch.update(pointsRef, {
+        'points_earned': FieldValue.increment(10),
+      });
+    } else {
+      // If no document exists, create a new one
+      DocumentReference newPointsRef = _firestore.collection('points').doc();
+      batch.set(newPointsRef, {
+        'user_id': postOwnerId,
+        'points_earned': 10, // Start with 10 points
+      });
+    }
+
+    // Commit the batch operation
+    await batch.commit();
+
+    // After updating points, update the level
+    await updateUserLevel(postOwnerId, updatedPoints);
+
+    devtools.log("✅ Post marked as claimed, points updated, and level updated successfully!");
+    return true;
   } catch (e) {
-    print("Error fetching images: $e");
-    return [];
+    devtools.log("❌ Error updating post status, points, or level: $e");
+    return false;
+  }
+}
+
+Future<void> updateUserLevel(String userId, int currentPoints) async {
+  try {
+    // Define level thresholds
+    List<Map<String, int>> levelThresholds = [
+      {'level': 1, 'points': 10},
+      {'level': 2, 'points': 40},
+      {'level': 3, 'points': 90},
+      {'level': 4, 'points': 150},
+      {'level': 5, 'points': 225},
+      {'level': 6, 'points': 300},
+      {'level': 7, 'points': 500},
+      {'level': 8, 'points': 800},
+      {'level': 9, 'points': 1000},
+      {'level': 10, 'points': 1500},
+    ];
+
+    int newLevel = 0;
+    for (var level in levelThresholds) {
+      if (currentPoints >= level['points']!) {
+        newLevel = level['level']!;
+      } else {
+        break; // Stop checking if the next level is not reached
+      }
+    }
+
+    CollectionReference levelsCollection = _firestore.collection('levels');
+
+    // Fetch user's level document
+    QuerySnapshot levelSnapshot =
+        await levelsCollection.where('user_id', isEqualTo: userId).limit(1).get();
+
+    if (levelSnapshot.docs.isNotEmpty) {
+      // Update existing level document
+      DocumentReference userLevelDoc = levelSnapshot.docs.first.reference;
+      await userLevelDoc.update({'level': newLevel});
+    } else {
+      // Create a new level document if not exists
+      DocumentReference newLevelDoc = levelsCollection.doc();
+      await newLevelDoc.set({
+        'user_id': userId,
+        'level': newLevel,
+        'points_required': levelThresholds[newLevel - 1]['points'],
+      });
+    }
+
+    devtools.log("✅ User level updated to $newLevel successfully!");
+  } catch (e) {
+    devtools.log("❌ Error updating user level: $e");
   }
 }
 
 
 
 }
+
+

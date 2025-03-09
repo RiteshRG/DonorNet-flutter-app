@@ -16,7 +16,7 @@ import 'package:donornet/views/map_page.dart';
 import 'package:donornet/views/my_account_page.dart';
 import 'package:donornet/views/post%20details/post_details_page.dart';
 import 'package:donornet/views/post%20details/User_post_details.dart';
-import 'package:donornet/views/profile_page.dart';
+import 'package:donornet/views/profile/profile_page.dart';
 import 'package:donornet/views/qr_code_page.dart';
 import 'package:donornet/views/rating_page.dart';
 import 'package:donornet/views/search/search_page.dart';

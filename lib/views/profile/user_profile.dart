@@ -321,10 +321,12 @@ Widget build(BuildContext context) {
                 fit: BoxFit.cover,
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
-                  return LoadingIndicator(isLoading: true); // Show loading indicator for images
+                  return Icon(Icons.image, size: 18, color: const Color.fromARGB(255, 110, 110, 110),);
+                  //LoadingIndicator(isLoading: true); // Show loading indicator for images
                 },
                 errorBuilder: (context, error, stackTrace) {
-                  return Icon(Icons.broken_image, size: 50, color: Colors.grey); // Show error icon if image fails to load
+                  return Icon(Icons.image, size: 18, color: const Color.fromARGB(255, 110, 110, 110),);
+                  //LoadingIndicator(isLoading: true); // Show error icon if image fails to load
                 },
               ),
             ),
