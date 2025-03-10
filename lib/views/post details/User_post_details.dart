@@ -32,6 +32,7 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
   String userRating = "0.0";
   double? distance;
   DateTime? createdAt;
+  DateTime? pickUpDate;
   GeoPoint? postLocation;
   bool isLoading = true;
   String qrCode = "";
@@ -45,11 +46,13 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
   Future<void> fetchPostDetails() async {
     try {
       List<Map<String, dynamic>> data = await PostService().getPostWithUserDetails(widget.postId);
+      devtools.log('$data');
       if (data.isNotEmpty) {
         var postData = data.first;
    
         setState(() {
           postId = postData['post']['postId'];
+          pickUpDate = (postData['post']['pickup_date_time'] as Timestamp).toDate();
           title = postData['post']['title'] ?? "No Title";
           description = postData['post']['description'] ?? "No Description";
           imageUrl = postData['post']['image_url'] ?? ""; // Ensure it doesn't break
@@ -217,7 +220,7 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                   '${createdAt != null ? DateFormat("d - MMM - yyyy").format(createdAt!) : 'Unknown'}\n${createdAt != null ? DateFormat("h:mm a").format(createdAt!) : "Unknown"}',
+                                   '${createdAt != null ? DateFormat("d - MMM - yyyy").format(pickUpDate!) : 'Unknown'}\n${pickUpDate != null ? DateFormat("h:mm a").format(pickUpDate!) : "Unknown"}',
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: Colors.grey[600],

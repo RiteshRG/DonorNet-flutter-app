@@ -3,8 +3,10 @@ import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/services%20and%20provider/map_service.dart';
 import 'package:donornet/services%20and%20provider/post_service.dart';
 import 'package:donornet/utilities/shimmer_loading.dart';
+import 'package:donornet/views/message/MessageBoxScreen.dart';
 import 'package:donornet/views/home%20page/post.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 import 'dart:developer' as devtools;
 
@@ -18,6 +20,7 @@ class PostDetailsPage extends StatefulWidget {
 }
 
 class _PostDetailsPageState extends State<PostDetailsPage> {
+   String userId = "";
   String title = "";
   String profile = "";
   String description = "";
@@ -26,6 +29,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
   String userRating = "0.0";
   double? distance;
   DateTime? createdAt;
+  DateTime? pickUpDate;
   GeoPoint? postLocation;
   bool isLoading = true;
 
@@ -43,6 +47,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
 
         setState(() {
           title = postData['post']['title'] ?? "No Title";
+          pickUpDate = (postData['post']['pickup_date_time'] as Timestamp).toDate();
           description = postData['post']['description'] ?? "No Description";
           imageUrl = postData['post']['image_url'] ?? ""; // Ensure it doesn't break
           userName = "${postData['user']['first_name']} ${postData['user']['last_name']}";
@@ -50,6 +55,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
           distance = double.parse(postData['distance'].toStringAsFixed(1));
           createdAt = (postData['post']['created_at'] as Timestamp).toDate(); 
           profile = postData['user']['profile_image'];
+          userId = postData['user']['userId'];
           postLocation = postData['post']['location'];
           devtools.log("${postLocation!.latitude}");
           isLoading = false;
@@ -178,7 +184,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  '${createdAt != null ? DateFormat("d - MMM - yyyy").format(createdAt!) : 'Unknown'}\n${createdAt != null ? DateFormat("h:mm a").format(createdAt!) : "Unknown"}',
+                                  '${pickUpDate != null ? DateFormat("d - MMM - yyyy").format(pickUpDate!) : 'Unknown'}\n${pickUpDate != null ? DateFormat("h:mm a").format(pickUpDate!) : "Unknown"}',
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: Colors.grey[600],
@@ -270,7 +276,12 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => MessageBoxScreen(postId: widget.postId, postOwnerId: userId)),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent, // Make button background transparent
                     shadowColor: Colors.transparent, // Remove shadow effect

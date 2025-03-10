@@ -1,5 +1,5 @@
 import 'package:donornet/materials/app_colors.dart';
-import 'package:donornet/views/MessageBoxScreen.dart';
+import 'package:donornet/views/message/MessageBoxScreen.dart';
 import 'package:flutter/material.dart';
 
 // MessageTile class to represent each message tile
@@ -261,20 +261,20 @@ class _ChatPageState extends State<ChatPage> {
           final message = messageData[index];
           return GestureDetector(
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => MessageBoxScreen(
-                    profileImage: message['profileImage'],
-                    itemImage: message['itemImage'],
-                    ownerName: message['ownerName'],
-                    postTitle: message['postTitle'],
-                    lastMessage: message['lastMessage'],
-                    lastMessageDate: message['lastMessageDate'],
-                    status: message['status'], 
-                  ),
-                ),
-              );
+              // Navigator.push(
+              //   context,
+              //   MaterialPageRoute(
+              //     builder: (context) => MessageBoxScreen(
+              //       profileImage: message['profileImage'],
+              //       itemImage: message['itemImage'],
+              //       ownerName: message['ownerName'],
+              //       postTitle: message['postTitle'],
+              //       lastMessage: message['lastMessage'],
+              //       lastMessageDate: message['lastMessageDate'],
+              //       status: message['status'], 
+              //     ),
+              //   ),
+              // );
             },
             child: MessageTile(
               profileImage: message['profileImage'],

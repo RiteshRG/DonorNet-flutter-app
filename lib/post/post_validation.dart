@@ -5,6 +5,7 @@ import 'package:donornet/services%20and%20provider/detect_image_labels_service.d
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:developer' as devtools;
 
 Future<bool> validateAndSubmitPost({
   required String imageUrl,
@@ -71,9 +72,30 @@ Future<bool> validateAndSubmitPost({
   ];
 
   bool containsRestrictedWords(String text) {
-    String cleanText = text.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-    return restrictedWords.any((word) => cleanText.contains(word));
+  String lowerText = text.toLowerCase();
+  for (var word in restrictedWords) {
+    // Create a regex that matches the whole word using word boundaries
+    RegExp regex = RegExp(r'\b' + RegExp.escape(word) + r'\b');
+    if (regex.hasMatch(lowerText)) {
+      devtools.log("Prohibited word found: $word");
+      return true;
+    }
   }
+    List<String> _restrictedWords = [
+    'gun', 'sex', 'porn', 'pornography', 'knife', 'xxx', 'bomb', 
+    ];
+
+     _restrictedWords += restrictedWords.where((word) => word.length > 3).toList();
+
+   String cleanText = text.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+   if(_restrictedWords.any((word) => cleanText.contains(word))){
+    return true;
+   }
+
+  return false;
+}
+
+
 
   if (containsRestrictedWords(title) || containsRestrictedWords(description)) {
     showErrorDialog(context, "Your post contains prohibited content. Please review and edit.");

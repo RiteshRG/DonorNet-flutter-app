@@ -10,6 +10,7 @@ import 'package:donornet/utilities/show_dialog.dart';
 import 'package:donornet/views/filter.dart';
 import 'package:donornet/views/home%20page/drawer.dart';
 import 'package:donornet/views/home%20page/post.dart';
+import 'package:donornet/views/search/search_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -44,7 +45,7 @@ class _HomePageState extends State<HomePage>  {
   @override
   void initState() {
     super.initState();
-     _checkInternetStatus();
+    _checkInternetStatus();
     _deleteExpiredPosts();
     _fetchPosts();
     _searchController.addListener(_onSearchChanged);
@@ -52,7 +53,7 @@ class _HomePageState extends State<HomePage>  {
      _scrollController.addListener(_onScroll);
     _loadFilters();
      // Listen for real-time network changes
-    InternetChecker.init((bool isConnected) {  // ✅ Updated Function Signature
+    InternetChecker.init((bool isConnected) {  
       setState(() {
         _isConnected = isConnected;
       });
@@ -77,7 +78,7 @@ class _HomePageState extends State<HomePage>  {
 
    void _onScroll() {
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 100) {
-      _fetchPosts(loadMore: true); // ✅ Load more posts when reaching bottom
+      _fetchPosts(loadMore: true); 
     }
   }
 
@@ -91,21 +92,20 @@ class _HomePageState extends State<HomePage>  {
   devtools.log('Fetching posts with selected categories: $selectedCategories');
 
   await _loadFilters();
-  // Fetch posts (which now include user details)
+
   List<Map<String, dynamic>> newPosts = await _postService.getAvailablePosts(
       loadMore: loadMore, selectedCategories: selectedCategories);
 
   if (newPosts.isNotEmpty) {
     devtools.log("Applying distance filter: $selectedDistance");
 
-    // ✅ Await the sorted posts
     newPosts = await _mapService.sortPostsByDistance(newPosts, selectedDistance);
 
     setState(() {
       if (loadMore) {
-        _posts.addAll(newPosts); // ✅ Append instead of replacing
+        _posts.addAll(newPosts); 
       } else {
-        _posts = newPosts; // ✅ Replace only on first load or refresh
+        _posts = newPosts; 
       }
       _isLoading = false;
       _isFetchingMore = false;
@@ -113,25 +113,22 @@ class _HomePageState extends State<HomePage>  {
 
     // Debugging: Log each post's data type
     for (var i = 0; i < _posts.length; i++) {
-      devtools.log("Post $i Data: ${_posts[i]}"); // ✅ Logs each post separately
+      devtools.log("Post $i Data: ${_posts[i]}"); 
     }
   } else {
     setState(() {
-      if (!loadMore) _posts = []; // ✅ Clear only on first load
+      if (!loadMore) _posts = []; 
       _isLoading = false;
       _isFetchingMore = false;
     });
   }
 }
 
-
-
-    Future<void> _checkInternetStatus() async {
+  Future<void> _checkInternetStatus() async {
     _isConnected = await InternetChecker.hasInternet();
     setState(() {});
   }
 
-  // Function to delete expired posts
   Future<void> _deleteExpiredPosts() async {
     UserService userService = UserService();
     await userService.deleteExpiredPostsForUser(context);
@@ -141,9 +138,9 @@ class _HomePageState extends State<HomePage>  {
     if (!mounted) return; 
     await _deleteExpiredPosts(); 
      setState(() {
-    _isLoading = true;  // ✅ Show loading indicator
+    _isLoading = true;  
   });
-    _fetchPosts();  // ✅ Wait for posts to refres
+    _fetchPosts();  
     if (!mounted) return;
   }
 
@@ -155,7 +152,7 @@ class _HomePageState extends State<HomePage>  {
 
 
 void _openFilterBottomSheet() {
-  showFilterBottomSheet(context, _refreshPage); // Call the filter bottom sheet function
+  showFilterBottomSheet(context, _refreshPage); 
 }
 
   @override
@@ -292,34 +289,42 @@ void _openFilterBottomSheet() {
                                   ),
                                 ],
                               ),
-                              child: TextField(
-                                onSubmitted: (query) {
-                                  print("Searching for: $query"); // Replace with your search function
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => SearchPage()),
+                                  );
                                 },
-                                controller: _searchController,
-                                textInputAction: TextInputAction.search,
-                                decoration: InputDecoration(
-                                  hintText: "Search",
-                                  hintStyle: TextStyle(
-                                    color: Color.fromARGB(255, 133, 133, 133),
+                                child: AbsorbPointer( 
+                                  child: TextField(
+                                    controller: _searchController,
+                                    textInputAction: TextInputAction.search,
+                                    decoration: InputDecoration(
+                                      hintText: "Search",
+                                      hintStyle: TextStyle(
+                                        color: Color.fromARGB(255, 133, 133, 133),
+                                      ),
+                                      prefixIcon: Icon(Icons.search, color: Color.fromARGB(255, 147, 147, 147)),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                        borderSide: BorderSide(color: Colors.transparent), 
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                        borderSide: BorderSide(color: Colors.transparent, width: 1.0), 
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                        borderSide: BorderSide(color: Colors.transparent, width: 2.0), 
+                                      ),
+                                      filled: true,
+                                      fillColor: const Color.fromARGB(255, 255, 255, 255),
+                                    ),
                                   ),
-                                  prefixIcon: Icon(Icons.search, color: Color.fromARGB(255, 147, 147, 147)),
-                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                    borderSide: BorderSide(color: Colors.transparent), // Transparent border
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                    borderSide: BorderSide(color: Colors.transparent, width: 1.0), // Transparent enabled border
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                    borderSide: BorderSide(color: Colors.transparent, width: 2.0), // Transparent focused border
-                                  ),
-                                  filled: true,
-                                  fillColor: const Color.fromARGB(255, 255, 255, 255),
                                 ),
                               ),
+
                             ),
                           ),
                 

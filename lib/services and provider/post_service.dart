@@ -11,6 +11,93 @@ class PostService {
   final Map<String, Map<String, dynamic>> _userCache = {}; // ✅ Cache to avoid redundant queries
 
 
+  Future<List<Map<String, dynamic>>> searchPosts(String searchText) async {
+    try {
+      // Get current time
+      DateTime currentTime = DateTime.now();
+      
+      // Prepare search text (trim and lower-case it for case-insensitive matching)
+      String trimmedQuery = searchText.trim().toLowerCase();
+
+      Query query = _firestore
+      .collection('posts')
+      .where('status', isEqualTo: 'available')
+      .where('expiry_date_time', isGreaterThan: Timestamp.fromDate(currentTime))
+      .orderBy('expiry_date_time', descending: false)
+      .limit(pageSize); 
+      
+      QuerySnapshot postSnapshot = await query.get();
+      List<Map<String, dynamic>> posts = [];
+      
+      // Find matching category IDs if search text is provided.
+      List<int> matchingCategoryIds = [];
+      if (trimmedQuery.isNotEmpty) {
+        QuerySnapshot categorySnapshot =
+            await _firestore.collection('category').get();
+        for (var doc in categorySnapshot.docs) {
+          var data = doc.data() as Map<String, dynamic>;
+          // Lower-case category name for case-insensitive matching
+          String catName = data['category_name']?.toString().toLowerCase() ?? '';
+          if (catName.contains(trimmedQuery)) {
+            matchingCategoryIds.add((data['categoryId'] as num).toInt());
+          }
+        }
+      }
+      
+      // Process each post and check for a match.
+      for (var doc in postSnapshot.docs) {
+        var data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id;
+        
+        bool matchesTitle = false;
+        bool matchesCategory = false;
+        
+        // Check if post title contains the search text.
+        if (data.containsKey('title')) {
+          String title = data['title'].toString().toLowerCase();
+          if (title.contains(trimmedQuery)) {
+            matchesTitle = true;
+          }
+        }
+        
+        // Check if post's category matches one of the category IDs we found.
+        if (data.containsKey('category_id') && matchingCategoryIds.isNotEmpty) {
+          int catId = (data['category_id'] as num).toInt();
+          if (matchingCategoryIds.contains(catId)) {
+            matchesCategory = true;
+          }
+        }
+        
+        // Include the post if it matches either the title or category.
+        if (matchesTitle || matchesCategory) {
+          // If user info is needed, fetch it if not already in cache.
+          if (data.containsKey('user_id')) {
+            String userId = data['user_id'];
+            if (!_userCache.containsKey(userId)) {
+              var userFuture = _firestore.collection('users').doc(userId).get();
+              var ratingFuture = UserService().getUserRating(userId);
+              var results = await Future.wait([userFuture, ratingFuture]);
+              
+              DocumentSnapshot userSnapshot = results[0] as DocumentSnapshot;
+              if (userSnapshot.exists) {
+                _userCache[userId] = userSnapshot.data() as Map<String, dynamic>;
+              }
+              _userCache[userId]?['user_rating'] = results[1];
+            }
+            data['user'] = _userCache[userId] ?? {};
+            data['user_rating'] = _userCache[userId]?['user_rating'] ?? "0.0";
+          }
+          
+          posts.add(data);
+        }
+      }
+      
+      return posts;
+    } catch (e) {
+      devtools.log('Error searching posts: $e');
+      return [];
+    }
+  }
 
   // ✅ Fetch posts with optional category filtering
   Future<List<Map<String, dynamic>>> getAvailablePosts({
@@ -303,6 +390,7 @@ Future<bool> markPostAsClaimed(String postId, String postOwnerId) async {
   }
 }
 
+
 Future<void> updateUserLevel(String userId, int currentPoints) async {
   try {
     // Define level thresholds
@@ -320,39 +408,48 @@ Future<void> updateUserLevel(String userId, int currentPoints) async {
     ];
 
     int newLevel = 0;
+
+    // Determine new level based on current points
     for (var level in levelThresholds) {
       if (currentPoints >= level['points']!) {
         newLevel = level['level']!;
       } else {
-        break; // Stop checking if the next level is not reached
+        break; 
       }
     }
 
+    int pointsRequired = (newLevel < levelThresholds.length)
+        ? (levelThresholds[newLevel]['points']! - currentPoints)
+        : 0; 
+
+    devtools.log("New Level: $newLevel, Points Required: $pointsRequired");
+
     CollectionReference levelsCollection = _firestore.collection('levels');
 
-    // Fetch user's level document
     QuerySnapshot levelSnapshot =
         await levelsCollection.where('user_id', isEqualTo: userId).limit(1).get();
 
     if (levelSnapshot.docs.isNotEmpty) {
-      // Update existing level document
       DocumentReference userLevelDoc = levelSnapshot.docs.first.reference;
-      await userLevelDoc.update({'level': newLevel});
+      await userLevelDoc.update({
+        'level': newLevel,
+        'points_required': pointsRequired,
+      });
     } else {
-      // Create a new level document if not exists
       DocumentReference newLevelDoc = levelsCollection.doc();
       await newLevelDoc.set({
         'user_id': userId,
         'level': newLevel,
-        'points_required': levelThresholds[newLevel - 1]['points'],
+        'points_required': pointsRequired,
       });
     }
 
-    devtools.log("✅ User level updated to $newLevel successfully!");
+    devtools.log("User level updated to $newLevel successfully!");
   } catch (e) {
-    devtools.log("❌ Error updating user level: $e");
+    devtools.log("Error updating user level: $e");
   }
 }
+
 
 
 

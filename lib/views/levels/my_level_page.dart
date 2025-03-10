@@ -16,6 +16,7 @@ class MyLevelPage extends StatefulWidget {
 class _MyLevelPageState extends State<MyLevelPage> {
   int currentPoints = 0;
   int currentLevel = 0;
+  int pointsToNextLevel = 10;
   bool isLoading = false; // Loading state
   bool isConnected = true; 
 
@@ -41,7 +42,7 @@ class _MyLevelPageState extends State<MyLevelPage> {
         isConnected = connected;
       });
     });
-    fetchUserPoints();
+    fetchUserPointsAndLevel();
     updateLevel();
   }
 
@@ -56,28 +57,64 @@ class _MyLevelPageState extends State<MyLevelPage> {
   }
 
 
-   Future<void> fetchUserPoints() async {
-    try {
-      User? user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-            .collection('points')
-            .where('user_id', isEqualTo: user.uid) // Fetching points for the logged-in user
-            .get();
-        
-        if (querySnapshot.docs.isNotEmpty) {
-          // Assuming each user has only one document in `points`
-          DocumentSnapshot doc = querySnapshot.docs.first;
-          
-          setState(() {
-            currentPoints = (doc['points_earned'] ?? 0).toInt();
-          });
-        }
-      }
-    } catch (e) {
-      print("Error fetching user points: $e");
+Future<void> fetchUserPointsAndLevel() async {
+  try {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    // Fetch user points from 'points' collection
+    QuerySnapshot pointsSnapshot = await firestore
+        .collection('points')
+        .where('user_id', isEqualTo: user.uid)
+        .limit(1)
+        .get();
+
+    int fetchedPoints = 0;
+    if (pointsSnapshot.docs.isNotEmpty) {
+      DocumentSnapshot doc = pointsSnapshot.docs.first;
+      fetchedPoints = (doc['points_earned'] ?? 0).toInt();
     }
+
+    // Fetch user level from 'levels' collection
+    QuerySnapshot levelSnapshot = await firestore
+        .collection('levels')
+        .where('user_id', isEqualTo: user.uid)
+        .limit(1)
+        .get();
+
+    int fetchedLevel = 0;
+    int pointsRequired = 10; // Default to level 1 requirement
+
+    if (levelSnapshot.docs.isNotEmpty) {
+      DocumentSnapshot levelDoc = levelSnapshot.docs.first;
+      fetchedLevel = (levelDoc['level'] ?? 0).toInt();
+      pointsRequired = (levelDoc['points_required'] ?? 10).toInt();
+    } else {
+      // If no level document exists, create one for the user
+      await firestore.collection('levels').add({
+        'user_id': user.uid,
+        'level': 0,
+        'points_required': 10,
+      });
+    }
+
+    // Update UI state
+    setState(() {
+      currentPoints = fetchedPoints;
+      currentLevel = fetchedLevel;
+      pointsToNextLevel = pointsRequired;
+    });
+
+    print("Fetched Points: $fetchedPoints, Level: $fetchedLevel, Points Required: $pointsRequired");
+
+  } catch (e) {
+    print("Error fetching user points and level: $e");
   }
+}
+
+
 
   Future<void> _refreshPage() async {
   if (!mounted) return; // Prevents calling setState() on an unmounted widget
@@ -86,7 +123,7 @@ class _MyLevelPageState extends State<MyLevelPage> {
     isLoading = true; // Show loading indicator
   });
 
-  await fetchUserPoints(); // Fetch latest points without restarting the page
+  await fetchUserPointsAndLevel(); // Fetch latest points without restarting the page
 
   if (!mounted) return;
 
@@ -105,33 +142,35 @@ class _MyLevelPageState extends State<MyLevelPage> {
 
 void updateLevel() {
   setState(() {
-    if (currentPoints <= 0) {
-      currentLevel = 0; // Set Level 0 for 0 points
-    } else if (currentPoints >= levels.last['points']) {
-      currentLevel = levels.length; // Max level reached
-    } else {
-      for (int i = 0; i < levels.length - 1; i++) {
-        if (currentPoints >= levels[i]['points'] &&
-            currentPoints < levels[i + 1]['points']) {
-          currentLevel = levels[i]['level'];
-          break;
-        }
+    currentLevel = 0; // Start at Level 0
+
+    for (int i = 0; i < levels.length; i++) {
+      if (currentPoints >= levels[i]['points']) {
+        currentLevel = levels[i]['level']; // Assign max eligible level
+      } else {
+        break; // Stop once the required points exceed currentPoints
       }
     }
   });
 }
 
-  double calculateProgress() {
-    if (currentLevel >= levels.length) return 1.0;
 
-    int prevPoints = (currentLevel > 1) ? levels[currentLevel - 1]['points'] : 0;
-    int nextPoints = levels[currentLevel]['points'];
-
-    if (nextPoints == prevPoints) return 0.0;
-
-    double progress = (currentPoints - prevPoints) / (nextPoints - prevPoints);
-    return progress.clamp(0.0, 1.0);
+double calculateProgress() {
+  if (currentLevel == 0) {
+    return currentPoints / levels[0]['points']; // Progress from Level 0 to 1
   }
+
+  int prevPoints = (currentLevel > 0) ? levels[currentLevel - 1]['points'] : 0;
+  int nextPoints = (currentLevel < levels.length) ? levels[currentLevel]['points'] : prevPoints;
+
+  if (nextPoints == prevPoints) return 0.0; // Prevent division by zero
+
+  double progress = (currentPoints - prevPoints) / (nextPoints - prevPoints);
+  return progress.clamp(0.0, 1.0);
+}
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -222,9 +261,9 @@ void updateLevel() {
             padding: EdgeInsets.only(top: 6,left: 5,bottom: 6,right: 10),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [const Color.fromARGB(255, 0, 0, 0),const Color.fromARGB(255, 0, 0, 0)], // Define gradient colors
-                begin: Alignment.topLeft,  // Gradient starts from top-left
-                end: Alignment.bottomRight, // Gradient ends at bottom-right
+                colors: [const Color.fromARGB(255, 0, 0, 0),const Color.fromARGB(255, 0, 0, 0)], 
+                begin: Alignment.topLeft,  
+                end: Alignment.bottomRight, 
               ),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.zero,          
@@ -259,7 +298,7 @@ void updateLevel() {
  // Coin icon
                 SizedBox(width: 10),
                 Text(
-                  '${currentPoints}', // Replace with actual points variable
+                  '${currentPoints}', 
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ],
@@ -372,9 +411,9 @@ void updateLevel() {
         const SizedBox(height: 8),
         Text(
         (currentPoints < levels[0]['points'])
-            ? '${levels[0]['points'] - currentPoints} points to Level 1'
+            ? '${pointsToNextLevel} points to Level 1'
             : (currentLevel < levels.length)
-                ? '${levels[currentLevel]['points'] - currentPoints} points to Level ${currentLevel + 1}'
+                ? '${pointsToNextLevel} points to Level ${currentLevel + 1}'
                 : 'Max Level Reached!',
         style: TextStyle(color: Colors.grey[600], fontSize: 16),
       ),

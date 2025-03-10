@@ -180,14 +180,12 @@ class BuildShimmerEffect extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          // 📍 Map Placeholder
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Container(height: 150, width: double.infinity, color: shimmerPlaceholderColor),
           ),
           const SizedBox(height: 20),
 
-          // 📍 Button Placeholder
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Container(
@@ -203,4 +201,86 @@ class BuildShimmerEffect extends StatelessWidget {
       ),
     );
   }
+}
+
+
+
+Widget messagePagebuildShimmerLayout() {
+  return Scaffold(
+    appBar: AppBar(
+      title: Shimmer.fromColors(
+        baseColor: Colors.grey[300]!,
+        highlightColor: Colors.grey[100]!,
+        child: Container(
+          height: 20,
+          width: 150,
+          color: Colors.white,
+        ),
+      ),
+    ),
+    body: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          // Title and post image row
+          Row(
+            children: [
+              // Shimmer for title placeholder
+              Expanded(
+                child: Shimmer.fromColors(
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
+                  child: Container(
+                    height: 20,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              SizedBox(width: 10),
+              // Shimmer for small rectangular post image placeholder
+              Shimmer.fromColors(
+                baseColor: Colors.grey[300]!,
+                highlightColor: Colors.grey[100]!,
+                child: Container(
+                  width: 70,
+                  height: 50,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 20),
+          // Simulated messages area with multiple shimmer lines
+          Expanded(
+            child: ListView.builder(
+              itemCount: 5,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Shimmer.fromColors(
+                    baseColor: Colors.grey[300]!,
+                    highlightColor: Colors.grey[100]!,
+                    child: Container(
+                      height: 15,
+                      color: Colors.white,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          // Typing box shimmer placeholder
+          Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(
+              height: 40,
+              width: double.infinity,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }

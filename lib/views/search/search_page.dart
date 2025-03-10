@@ -1,4 +1,5 @@
 import 'package:donornet/materials/app_colors.dart';
+import 'package:donornet/views/search/search_post_page.dart';
 import 'package:flutter/material.dart';
 
 class SearchPage extends StatefulWidget {
@@ -37,6 +38,19 @@ class _SearchPageState extends State<SearchPage> {
       _onSearchChanged(text);
     });
   }
+
+  void _triggerSearch(String value) {
+  String trimmedValue = value.trim();
+  if (trimmedValue.isEmpty) {
+    return;
+  }
+  print("Search Query: $trimmedValue");
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => SearchPostPage(searchQuery: trimmedValue)),
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -82,46 +96,55 @@ class _SearchPageState extends State<SearchPage> {
                   ],
                 ),
                 child: TextField(
-                  controller: _searchController,
-                  onChanged: _onSearchChanged,
-                  decoration: InputDecoration(
-                    hintText: "Search",
-                    hintStyle: TextStyle(
-                      color: Color.fromARGB(255, 133, 133, 133),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    prefixIcon: Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: Icon(Icons.search, color: Color.fromARGB(255, 147, 147, 147)),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide(color: Colors.transparent), // Transparent border
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide(color: Colors.transparent, width: 1.0), // Transparent enabled border
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide(color: AppColors.primaryColor, width: 2.0), // Slightly visible focused border
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(Icons.close, color: Color.fromARGB(255, 147, 147, 147)),
-                            onPressed: () {
-                              _searchController.clear();
-                              _onSearchChanged("");
-                            },
-                          )
-                        : null,
+                controller: _searchController,
+                textInputAction: TextInputAction.search,
+                onChanged: _onSearchChanged,
+                onSubmitted: (value) {
+                  _triggerSearch(value);
+                },
+                decoration: InputDecoration(
+                  hintText: "Search",
+                  hintStyle: TextStyle(
+                    color: Color.fromARGB(255, 133, 133, 133),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
                   ),
-                  style: TextStyle(fontSize: 16, color: Colors.black),
+                  prefixIcon: IconButton(
+                    icon: Icon(Icons.search, color: Color.fromARGB(255, 147, 147, 147)),
+                    onPressed: () {
+                      // Trigger search using the current text value
+                      _triggerSearch(_searchController.text);
+                    },
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide(color: Colors.transparent),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide(color: Colors.transparent, width: 1.0),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide(color: AppColors.primaryColor, width: 2.0),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(Icons.close, color: Color.fromARGB(255, 147, 147, 147)),
+                          onPressed: () {
+                            _searchController.clear();
+                            _onSearchChanged("");
+                          },
+                        )
+                      : null,
                 ),
+                style: TextStyle(fontSize: 16, color: Colors.black),
+              ),
+
+
               ),
 
               SizedBox(height: 12),

@@ -135,59 +135,145 @@ late final TextEditingController _titleController;
   }
 
 
- Future<void> _selectDate(BuildContext context, bool isPickup) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: isPickup ? (_pickupDate ?? DateTime.now()) : (_expiryDate ?? DateTime.now()),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(Duration(days: 365)),
-      builder: (BuildContext context, Widget? child) {
-        return Theme(
-          data: ThemeData.light().copyWith(
-            primaryColor: AppColors.primaryColor,
-            colorScheme: ColorScheme.light(primary: AppColors.primaryColor),
-            buttonTheme: ButtonThemeData(textTheme: ButtonTextTheme.primary),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null) {
-      setState(() {
-        if (isPickup) {
-          _pickupDate = picked;
-        } else {
-          _expiryDate = picked;
-        }
-      });
-    }
+
+Future<void> _selectDate(BuildContext context, bool isPickup) async {
+  DateTime now = DateTime.now();
+  DateTime initialDate;
+  DateTime firstDate;
+  
+  devtools.log("Opening date picker for: ${isPickup ? 'Pickup' : 'Expiry'} date");
+  if (isPickup) {
+    // For pickup, ensure initialDate is not before today.
+    initialDate = (_pickupDate != null && !_pickupDate!.isBefore(now))
+        ? _pickupDate!
+        : now;
+    firstDate = now;
+  } else {
+    // For expiry date, set firstDate to the pickup date if available; otherwise, today.
+    firstDate = _pickupDate ?? now;
+    // Ensure initialDate is at least firstDate.
+    initialDate = (_expiryDate != null && !_expiryDate!.isBefore(firstDate))
+        ? _expiryDate!
+        : firstDate;
   }
 
-  Future<void> _selectTime(BuildContext context, bool isPickup) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: isPickup ? (_pickupTime ?? TimeOfDay.now()) : (_expiryTime ?? TimeOfDay.now()),
-      builder: (BuildContext context, Widget? child) {
-        return Theme(
-          data: ThemeData.light().copyWith(
-            primaryColor: AppColors.primaryColor,
-            colorScheme: ColorScheme.light(primary: AppColors.primaryColor),
-            buttonTheme: ButtonThemeData(textTheme: ButtonTextTheme.primary),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null) {
-      setState(() {
-        if (isPickup) {
-          _pickupTime = picked;
-        } else {
-          _expiryTime = picked;
+  DateTime lastDate = now.add(Duration(days: 365));
+
+  final DateTime? picked = await showDatePicker(
+    context: context,
+    initialDate: initialDate,
+    firstDate: firstDate,
+    lastDate: lastDate,
+    builder: (BuildContext context, Widget? child) {
+      return Theme(
+        data: ThemeData.light().copyWith(
+          primaryColor: AppColors.primaryColor,
+          colorScheme: ColorScheme.light(primary: AppColors.primaryColor),
+          buttonTheme: ButtonThemeData(textTheme: ButtonTextTheme.primary),
+        ),
+        child: child!,
+      );
+    },
+  );
+  if (picked != null) {
+    setState(() {
+      if (isPickup) {
+        _pickupDate = picked;
+        devtools.log('$_pickupDate');
+        // Optional: If an expiry date exists but is before the new pickup date, reset it.
+        if (_expiryDate != null && _expiryDate!.isBefore(picked)) {
+          _expiryDate = null;
         }
-      });
-    }
+      } else {
+        _expiryDate = picked;
+      }
+    });
   }
+}
+
+
+
+Future<void> _selectTime(BuildContext context, bool isPickup) async {
+  final TimeOfDay? picked = await showTimePicker(
+    context: context,
+    initialTime: isPickup ? (_pickupTime ?? TimeOfDay.now()) : (_expiryTime ?? TimeOfDay.now()),
+    builder: (BuildContext context, Widget? child) {
+      return Theme(
+        data: ThemeData.light().copyWith(
+          primaryColor: AppColors.primaryColor,
+          colorScheme: ColorScheme.light(primary: AppColors.primaryColor),
+          buttonTheme: ButtonThemeData(textTheme: ButtonTextTheme.primary),
+        ),
+        child: child!,
+      );
+    },
+  );
+  if (picked != null) {
+    setState(() {
+      if (isPickup) {
+        _pickupTime = picked;
+      } else {
+        _expiryTime = picked;
+      }
+    });
+  }
+}
+
+
+
+//  Future<void> _selectDate(BuildContext context, bool isPickup) async {
+//     final DateTime? picked = await showDatePicker(
+//       context: context,
+//       initialDate: isPickup ? (_pickupDate ?? DateTime.now()) : (_expiryDate ?? DateTime.now()),
+//       firstDate: DateTime.now(),
+//       lastDate: DateTime.now().add(Duration(days: 365)),
+//       builder: (BuildContext context, Widget? child) {
+//         return Theme(
+//           data: ThemeData.light().copyWith(
+//             primaryColor: AppColors.primaryColor,
+//             colorScheme: ColorScheme.light(primary: AppColors.primaryColor),
+//             buttonTheme: ButtonThemeData(textTheme: ButtonTextTheme.primary),
+//           ),
+//           child: child!,
+//         );
+//       },
+//     );
+//     if (picked != null) {
+//       setState(() {
+//         if (isPickup) {
+//           _pickupDate = picked;
+//         } else {
+//           _expiryDate = picked;
+//         }
+//       });
+//     }
+//   }
+
+//   Future<void> _selectTime(BuildContext context, bool isPickup) async {
+//     final TimeOfDay? picked = await showTimePicker(
+//       context: context,
+//       initialTime: isPickup ? (_pickupTime ?? TimeOfDay.now()) : (_expiryTime ?? TimeOfDay.now()),
+//       builder: (BuildContext context, Widget? child) {
+//         return Theme(
+//           data: ThemeData.light().copyWith(
+//             primaryColor: AppColors.primaryColor,
+//             colorScheme: ColorScheme.light(primary: AppColors.primaryColor),
+//             buttonTheme: ButtonThemeData(textTheme: ButtonTextTheme.primary),
+//           ),
+//           child: child!,
+//         );
+//       },
+//     );
+//     if (picked != null) {
+//       setState(() {
+//         if (isPickup) {
+//           _pickupTime = picked;
+//         } else {
+//           _expiryTime = picked;
+//         }
+//       });
+//     }
+//   }
 
   // Future<void> _selectDate(BuildContext context, bool isPickup) async {
   //   final DateTime? picked = await showDatePicker(
@@ -427,8 +513,12 @@ late final TextEditingController _titleController;
                     Expanded(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
+                        // For pickup date, pass 'true'
                         onPressed: () => _selectDate(context, true),
-                        child: Text(_pickupDate == null ? 'Pick Date' : DateFormat('yyyy-MM-dd').format(_pickupDate!),
+                        child: Text(
+                          _pickupDate == null 
+                              ? 'Pick Date' 
+                              : DateFormat('yyyy-MM-dd').format(_pickupDate!),
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
@@ -438,7 +528,10 @@ late final TextEditingController _titleController;
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
                         onPressed: () => _selectTime(context, true),
-                        child: Text(_pickupTime == null ? 'Pick Time' : _pickupTime!.format(context),
+                        child: Text(
+                          _pickupTime == null 
+                              ? 'Pick Time' 
+                              : _pickupTime!.format(context),
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
@@ -454,8 +547,12 @@ late final TextEditingController _titleController;
                     Expanded(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
+                        // For expiry date, pass 'false'
                         onPressed: () => _selectDate(context, false),
-                        child: Text(_expiryDate == null ? 'Expiry Date' : DateFormat('yyyy-MM-dd').format(_expiryDate!),
+                        child: Text(
+                          _expiryDate == null 
+                              ? 'Expiry Date' 
+                              : DateFormat('yyyy-MM-dd').format(_expiryDate!),
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
@@ -465,7 +562,10 @@ late final TextEditingController _titleController;
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryColor),
                         onPressed: () => _selectTime(context, false),
-                        child: Text(_expiryTime == null ? 'Expiry Time' : _expiryTime!.format(context),
+                        child: Text(
+                          _expiryTime == null 
+                              ? 'Expiry Time' 
+                              : _expiryTime!.format(context),
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
@@ -527,6 +627,8 @@ late final TextEditingController _titleController;
                                   isProcessing = true;  // Prevent duplicate clicks
                                   isLoading = true;  // Show loading indicator
                                 });
+
+                                devtools.log('$_pickupDate');
 
                                 bool isValid = await validateAndSubmitPost(
                                   imageUrl: imageUrl,
