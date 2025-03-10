@@ -13,7 +13,7 @@ class MessageCard extends StatelessWidget {
     String senderId = message['sender_id'] ?? "";
     Timestamp ts = message['sent_at'] ?? Timestamp.now();
     DateTime sentTime = ts.toDate();
-    String formattedTime = DateFormat('hh:mm a').format(sentTime);
+    String formattedTime = DateFormat("hh:mm a · dd MMM yyyy").format(sentTime);
     bool isMe = senderId == FirebaseAuth.instance.currentUser!.uid;
 
     return Align(
@@ -22,7 +22,7 @@ class MessageCard extends StatelessWidget {
         margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
         padding: EdgeInsets.symmetric(vertical: 10, horizontal: 14),
         decoration: BoxDecoration(
-          color: isMe ? Colors.blueAccent : Colors.grey[300],
+          color: isMe ?Colors.grey.shade300 : const Color.fromARGB(228, 38, 182, 122),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -32,7 +32,7 @@ class MessageCard extends StatelessWidget {
             Text(
               msgText,
               style: TextStyle(
-                color: isMe ? Colors.white : Colors.black,
+                color: isMe ? Colors.black  : Colors.white,
                 fontSize: 16,
               ),
             ),
@@ -40,8 +40,8 @@ class MessageCard extends StatelessWidget {
             Text(
               formattedTime,
               style: TextStyle(
-                color: isMe ? Colors.white70 : Colors.black54,
-                fontSize: 10,
+                color: isMe ?  Colors.black  : Colors.white,
+                fontSize: 9,
               ),
             ),
           ],

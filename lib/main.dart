@@ -10,7 +10,7 @@ import 'package:donornet/views/authentication/resetPassword.dart';
 import 'package:donornet/views/authentication/verification.dart';
 import 'package:donornet/views/authentication/welcome_page.dart';
 import 'package:donornet/views/add_item_page.dart';
-import 'package:donornet/views/chat_page.dart';
+import 'package:donornet/views/message/chat_page.dart';
 import 'package:donornet/views/levels/my_level_page.dart';
 import 'package:donornet/views/map_page.dart';
 import 'package:donornet/views/my_account_page.dart';

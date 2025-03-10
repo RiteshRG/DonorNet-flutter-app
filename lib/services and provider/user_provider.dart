@@ -195,33 +195,63 @@ Future<List<String>> getClaimedPostImages() async {
   }
 
    /// ****Rating****
-    Future<void> fetchUserRating(String userId) async {
-    try {
-      QuerySnapshot ratingSnapshot = await _firestore
-          .collection('ratings')
-          .where('rated_user_id', isEqualTo: userId)
-          .get();
+  //   Future<void> fetchUserRating(String userId) async {
+  //   try {
+  //     QuerySnapshot ratingSnapshot = await _firestore
+  //         .collection('ratings')
+  //         .where('rated_user_id', isEqualTo: userId)
+  //         .get();
 
-      if (ratingSnapshot.docs.isEmpty) {
-        _userRating = 0.0; // No ratings found, set to 0
-      } else {
-        double totalRating = 0;
-        int ratingCount = ratingSnapshot.docs.length;
+  //     if (ratingSnapshot.docs.isEmpty) {
+  //       _userRating = 0.0; // No ratings found, set to 0
+  //     } else {
+  //       double totalRating = 0;
+  //       int ratingCount = ratingSnapshot.docs.length;
 
-        for (var doc in ratingSnapshot.docs) {
-          totalRating += (doc['rating'] as num).toDouble();
-        }
+  //       for (var doc in ratingSnapshot.docs) {
+  //         totalRating += (doc['rating'] as num).toDouble();
+  //       }
 
-        _userRating = totalRating / ratingCount; // Calculate average rating
+  //       _userRating = totalRating / ratingCount; // Calculate average rating
+  //     }
+
+  //     notifyListeners(); // Notify UI to update
+  //   } catch (e) {
+  //     debugPrint("Error fetching ratings: $e");
+  //     _userRating = 0.0; // Default to 0 on error
+  //     notifyListeners();
+  //   }
+  // }
+
+  Future<void> fetchUserRating(String userId) async {
+  double totalRating = 0.0;
+  int ratingCount = 0;
+
+  try {
+    QuerySnapshot ratingsSnapshot = await _firestore
+        .collection('rating') 
+        .where('rated_user_id', isEqualTo: userId)
+        .get();
+
+    if (ratingsSnapshot.docs.isEmpty) {
+      _userRating = 0.0; 
+    } else {
+      for (var doc in ratingsSnapshot.docs) {
+        totalRating += (doc['rating'] as num).toDouble();
+        ratingCount++;
       }
 
-      notifyListeners(); // Notify UI to update
-    } catch (e) {
-      debugPrint("Error fetching ratings: $e");
-      _userRating = 0.0; // Default to 0 on error
-      notifyListeners();
+      _userRating = double.parse((totalRating / ratingCount).toStringAsFixed(1)); 
     }
+    
+    notifyListeners(); 
+  } catch (e) {
+    debugPrint("Error fetching ratings: $e");
+    _userRating = 0.0; 
+    notifyListeners();
   }
+}
+
 
 
   /// **Update a Rating**

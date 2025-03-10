@@ -114,7 +114,7 @@ class _MessageBoxScreenState extends State<MessageBoxScreen> {
         'chatId': _chatId,
         'post_id': widget.postId,
         'post_owner_id': widget.postOwnerId,
-        'participants': [currentUserId],
+        'participants': [currentUserId, widget.postOwnerId],
         'last_message': '',
         'last_message_time': null,
       });
@@ -301,7 +301,7 @@ class _MessageBoxScreenState extends State<MessageBoxScreen> {
                 SizedBox(width: 20,),
                 GestureDetector(
                   onTap: () {
-                    Navigator.pushReplacement(
+                    Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => PostDetailsPage(widget.postId)),
                     );

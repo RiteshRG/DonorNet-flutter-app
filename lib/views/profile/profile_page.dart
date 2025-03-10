@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/services%20and%20provider/user_provider.dart';
 import 'package:donornet/materials/access_throught_link.dart';
+import 'package:donornet/services%20and%20provider/user_service.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
 import 'package:donornet/utilities/shimmer_loading.dart';
 import 'package:donornet/views/home%20page/drawer.dart';
@@ -20,11 +21,16 @@ class _Profile_pageState extends State<Profile_page> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late Future<List<Map<String, dynamic>>> _futurePosts;
   late Future<List<String>> claimedPost;
+  String rating = "";
+  String userId = "";
+
 
     @override
   void initState() {
     super.initState();
     // Fetch user data when the screen is initialized
+    userId = UserService().currentUserId!;
+    _fetchUserRating();
      Future.microtask(() {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       userProvider.fetchUserDetails();
@@ -34,6 +40,13 @@ class _Profile_pageState extends State<Profile_page> {
       }
        _futurePosts = UserProvider().fetchAvailablePosts();
        claimedPost = UserProvider().getClaimedPostImages();
+    });
+  }
+
+  Future<void> _fetchUserRating() async {
+    String fetchedRating = await UserService().getUserRating(userId);
+    setState(() {
+      rating = fetchedRating; // Update state with fetched rating
     });
   }
 
@@ -177,7 +190,7 @@ class _Profile_pageState extends State<Profile_page> {
                               SizedBox(width: 8),
                               Icon(Icons.star, size: 16, color: Colors.amber),
                               Text(
-                                '  ${userProvider.userRating}',
+                                '  ${rating}',
                                 style: TextStyle(color: Colors.white70),
                               ),
                             ],

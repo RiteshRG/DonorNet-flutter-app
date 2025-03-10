@@ -23,10 +23,12 @@ class _UserProfileState extends State<UserProfile> {
   bool isLoading = false;
   late Future<List<Map<String, dynamic>>> _futurePosts;
   late Future<List<String>> claimedPost;
+  late String rating;
 
   @override
   void initState() {
     super.initState();
+    //rating = UserService().getUserRating(widget.userId) as String;
      _futurePosts = PostService().fetchAvailablePosts(widget.userId);
     claimedPost = PostService().getClaimedPostImages(widget.userId);
     _fetchUserData();
@@ -42,7 +44,7 @@ class _UserProfileState extends State<UserProfile> {
 
       if (mounted) {
         setState(() {
-          userDetails = fetchedUserDetails; // ✅ Ensure safe assignment
+          userDetails = fetchedUserDetails; 
           isLoading = false;
         });
       }
@@ -155,12 +157,12 @@ Widget build(BuildContext context) {
                                         ],
                                       ),
                                       child: Image.network(
-                                        AccessLink.getLevelImage(userDetails!['level']), // Dynamically load correct level image
+                                        AccessLink.getLevelImage(userDetails!['level']), 
                                         height: 40,
                                         width: 40,
                                       ),
                                     )
-                                  : SizedBox(), // Empty widget if level is 0 or null
+                                  : SizedBox(), 
                             ),
 
                             ],

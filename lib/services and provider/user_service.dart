@@ -21,6 +21,27 @@ class UserService {
   bool isCurrentUser(String userIdToCheck) {
   return currentUserId == userIdToCheck;
   }
+  
+
+  Future<String?> getChatIdForPost(String postId) async {
+  try {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('chats')
+        .where('post_id', isEqualTo: postId)
+        .where('participants', arrayContains: currentUserId)
+        .limit(1) // Optimize query performance by limiting results
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      return querySnapshot.docs.first.id; // Return the existing chatId
+    }
+    return null; // No existing chat found
+  } catch (e) {
+    devtools.log("Error checking chat existence: $e");
+    return null; // Handle errors gracefully
+  }
+}
+
 
   // Fetch user details from Firestore
   Future<Map<String, dynamic>?> getUserDetails() async {
@@ -426,6 +447,7 @@ Future<bool> updatePost({
 Future<void> deleteExpiredPostsForUser(BuildContext context) async {
   final DateTime now = DateTime.now();
   final User? user = FirebaseAuth.instance.currentUser;
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   if (user == null) {
     devtools.log("No user logged in");
@@ -433,8 +455,8 @@ Future<void> deleteExpiredPostsForUser(BuildContext context) async {
   }
 
   try {
-    // Fetch all posts by the user (without an expiry_date_time condition to avoid index errors)
-    final QuerySnapshot snapshot = await FirebaseFirestore.instance
+    // Fetch all posts by the user (ignoring expiry_date_time condition to avoid Firestore index errors)
+    final QuerySnapshot snapshot = await firestore
         .collection('posts')
         .where('user_id', isEqualTo: user.uid)
         .get();
@@ -457,20 +479,27 @@ Future<void> deleteExpiredPostsForUser(BuildContext context) async {
       if (status == "available") {
         final String? imageUrl = doc['image_url'];
         final String? qrCodeUrl = doc['qr_code_url'];
+        final String postId = doc.id;
 
-        // Delete the image from Firebase Storage
+        // Delete images from Firebase Storage
         if (imageUrl != null && imageUrl.isNotEmpty) {
           await _deleteFileFromStorage(imageUrl);
         }
-
-        // Delete the QR code from Firebase Storage
         if (qrCodeUrl != null && qrCodeUrl.isNotEmpty) {
           await _deleteFileFromStorage(qrCodeUrl);
         }
 
-        // Delete the Firestore document
-        await FirebaseFirestore.instance.collection('posts').doc(doc.id).delete();
-        devtools.log("Deleted expired post: ${doc.id}");
+        // Delete associated chats
+        QuerySnapshot chatSnapshot =
+            await firestore.collection('chats').where('post_id', isEqualTo: postId).get();
+
+        for (var chatDoc in chatSnapshot.docs) {
+          await firestore.collection('chats').doc(chatDoc.id).delete();
+        }
+
+        // Delete post from Firestore
+        await firestore.collection('posts').doc(postId).delete();
+        devtools.log("Deleted expired post and associated chats: $postId");
         anyDeleted = true;
       }
     }
@@ -484,9 +513,14 @@ Future<void> deleteExpiredPostsForUser(BuildContext context) async {
   }
 }
 
+
+
 Future<bool> deletePostById(BuildContext context, String postId) async {
   try {
-    DocumentSnapshot doc = await FirebaseFirestore.instance.collection('posts').doc(postId).get();
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    // Fetch post document
+    DocumentSnapshot doc = await firestore.collection('posts').doc(postId).get();
 
     if (!doc.exists) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -507,12 +541,20 @@ Future<bool> deletePostById(BuildContext context, String postId) async {
       await _deleteFileFromStorage(qrCodeUrl);
     }
 
+    // Delete associated chats
+    QuerySnapshot chatSnapshot =
+        await firestore.collection('chats').where('post_id', isEqualTo: postId).get();
+
+    for (var chatDoc in chatSnapshot.docs) {
+      await firestore.collection('chats').doc(chatDoc.id).delete();
+    }
+
     // Delete post from Firestore
-    await FirebaseFirestore.instance.collection('posts').doc(postId).delete();
+    await firestore.collection('posts').doc(postId).delete();
 
     // Show success snackbar
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Post deleted successfully!"), backgroundColor: Colors.green),
+      SnackBar(content: Text("Post and related chats deleted successfully!"), backgroundColor: Colors.green),
     );
 
     return true; // Successfully deleted
@@ -525,6 +567,7 @@ Future<bool> deletePostById(BuildContext context, String postId) async {
   }
 }
 
+
 // Helper function to delete a file from Firebase Storage
 Future<void> _deleteFileFromStorage(String fileUrl) async {
   try {
@@ -535,6 +578,7 @@ Future<void> _deleteFileFromStorage(String fileUrl) async {
     devtools.log("Error deleting file: $error");
   }
 }
+
 
 Future<Map<String, dynamic>?> checkAndClaimPost(String postId) async {
   try {
@@ -619,11 +663,90 @@ Future<Map<String, dynamic>?> checkAndClaimPost(String postId) async {
         print("Rating added successfully!");
       }
       
-      return true; // ✅ Always return success when operation completes
+      return true; 
     } catch (error) {
       print("Error adding/updating rating: $error");
-      return false; // ❌ Return false on error
+      return false; 
     }
   }
+
+
+Future<List<Map<String, dynamic>>> getUserChats() async {
+  List<Map<String, dynamic>> chatList = [];
+
+  try {
+    DateTime now = DateTime.now();
+
+    // Fetch chats where currentUserId is in participants
+    QuerySnapshot chatSnapshot = await _firestore
+        .collection('chats')
+        .where('participants', arrayContains: currentUserId)
+        .orderBy('last_message_time', descending: true) // Sort by recent messages
+        .get();
+
+    for (var chatDoc in chatSnapshot.docs) {
+      Map<String, dynamic> chatData = chatDoc.data() as Map<String, dynamic>;
+
+      // Fetch post details
+      DocumentSnapshot postDoc =
+          await _firestore.collection('posts').doc(chatData['post_id']).get();
+
+      if (!postDoc.exists) continue;
+
+      Map<String, dynamic> postData = postDoc.data() as Map<String, dynamic>;
+
+      // Skip expired posts
+      if ((postData['expiry_date_time'] as Timestamp).toDate().isBefore(now)) {
+        continue;
+      }
+
+      // Find the other user (not the current user)
+      List<dynamic> participants = chatData['participants'];
+      String otherUserId = participants.firstWhere(
+        (id) => id != currentUserId,
+        orElse: () => "",
+      );
+
+      if (otherUserId.isEmpty) continue;
+
+      // Fetch details of the other user
+      DocumentSnapshot userDoc =
+          await _firestore.collection('users').doc(otherUserId).get();
+
+      String firstName = "Unknown";
+      String lastName = "";
+      String profileImage = "";
+
+      if (userDoc.exists) {
+        Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+        firstName = userData['first_name'] ?? "Unknown";
+        lastName = userData['last_name'] ?? "";
+        profileImage = userData['profile_image'] ?? "";
+      }
+
+      // Construct result object
+      chatList.add({
+        'chatId': chatData['chatId'],
+        'post_id': chatData['post_id'],
+        'post_owner_id': chatData['post_owner_id'],
+        'last_message': chatData['last_message'],
+        'last_message_time': chatData['last_message_time'],
+        'title': postData['title'],
+        'status': postData['status'],
+        'image_url': postData['image_url'],
+        'profile_image': profileImage,
+        'first_name': firstName,
+        'last_name': lastName,
+      });
+    }
+  } catch (e) {
+    devtools.log("Error fetching chats: $e");
+  }
+
+  devtools.log("############### $chatList");
+  return chatList;
+}
+
+
 }
 

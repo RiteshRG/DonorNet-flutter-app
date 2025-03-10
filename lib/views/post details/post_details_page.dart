@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/services%20and%20provider/map_service.dart';
 import 'package:donornet/services%20and%20provider/post_service.dart';
+import 'package:donornet/services%20and%20provider/user_service.dart';
+import 'package:donornet/utilities/loading_indicator.dart';
 import 'package:donornet/utilities/shimmer_loading.dart';
 import 'package:donornet/views/message/MessageBoxScreen.dart';
 import 'package:donornet/views/home%20page/post.dart';
@@ -31,7 +33,9 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
   DateTime? createdAt;
   DateTime? pickUpDate;
   GeoPoint? postLocation;
+  String? chatId;
   bool isLoading = true;
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -42,6 +46,12 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
   Future<void> fetchPostDetails() async {
     try {
       List<Map<String, dynamic>> data = await PostService().getPostWithUserDetails(widget.postId);
+      // chatId = await UserService().getChatIdForPost(widget.postId);
+      // if (chatId != null) {
+      //   devtools.log("*****Chat exists with ID: $chatId");
+      // } else {
+      //    devtools.log("********No chat found for this post.");
+      // }
       if (data.isNotEmpty) {
         var postData = data.first;
 
@@ -276,12 +286,30 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => MessageBoxScreen(postId: widget.postId, postOwnerId: userId)),
-                    );
-                  },
+                  onPressed: _isProcessing
+                      ? null // Disable button when processing
+                      : () async {
+                          setState(() {
+                            _isProcessing = true; // Disable button
+                          });
+
+                          String? chatId = await UserService().getChatIdForPost(widget.postId);
+
+                          setState(() {
+                            _isProcessing = false; // Re-enable button after processing
+                          });
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MessageBoxScreen(
+                                  chatId: chatId,
+                                  postId: widget.postId,
+                                  postOwnerId: userId,
+                                ),
+                              ),
+                            );
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent, // Make button background transparent
                     shadowColor: Colors.transparent, // Remove shadow effect
@@ -290,7 +318,16 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: const Text(
+                  child:_isProcessing
+          ? Text(
+                    'Loading...', 
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ) // Show loader when processing
+          : const Text(
                     'Send message via chat',
                     style: TextStyle(
                       fontSize: 16,
