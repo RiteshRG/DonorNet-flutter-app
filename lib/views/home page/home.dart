@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/services%20and%20provider/internet_checker.dart';
+import 'package:donornet/services%20and%20provider/listen_for_level_up.dart';
 import 'package:donornet/services%20and%20provider/map_service.dart';
 import 'package:donornet/services%20and%20provider/post_service.dart';
 import 'package:donornet/services%20and%20provider/user_service.dart';
@@ -58,6 +59,12 @@ class _HomePageState extends State<HomePage>  {
         _isConnected = isConnected;
       });
     });
+    //   FirebaseAuth.instance.authStateChanges().listen((User? user) {
+    //   if (user != null) {
+    //     devtools.log('************########');
+    //     listenForLevelUp(context, user.uid); // Start listening for level-up events
+    //   }
+    // });
   }
 
   @override

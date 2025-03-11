@@ -14,12 +14,16 @@ class MessageBoxScreen extends StatefulWidget {
   final String? chatId; // May be null if no chat exists yet.
   final String postId;
   final String postOwnerId;
+  final String profileImage;
+  final String userName;
 
   const MessageBoxScreen({
     Key? key,
     this.chatId,
     required this.postId,
     required this.postOwnerId,
+    required this.profileImage,
+    required this.userName
   }) : super(key: key);
 
   @override
@@ -31,7 +35,7 @@ class _MessageBoxScreenState extends State<MessageBoxScreen> {
   String title = "";
   String profile = "";
   String imageUrl = "";
-  String userName = "";
+  //String userName = "";
   String status = "";
   DateTime? expiryDate;
   DateTime? pickUpDate;
@@ -76,7 +80,7 @@ class _MessageBoxScreenState extends State<MessageBoxScreen> {
           pickUpDate = (postData['post']['pickup_date_time'] as Timestamp?)?.toDate();
           expiryDate = (postData['post']['expiry_date_time'] as Timestamp?)?.toDate();
           imageUrl = postData['post']['image_url'] ?? "";
-          userName = "${postData['user']['first_name'] ?? ''} ${postData['user']['last_name'] ?? ''}".trim();
+          //userName = "${postData['user']['first_name'] ?? ''} ${postData['user']['last_name'] ?? ''}".trim();
           profile = postData['user']['profile_image'] ?? "";
           status = postData['post']['status'] ?? "";
           isLoading = false;
@@ -247,14 +251,14 @@ class _MessageBoxScreenState extends State<MessageBoxScreen> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(30),
-                  child: (profile == "")
+                  child: (widget.profileImage == "" || widget.profileImage == null)
                       ? CircleAvatar(
                           radius: 20,
                           backgroundColor: Colors.grey,
                           child: Icon(Icons.person, color: Colors.white, size: 20),
                         )
                       : Image.network(
-                          profile,
+                          widget.profileImage,
                           width: 35,
                           height: 35,
                           fit: BoxFit.cover,
@@ -272,7 +276,7 @@ class _MessageBoxScreenState extends State<MessageBoxScreen> {
           
                 SizedBox(width: 15),
                 Text(
-                 userName,
+                 widget.userName,
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ],
@@ -282,177 +286,179 @@ class _MessageBoxScreenState extends State<MessageBoxScreen> {
           ),
         ),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.only(top:16, bottom:13, right:20, left:20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: const Color.fromARGB(255, 126, 126, 126)),
-                     overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.only(top:16, bottom:13, right:20, left:20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: const Color.fromARGB(255, 126, 126, 126)),
+                       overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                    ),
                   ),
-                ),
-                SizedBox(width: 20,),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => PostDetailsPage(widget.postId)),
-                    );
-                  },
-                  child: Container(
+                  SizedBox(width: 20,),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => PostDetailsPage(widget.postId)),
+                      );
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            spreadRadius: 1,
+                            blurRadius: 5,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.network(
+                          imageUrl,
+                          width: 70,
+                          height: 50,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: 60,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade300,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(Icons.image, color: Colors.grey, size: 40),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
+            Divider(),
+        
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: getMessagesStream(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError)
+                    return Center(child: Text("Error loading messages"));
+                  if (snapshot.connectionState == ConnectionState.waiting)
+                    return Center(child: CircularProgressIndicator());
+        
+                  final docs = snapshot.data!.docs;
+                  if (docs.isEmpty) return Center(child: Text("No messages yet."));
+                  return ListView.builder(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    itemCount: docs.length,
+                    itemBuilder: (context, index) {
+                      Map<String, dynamic> msgData = docs[index].data() as Map<String, dynamic>;
+                      return MessageCard(message: msgData);
+                    },
+                  );
+                },
+              ),
+            ),
+        
+            //Expanded(all message display........)
+        
+            Padding(
+              padding: EdgeInsets.all(8),
+              child: status != 'available'
+                  ? Stack(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color.fromARGB(255, 4, 171, 183),
+                          const Color.fromARGB(255, 1, 133, 36)
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          spreadRadius: 1,
-                          blurRadius: 5,
-                          offset: Offset(0, 2),
+                          color: Colors.black26,
+                          blurRadius: 6,
+                          spreadRadius: 2,
+                          offset: Offset(2, 3),
                         ),
                       ],
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.network(
-                        imageUrl,
-                        width: 70,
-                        height: 50,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 60,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
-                              borderRadius: BorderRadius.circular(10),
+                    child: Text(
+                      "Claimed",
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              )
+        
+                  : Row( 
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _messageController,
+                            decoration: InputDecoration(
+                              hintText: "Type a message...",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(20),
+                                borderSide: BorderSide(color: Colors.grey),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(20),
+                                borderSide: BorderSide(color: Colors.grey),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(20),
+                                borderSide: BorderSide(color: Colors.grey, width: 2),
+                              ),
                             ),
-                            child: Icon(Icons.image, color: Colors.grey, size: 40),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                )
-              ],
-            ),
-          ),
-          Divider(),
-
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: getMessagesStream(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError)
-                  return Center(child: Text("Error loading messages"));
-                if (snapshot.connectionState == ConnectionState.waiting)
-                  return Center(child: CircularProgressIndicator());
-
-                final docs = snapshot.data!.docs;
-                if (docs.isEmpty) return Center(child: Text("No messages yet."));
-                return ListView.builder(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  itemCount: docs.length,
-                  itemBuilder: (context, index) {
-                    Map<String, dynamic> msgData = docs[index].data() as Map<String, dynamic>;
-                    return MessageCard(message: msgData);
-                  },
-                );
-              },
-            ),
-          ),
-
-          //Expanded(all message display........)
-
-          Padding(
-            padding: EdgeInsets.all(8),
-            child: status != 'available'
-                ? Stack(
-              children: [
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color.fromARGB(255, 4, 171, 183),
-                        const Color.fromARGB(255, 1, 133, 36)
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Container(
+                          padding: EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [AppColors.tertiaryColor, AppColors.primaryColor],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: IconButton(
+                            icon: Icon(Icons.send, color: Colors.white),
+                            onPressed:_sendMessage,
+                          ),
+                        )
                       ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 6,
-                        spreadRadius: 2,
-                        offset: Offset(2, 3),
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    "Claimed",
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
             )
-
-                : Row( 
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _messageController,
-                          decoration: InputDecoration(
-                            hintText: "Type a message...",
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20),
-                              borderSide: BorderSide(color: Colors.grey),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20),
-                              borderSide: BorderSide(color: Colors.grey),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20),
-                              borderSide: BorderSide(color: Colors.grey, width: 2),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Container(
-                        padding: EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [AppColors.tertiaryColor, AppColors.primaryColor],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: IconButton(
-                          icon: Icon(Icons.send, color: Colors.white),
-                          onPressed:_sendMessage,
-                        ),
-                      )
-                    ],
-                  ),
-          )
-
-        ],
+        
+          ],
+        ),
       ),
     );
   }

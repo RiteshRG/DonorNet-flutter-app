@@ -347,7 +347,10 @@ Future<bool> markPostAsClaimed(String postId, String postOwnerId) async {
     DocumentReference postRef = _firestore.collection('posts').doc(postId);
 
     // Update post status to "claimed"
-    batch.update(postRef, {'status': 'claimed'});
+    batch.update(postRef, {
+      'status': 'claimed',
+      'claimed_by': UserService().currentUserId,
+    });
 
     // Fetch the points document where user_id == postOwnerId
     QuerySnapshot pointsQuery = await _firestore

@@ -23,7 +23,17 @@ class MessageCard extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 10, horizontal: 14),
         decoration: BoxDecoration(
           color: isMe ?Colors.grey.shade300 : const Color.fromARGB(228, 38, 182, 122),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: isMe ? BorderRadius.only(
+              topLeft: Radius.circular(20),  
+              topRight: Radius.circular(3),  
+              bottomLeft: Radius.circular(20),  
+              bottomRight: Radius.circular(20),  
+            )  : BorderRadius.only(
+            topLeft: Radius.circular(3),  
+            topRight: Radius.circular(20),  
+            bottomLeft: Radius.circular(20),  
+            bottomRight: Radius.circular(20),  
+          ),
         ),
         child: Column(
           crossAxisAlignment:
@@ -50,3 +60,5 @@ class MessageCard extends StatelessWidget {
     );
   }
 }
+
+

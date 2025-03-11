@@ -1,5 +1,6 @@
 
 import 'package:donornet/materials/app_colors.dart';
+import 'package:donornet/services%20and%20provider/listen_for_level_up.dart';
 import 'package:donornet/services%20and%20provider/user_provider.dart';
 import 'package:donornet/services%20and%20provider/user_service.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
@@ -73,8 +74,10 @@ class _CustomDrawerState extends State<CustomDrawer> {
             child: Stack(
               children: [
                 Column(
+
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Spacer(),
                     CircleAvatar(
                       radius: 30,
                       backgroundColor: const Color.fromARGB(255, 101, 101, 101), // Fallback background color
@@ -95,15 +98,10 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       ),
                     ),
                     Spacer(),
-                    Row(
-                      children: [
-                        Icon(Icons.volunteer_activism, color: Colors.white, size: 20),
-                        SizedBox(width: 5),
-                        Text(
-                          'Donations: 1', // Replace with dynamic count
-                          style: TextStyle(color: Colors.white70, fontSize: 14),
-                        ),
-                      ],
+                    SizedBox(width: 5),
+                    Text(
+                      '${userData?['email']}', // Replace with dynamic count
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
                     ),
                   ],
                 ),
@@ -140,25 +138,13 @@ class _CustomDrawerState extends State<CustomDrawer> {
               Navigator.of(context).pushNamed('myAccountPageRoute');
             },
           ),
-          ListTile(
-            leading: Icon(Icons.notifications, color: CustomDrawer.leadingColor),
-            title: Text('Notification Settings', style: TextStyle(color: CustomDrawer.leadingColor)),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          ListTile(
-            leading: Icon(Icons.info, color: CustomDrawer.leadingColor),
-            title: Text('About Us', style: TextStyle(color: CustomDrawer.leadingColor)),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
+
           Divider(),
           ListTile(
             leading: Icon(Icons.logout, color: Colors.red),
             title: Text('Logout', style: TextStyle(color: Colors.red)),
-            onTap: () {
+            onTap: () async {
+              await clearUserLevelData(UserService().currentUserId!); 
               Provider.of<UserProvider>(context, listen: false).logoutUser(context);
             },
           ),

@@ -1,4 +1,5 @@
 
+import 'package:donornet/materials/access_throught_link.dart';
 import 'package:donornet/materials/app_colors.dart';
 import 'package:flutter/material.dart';
 
@@ -123,7 +124,6 @@ showSuccessDialog(BuildContext context, String text) {
 }
 
 
-
 Future<void> permissionDialog(
   BuildContext context, 
   String text,
@@ -141,4 +141,66 @@ Future<void> permissionDialog(
       );
     },
   );
+}
+
+
+
+void showLevelUpPopup(BuildContext context, int level) {
+  String message = getLevelUpMessage(level);
+
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    showDialog(
+      context: context,
+      barrierDismissible: true, // Allow dismiss by tapping outside
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20), // Rounded corners
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min, // Prevent unnecessary space
+            children: [
+              Image.network(
+                AccessLink.getLevelImage(level), // Fetch image from URL
+                height: 120, 
+                width: 120,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(Icons.auto_graph_outlined, size: 100, color:AppColors.primaryColor); 
+                },
+              ),
+              const SizedBox(height: 15),
+              Text(
+                "Congratulations!",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  });
+}
+
+
+
+String getLevelUpMessage(int level) {
+  if (level == 1) return "Great start! You've reached Level 1! 🎯";
+  if (level == 2) return "You're making a difference! Level 2 unlocked! 🌍";
+  if (level == 3) return "Amazing! You're now at Level 3! Keep going! 💪";
+  if (level == 4) return "Incredible! Level 4 achieved! 🌟";
+  if (level == 5) return "Halfway there! Level 5 unlocked! 🚀";
+  if (level == 6) return "You're unstoppable! Welcome to Level 6! ⚡";
+  if (level == 7) return "Legendary! You've reached Level 7! 🏆";
+  if (level == 8) return "A true hero! Level 8 unlocked! 🎖";
+  if (level == 9) return "Superstar! You're now at Level 9! ✨";
+  if (level == 10) return "Ultimate Donor! Level 10 achieved! 🔥";
+  return "You've leveled up! Keep making an impact! 🎉";
 }

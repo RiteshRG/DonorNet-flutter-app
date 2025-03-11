@@ -51,7 +51,10 @@ class _WelcomePage extends State<WelcomePage> {
                   height: 225,
                   width: 225,
                   fit: BoxFit.cover,
-                ),
+                  errorBuilder: (context, error, stackTrace) {
+                    return SizedBox.shrink(); 
+                  },
+                )
               ),
             ),
             
@@ -65,6 +68,9 @@ class _WelcomePage extends State<WelcomePage> {
                     height: 210,
                     width: 210,
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                    return SizedBox.shrink(); 
+                  },
                   ),
               ),
             ),
@@ -85,6 +91,9 @@ class _WelcomePage extends State<WelcomePage> {
                         height: 100,
                         width: 100,
                         fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return SizedBox.shrink(); 
+                        },
                       ),
                   ),
             

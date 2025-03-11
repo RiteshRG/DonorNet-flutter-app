@@ -152,6 +152,9 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                     height: 225,
                     width: 225,
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                          return SizedBox.shrink(); 
+                        },
                   ),
                 ),
               ),

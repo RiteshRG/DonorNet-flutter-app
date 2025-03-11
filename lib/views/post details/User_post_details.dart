@@ -321,23 +321,23 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
                     ),
                   ),
                 ),
-
+          
                 Container(
-      margin: EdgeInsets.only(top: 10, bottom: 10, left: 20, right: 20),
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
+                margin: EdgeInsets.only(top: 10, bottom: 10, left: 20, right: 20),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
           colors: [
             const Color.fromARGB(255, 201, 84, 84),
             const Color(0xFFff5e5e),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: ElevatedButton(
-        onPressed: _isDeleting
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: ElevatedButton(
+                  onPressed: _isDeleting
             ? null
             : () {
                 showDialog(
@@ -411,15 +411,15 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
                   },
                 );
               },
-        style: ElevatedButton.styleFrom(
+                  style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent, // Transparent button background
           shadowColor: Colors.transparent, // Remove shadow effect
           padding: const EdgeInsets.symmetric(vertical: 10),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
-        ),
-        child: _isDeleting
+                  ),
+                  child: _isDeleting
             ? SizedBox(
                 width: 20,
                 height: 20,
@@ -436,8 +436,8 @@ class _UserPostDetailPageState extends State<UserPostDetailPage> {
                   color: Colors.white,
                 ),
               ),
-      ),
-    ),
+                ),
+              ),
                 SizedBox(height: 20,)
               ],
             ),

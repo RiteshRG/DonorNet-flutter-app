@@ -164,6 +164,8 @@ class MessageTile extends StatelessWidget {
               chatId: chatData['chatId'],
               postId: chatData['post_id'],
               postOwnerId: chatData['post_owner_id'],
+              profileImage:  chatData['profile_image'],
+              userName: "${chatData['first_name'] ?? 'Unknown'} ${chatData['last_name'] ?? ''}".trim()
             ),
           ),
         );
@@ -212,7 +214,7 @@ class MessageTile extends StatelessWidget {
                       Positioned.fill(
                         child: Container(
                           decoration: BoxDecoration(
-                            color: const Color.fromARGB(255, 255, 255, 255).withOpacity(0.6),
+                            color: const Color.fromARGB(255, 107, 106, 106).withOpacity(0.6),
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: Center(
@@ -285,7 +287,7 @@ class MessageTile extends StatelessWidget {
                         "${chatData['first_name'] ?? 'Unknown'} ${chatData['last_name'] ?? ''}".trim(),
                         style: TextStyle(fontSize: 12, color: const Color.fromARGB(255, 0, 0, 0)),
                       ),
-                      SizedBox(height: 0,),
+                      SizedBox(height: 3,),
       
                       Text(
                         chatData['title'] ?? 'No Title',

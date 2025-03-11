@@ -306,6 +306,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                                   chatId: chatId,
                                   postId: widget.postId,
                                   postOwnerId: userId,
+                                  profileImage:  profile,
+                                  userName: userName
                                 ),
                               ),
                             );
