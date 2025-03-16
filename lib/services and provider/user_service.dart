@@ -444,6 +444,75 @@ Future<bool> updatePost({
   }
 
 
+// Future<void> deleteExpiredPostsForUser(BuildContext context) async {
+//   final DateTime now = DateTime.now();
+//   final User? user = FirebaseAuth.instance.currentUser;
+//   final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+//   if (user == null) {
+//     devtools.log("No user logged in");
+//     return;
+//   }
+
+//   try {
+//     // Fetch all posts by the user (ignoring expiry_date_time condition to avoid Firestore index errors)
+//     final QuerySnapshot snapshot = await firestore
+//         .collection('posts')
+//         .where('user_id', isEqualTo: user.uid)
+//         .get();
+
+//     // Filter expired posts locally
+//     final expiredPosts = snapshot.docs.where((doc) {
+//       final expiryDate = (doc['expiry_date_time'] as Timestamp).toDate();
+//       return expiryDate.isBefore(now);
+//     }).toList();
+
+//     if (expiredPosts.isEmpty) {
+//       devtools.log("No expired posts found.");
+//       return;
+//     }
+
+//     bool anyDeleted = false; // Track if at least one post was deleted
+
+//     for (var doc in expiredPosts) {
+//       final String status = doc['status'];
+//       if (status == "available") {
+//         final String? imageUrl = doc['image_url'];
+//         final String? qrCodeUrl = doc['qr_code_url'];
+//         final String postId = doc.id;
+
+//         // Delete images from Firebase Storage
+//         if (imageUrl != null && imageUrl.isNotEmpty) {
+//           await _deleteFileFromStorage(imageUrl);
+//         }
+//         if (qrCodeUrl != null && qrCodeUrl.isNotEmpty) {
+//           await _deleteFileFromStorage(qrCodeUrl);
+//         }
+
+//         // Delete associated chats
+//         QuerySnapshot chatSnapshot =
+//             await firestore.collection('chats').where('post_id', isEqualTo: postId).get();
+
+//         for (var chatDoc in chatSnapshot.docs) {
+//           await firestore.collection('chats').doc(chatDoc.id).delete();
+//         }
+
+//         // Delete post from Firestore
+//         await firestore.collection('posts').doc(postId).delete();
+//         devtools.log("Deleted expired post and associated chats: $postId");
+//         anyDeleted = true;
+//       }
+//     }
+
+//     if (!anyDeleted) {
+//       devtools.log("No 'available' expired posts to delete.");
+//     }
+//   } catch (error) {
+//     devtools.log("Error deleting expired posts: $error");
+//     showErrorDialog(context, "Failed to delete expired posts.");
+//   }
+// }
+
 Future<void> deleteExpiredPostsForUser(BuildContext context) async {
   final DateTime now = DateTime.now();
   final User? user = FirebaseAuth.instance.currentUser;
@@ -469,50 +538,61 @@ Future<void> deleteExpiredPostsForUser(BuildContext context) async {
 
     if (expiredPosts.isEmpty) {
       devtools.log("No expired posts found.");
-      return;
-    }
+    } else {
+      bool anyDeleted = false; // Track if at least one post was deleted
 
-    bool anyDeleted = false; // Track if at least one post was deleted
+      for (var doc in expiredPosts) {
+        final String status = doc['status'];
+        if (status == "available") {
+          final String? imageUrl = doc['image_url'];
+          final String? qrCodeUrl = doc['qr_code_url'];
+          final String postId = doc.id;
 
-    for (var doc in expiredPosts) {
-      final String status = doc['status'];
-      if (status == "available") {
-        final String? imageUrl = doc['image_url'];
-        final String? qrCodeUrl = doc['qr_code_url'];
-        final String postId = doc.id;
+          // Delete images from Firebase Storage
+          if (imageUrl != null && imageUrl.isNotEmpty) {
+            await _deleteFileFromStorage(imageUrl);
+          }
+          if (qrCodeUrl != null && qrCodeUrl.isNotEmpty) {
+            await _deleteFileFromStorage(qrCodeUrl);
+          }
 
-        // Delete images from Firebase Storage
-        if (imageUrl != null && imageUrl.isNotEmpty) {
-          await _deleteFileFromStorage(imageUrl);
+          // Delete associated chats for this post
+          QuerySnapshot chatSnapshot =
+              await firestore.collection('chats').where('post_id', isEqualTo: postId).get();
+
+          for (var chatDoc in chatSnapshot.docs) {
+            await firestore.collection('chats').doc(chatDoc.id).delete();
+          }
+
+          // Delete the expired post
+          await firestore.collection('posts').doc(postId).delete();
+          devtools.log("Deleted expired post and associated chats: $postId");
+          anyDeleted = true;
         }
-        if (qrCodeUrl != null && qrCodeUrl.isNotEmpty) {
-          await _deleteFileFromStorage(qrCodeUrl);
-        }
+      }
 
-        // Delete associated chats
-        QuerySnapshot chatSnapshot =
-            await firestore.collection('chats').where('post_id', isEqualTo: postId).get();
-
-        for (var chatDoc in chatSnapshot.docs) {
-          await firestore.collection('chats').doc(chatDoc.id).delete();
-        }
-
-        // Delete post from Firestore
-        await firestore.collection('posts').doc(postId).delete();
-        devtools.log("Deleted expired post and associated chats: $postId");
-        anyDeleted = true;
+      if (!anyDeleted) {
+        devtools.log("No 'available' expired posts to delete.");
       }
     }
 
-    if (!anyDeleted) {
-      devtools.log("No 'available' expired posts to delete.");
+    // 🔥 Delete **all** chats where the user is a participant
+    QuerySnapshot userChatsSnapshot = await firestore
+        .collection('chats')
+        .where('participants', arrayContains: user.uid)
+        .get();
+
+    for (var chatDoc in userChatsSnapshot.docs) {
+      await firestore.collection('chats').doc(chatDoc.id).delete();
     }
+
+    devtools.log("Deleted all chats for user: ${user.uid}");
+
   } catch (error) {
-    devtools.log("Error deleting expired posts: $error");
-    showErrorDialog(context, "Failed to delete expired posts.");
+    devtools.log("Error deleting expired posts and chats: $error");
+    showErrorDialog(context, "Failed to delete expired posts and chats.");
   }
 }
-
 
 
 Future<bool> deletePostById(BuildContext context, String postId) async {
@@ -541,12 +621,31 @@ Future<bool> deletePostById(BuildContext context, String postId) async {
       await _deleteFileFromStorage(qrCodeUrl);
     }
 
-    // Delete associated chats
+    // Delete associated chats and their messages
     QuerySnapshot chatSnapshot =
         await firestore.collection('chats').where('post_id', isEqualTo: postId).get();
 
     for (var chatDoc in chatSnapshot.docs) {
-      await firestore.collection('chats').doc(chatDoc.id).delete();
+      String chatId = chatDoc.id;
+
+      // Fetch and delete all messages inside the chat
+      QuerySnapshot messageSnapshot = await firestore
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .get();
+
+      for (var messageDoc in messageSnapshot.docs) {
+        await firestore
+            .collection('chats')
+            .doc(chatId)
+            .collection('messages')
+            .doc(messageDoc.id)
+            .delete();
+      }
+
+      // Now delete the chat document
+      await firestore.collection('chats').doc(chatId).delete();
     }
 
     // Delete post from Firestore
@@ -554,7 +653,7 @@ Future<bool> deletePostById(BuildContext context, String postId) async {
 
     // Show success snackbar
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Post and related chats deleted successfully!"), backgroundColor: Colors.green),
+      SnackBar(content: Text("Post deleted successfully!"), backgroundColor: Colors.green),
     );
 
     return true; // Successfully deleted
@@ -566,6 +665,59 @@ Future<bool> deletePostById(BuildContext context, String postId) async {
     return false; // Deletion failed
   }
 }
+
+
+// Future<bool> deletePostById(BuildContext context, String postId) async {
+//   try {
+//     FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+//     // Fetch post document
+//     DocumentSnapshot doc = await firestore.collection('posts').doc(postId).get();
+
+//     if (!doc.exists) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text("Post not found."), backgroundColor: Colors.red),
+//       );
+//       return false;
+//     }
+
+//     // Fetch image URLs from the post
+//     String? imageUrl = doc['image_url'];
+//     String? qrCodeUrl = doc['qr_code_url'];
+
+//     // Delete images from Firebase Storage
+//     if (imageUrl != null && imageUrl.isNotEmpty) {
+//       await _deleteFileFromStorage(imageUrl);
+//     }
+//     if (qrCodeUrl != null && qrCodeUrl.isNotEmpty) {
+//       await _deleteFileFromStorage(qrCodeUrl);
+//     }
+
+//     // Delete associated chats
+//     QuerySnapshot chatSnapshot =
+//         await firestore.collection('chats').where('post_id', isEqualTo: postId).get();
+
+//     for (var chatDoc in chatSnapshot.docs) {
+//       await firestore.collection('chats').doc(chatDoc.id).delete();
+//     }
+
+//     // Delete post from Firestore
+//     await firestore.collection('posts').doc(postId).delete();
+
+//     // Show success snackbar
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       SnackBar(content: Text("Post and related chats deleted successfully!"), backgroundColor: Colors.green),
+//     );
+
+//     return true; // Successfully deleted
+//   } catch (error) {
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       SnackBar(content: Text("Failed to delete post: $error"), backgroundColor: Colors.red),
+//     );
+//     debugPrint("Error deleting post: $error");
+//     return false; // Deletion failed
+//   }
+// }
 
 
 // Helper function to delete a file from Firebase Storage

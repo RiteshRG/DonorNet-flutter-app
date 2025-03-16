@@ -237,9 +237,9 @@ void _showPostDetails(BuildContext context, Map<String, dynamic> post, Map<Strin
             width: 30,
             height: 30,
             child: const Icon(
-              Icons.my_location,
-              color: Color.fromARGB(255, 0, 0, 0),
-              size: 30,
+              Icons.location_pin,
+              color: Color.fromARGB(255, 248, 28, 28),
+              size: 35,
             ),
           ),
         );

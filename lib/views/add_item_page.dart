@@ -326,12 +326,12 @@ class _AddItemPageState extends State<AddItemPage> {
               ),
             
               SizedBox(height: 10),
-            Text(
-              selectedLocation != null
-                  ? "User's selected location: ${selectedLocation!.latitude}, ${selectedLocation!.longitude}"
-                  : "Select a location",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
+            // Text(
+            //   selectedLocation != null
+            //       ? "User's selected location: ${selectedLocation!.latitude}, ${selectedLocation!.longitude}"
+            //       : "Select a location",
+            //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            // ),
             
                 SizedBox(height: 38),
                 
@@ -536,6 +536,9 @@ class _AddItemPageState extends State<AddItemPage> {
           onTap: (index) {
             if(index == 0){
                Navigator.of(context).pushNamedAndRemoveUntil('homePageRoute', (route) => false,);
+            }
+            if(index == 1){
+               Navigator.of(context).pushNamed('mapPageRoute');
             }
             if(index == 3){
                Navigator.of(context).pushNamedAndRemoveUntil('chatPageRoute', (route) => false,);

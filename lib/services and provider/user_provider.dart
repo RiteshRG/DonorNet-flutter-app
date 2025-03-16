@@ -33,7 +33,8 @@ class UserProvider with ChangeNotifier {
 
 
   // Fetch User Data
-  Future<void> fetchUserDetails() async {
+Future<void> fetchUserDetails() async {
+  Future.delayed(Duration.zero, () async {
     _isLoading = true;
     notifyListeners();
 
@@ -57,7 +58,9 @@ class UserProvider with ChangeNotifier {
 
     _isLoading = false;
     notifyListeners();
-  }
+  });
+}
+
 
 Future<List<Map<String, dynamic>>> fetchAvailablePosts() async {
   try {

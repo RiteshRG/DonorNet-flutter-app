@@ -28,6 +28,8 @@ class _Profile_pageState extends State<Profile_page> {
     @override
   void initState() {
     super.initState();
+    _futurePosts = UserProvider().fetchAvailablePosts();
+       claimedPost = UserProvider().getClaimedPostImages();
     // Fetch user data when the screen is initialized
     userId = UserService().currentUserId!;
     _fetchUserRating();
@@ -38,8 +40,6 @@ class _Profile_pageState extends State<Profile_page> {
       if (userProvider.userData != null && userProvider.userData!['uid'] != null) {
         userProvider.fetchUserRating(userProvider.userData!['uid']); 
       }
-       _futurePosts = UserProvider().fetchAvailablePosts();
-       claimedPost = UserProvider().getClaimedPostImages();
     });
   }
 
@@ -254,6 +254,9 @@ class _Profile_pageState extends State<Profile_page> {
           onTap: (index) {
             if(index == 0){
                Navigator.of(context).pushNamedAndRemoveUntil('homePageRoute', (route) => false,);
+            }
+            if(index == 1){
+               Navigator.of(context).pushNamed('mapPageRoute');
             }
             if(index == 2){
                Navigator.of(context).pushNamed('addItemPageRoute');

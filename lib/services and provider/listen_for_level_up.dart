@@ -72,7 +72,7 @@ void listenForLevelUp(BuildContext context, String userId) async {
 
         devtools.log("🟢 Real-Time Level: $currentLevel | Last Known Level: $lastKnownLevel");
 
-        if (currentLevel > 0 && temp >0) { 
+        if (currentLevel > 0 && temp >0 && lastKnownLevel<currentLevel) { 
           devtools.log("🎉 Real-Time First Level Up: 0 ➝ $currentLevel");
 
            BuildContext? currentContext = navigatorKey.currentContext;

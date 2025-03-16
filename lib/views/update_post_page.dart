@@ -595,12 +595,12 @@ Future<void> _selectTime(BuildContext context, bool isPickup) async {
               ),
             
               SizedBox(height: 10),
-            Text(
-              selectedLocation != null
-                  ? "User's selected location: ${selectedLocation!.latitude}, ${selectedLocation!.longitude}"
-                  : "Select a location",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
+            // Text(
+            //   selectedLocation != null
+            //       ? "User's selected location: ${selectedLocation!.latitude}, ${selectedLocation!.longitude}"
+            //       : "Select a location",
+            //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            // ),
             
                 SizedBox(height: 38),
                 

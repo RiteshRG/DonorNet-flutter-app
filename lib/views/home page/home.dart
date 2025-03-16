@@ -67,13 +67,14 @@ class _HomePageState extends State<HomePage>  {
     // });
   }
 
-  @override
+   @override
   void dispose() {
     _searchController.dispose();
     _scrollController.dispose();
-    InternetChecker.dispose();
+    InternetChecker.dispose(); // Make sure InternetChecker is properly disposed
     super.dispose();
-  }
+}
+
 
    Future<void> _loadFilters() async {
     final filters = await loadFilters();
@@ -92,6 +93,8 @@ class _HomePageState extends State<HomePage>  {
   Future<void> _fetchPosts({bool loadMore = false}) async {
   if (loadMore && _isFetchingMore) return;
 
+  if (!mounted) return; // Check if the widget is still in the tree
+
   setState(() {
     _isFetchingMore = loadMore;
   });
@@ -103,28 +106,29 @@ class _HomePageState extends State<HomePage>  {
   List<Map<String, dynamic>> newPosts = await _postService.getAvailablePosts(
       loadMore: loadMore, selectedCategories: selectedCategories);
 
+  if (!mounted) return; // Check again after async operation
+
   if (newPosts.isNotEmpty) {
     devtools.log("Applying distance filter: $selectedDistance");
 
     newPosts = await _mapService.sortPostsByDistance(newPosts, selectedDistance);
 
+    if (!mounted) return;
+
     setState(() {
       if (loadMore) {
-        _posts.addAll(newPosts); 
+        _posts.addAll(newPosts);
       } else {
-        _posts = newPosts; 
+        _posts = newPosts;
       }
       _isLoading = false;
       _isFetchingMore = false;
     });
-
-    // Debugging: Log each post's data type
-    for (var i = 0; i < _posts.length; i++) {
-      devtools.log("Post $i Data: ${_posts[i]}"); 
-    }
   } else {
+    if (!mounted) return;
+
     setState(() {
-      if (!loadMore) _posts = []; 
+      if (!loadMore) _posts = [];
       _isLoading = false;
       _isFetchingMore = false;
     });
@@ -141,15 +145,21 @@ class _HomePageState extends State<HomePage>  {
     await userService.deleteExpiredPostsForUser(context);
   }
 
-   Future<void> _refreshPage() async {
-    if (!mounted) return; 
-    await _deleteExpiredPosts(); 
-     setState(() {
-    _isLoading = true;  
+Future<void> _refreshPage() async {
+  if (!mounted) return;
+  
+  await _deleteExpiredPosts();
+
+  if (!mounted) return;
+
+  setState(() {
+    _isLoading = true;
   });
-    _fetchPosts();  
-    if (!mounted) return;
-  }
+
+  await _fetchPosts();
+
+  if (!mounted) return;
+}
 
   void _onSearchChanged() {
   setState(() {
