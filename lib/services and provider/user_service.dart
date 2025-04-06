@@ -576,17 +576,17 @@ Future<void> deleteExpiredPostsForUser(BuildContext context) async {
       }
     }
 
-    // 🔥 Delete **all** chats where the user is a participant
-    QuerySnapshot userChatsSnapshot = await firestore
-        .collection('chats')
-        .where('participants', arrayContains: user.uid)
-        .get();
+    // // 🔥 Delete **all** chats where the user is a participant
+    // QuerySnapshot userChatsSnapshot = await firestore
+    //     .collection('chats')
+    //     .where('participants', arrayContains: user.uid)
+    //     .get();
 
-    for (var chatDoc in userChatsSnapshot.docs) {
-      await firestore.collection('chats').doc(chatDoc.id).delete();
-    }
+    // for (var chatDoc in userChatsSnapshot.docs) {
+    //   await firestore.collection('chats').doc(chatDoc.id).delete();
+    // }
 
-    devtools.log("Deleted all chats for user: ${user.uid}");
+    // devtools.log("Deleted all chats for user: ${user.uid}");
 
   } catch (error) {
     devtools.log("Error deleting expired posts and chats: $error");

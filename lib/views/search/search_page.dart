@@ -10,7 +10,7 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   TextEditingController _searchController = TextEditingController();
   List<String> searchOptions = [
-    'Food', 'Toy', 'Pet Supplies', 'Clothing and Textiles',
+    'Food', 'Toy', 'Pet Supplies', 'Clothing and Textile',
     'Footwear', 'Furniture', 'Sports Equipment'
   ];
   List<String> filteredOptions = [];

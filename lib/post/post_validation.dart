@@ -124,7 +124,7 @@ Future<bool> validateAndSubmitPost({
     return false;
   }
 
-  // 8️⃣ Validate Expiry Date & Time
+  // Validate Expiry Date & Time
   DateTime expiryDateTime = DateTime(
     expiryDate.year, expiryDate.month, expiryDate.day, expiryTime.hour, expiryTime.minute
   );
@@ -148,10 +148,10 @@ Future<bool> validateAndSubmitPost({
     return false;
   }
 
-  // 9️⃣ Image Label Detection
+  // Image Label Detection
   if (task == 'update') {
     if ((imageUrl.isNotEmpty && imageUrl.trim() != "") && imageFile != null) {
-      print("❌ Both imageUrl and imageFile are provided. Only one should be used.");
+      print("Both imageUrl and imageFile are provided. Only one should be used.");
       detectedLabels = await detectImageLabels(context, File(imageFile.path)); 
     } else {
       if ((imageUrl.isNotEmpty && imageUrl.trim() != "") && imageFile == null) {
@@ -177,14 +177,14 @@ Future<bool> validateAndSubmitPost({
     return false;
   }
 
-  // 🔟 Validate Category Match
+  // Validate Category Match
   bool isMatch = await isCategoryMatch(context, detectedLabels, category);
   if (!isMatch) {
     showErrorDialog(context, "The uploaded image does not match the selected category.");
     return false;
   }
 
-  // 1️⃣1️⃣ Validate Title with Image Labels
+  // Validate Title with Image Labels
   bool titleMatch = isTitleMatch(title, detectedLabels);
   if (!titleMatch) {
     showErrorDialog(context, "The title should be relevant to the image content. Consider using words that best describe the image.\n\nSuggested keywords: $detectedLabels.");
@@ -194,22 +194,22 @@ Future<bool> validateAndSubmitPost({
   return true;
 }
 
-// ✅ Check if Title Matches Detected Labels
+// Check if Title Matches Detected Labels
 bool isTitleMatch(String title, List<String> detectedLabels) {
   String titleLower = title.toLowerCase().trim();
 
   for (String label in detectedLabels) {
     if (titleLower.contains(label)) {
-      print("✅ Title matches detected label: $label");
+      print("Title matches detected label: $label");
       return true;
     }
   }
 
-  print("❌ No match found between title and detected labels.");
+  print("No match found between title and detected labels.");
   return false;
 }
 
-// ✅ Validate Category Match
+// Validate Category Match
 Future<bool> isCategoryMatch(BuildContext context, List<String> detectedLabels, String categoryName) async {
   final firestore = FirebaseFirestore.instance;
 
@@ -253,301 +253,3 @@ Future<bool> isCategoryMatch(BuildContext context, List<String> detectedLabels, 
   }
 }
 
-
-// Future<bool> validateAndSubmitPost({
-//   required String  imageUrl,
-//   required XFile? imageFile,
-//   required String title,
-//   required String description,
-//   required String category,
-//   required DateTime? pickupDate,
-//   required TimeOfDay? pickupTime,
-//   required DateTime? expiryDate,
-//   required TimeOfDay? expiryTime,
-//   required LatLng? location,
-//   required String task,
-//   required BuildContext context,
-// }) async {
-
-//   List<String> detectedLabels;
-
-//   if ((imageUrl.isEmpty || imageUrl.trim() == "") && imageFile == null) {
-//     showErrorDialog(context, "Please provide an image");
-//     return false;
-//   }
-
-//   // 1️⃣ Validate Required Fields
-//   if (title.trim().isEmpty || 
-//       description.trim().isEmpty || 
-//       category.trim().isEmpty || 
-//       pickupDate == null || 
-//       pickupTime == null || 
-//       expiryDate == null || 
-//       expiryTime == null || 
-//       location == null) {
-//     showErrorDialog(context, "All fields are required. Please fill in all details.");
-//     return false;
-//   }
-
-//   // 2️⃣ Validate Image Size (Should be ≤ 1MB)
-//   File file = File(imageFile!.path);
-//   int imageSize = await file.length(); 
-//   if (imageSize > 1024 * 1024) {
-//     showErrorDialog(context, "The image size is too large. Please upload an image less than 1MB.");
-//     return false;
-//   }
-
-//   final RegExp titleRegex = RegExp(r'^(?=(?:.*[a-zA-Z0-9]){3,})[a-zA-Z0-9\- ]+$');
-//   if (!titleRegex.hasMatch(title)) {
-//   showErrorDialog(context, "Invalid title. It must contain at least three letters or numbers and can only include spaces and '-'.");
-//   return false;
-//   }
-
-//   // 3️⃣ **Validate Description (Min 3 characters)**
-//   if (description.length < 3) {
-//     showErrorDialog(context, "Description must be at least 3 characters long.");
-//     return false;
-//   }
-
-//   // 3️⃣ Validate Title & Description (Advanced Restricted Word Check)
-//   List<String> restrictedWords = [
-//     'gun', 'weapon', 'knife', 'dagger', 'bomb', 'explosive', 'firearm', 'pistol', 'rifle', 'shotgun', 'ammunition', 'bullet', 'grenade', 'machete', 'sword', 'crossbow', 'taser', 'stun gun', 'baton', 'nunchaku', 'brass'];
-
-//    bool containsRestrictedWords(String text) {
-//     String cleanText = text.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-//     return restrictedWords.any((word) => cleanText.contains(word));
-//   }
-
-//   if (containsRestrictedWords(title) || containsRestrictedWords(description)) {
-//     showErrorDialog(context, "Your post contains prohibited content. Please review and edit.");
-//     return false;
-//   }
-
-//   // 4️⃣ Validate Pickup Date & Time 
-//   DateTime now = DateTime.now();
-//   DateTime today = DateTime(now.year, now.month, now.day);
-//   DateTime pickupDateOnly = DateTime(pickupDate.year, pickupDate.month, pickupDate.day);
-//   DateTime pickupDateTime = DateTime(
-//     pickupDate.year, pickupDate.month, pickupDate.day, pickupTime.hour, pickupTime.minute
-//   );
-
-//   // Pickup date must not be in the past
-//   if (pickupDateOnly.isBefore(today)) {
-//     showErrorDialog(context, "Pickup date cannot be in the past.");
-//     return false;
-//   }
-
-//   // If pickup is today, time must be in the future
-//   if (pickupDateOnly.isAtSameMomentAs(today) && pickupDateTime.isBefore(now)) {
-//     showErrorDialog(context, "Pickup time must be after the current time if pickup is today.");
-//     return false;
-//   }
-
-//   // 5️⃣ Validate Expiry Date & Time (Must be after Pickup Time, with at least 1-hour gap, max 30 days)
-//   DateTime expiryDateTime = DateTime(
-//     expiryDate.year, expiryDate.month, expiryDate.day, expiryTime.hour, expiryTime.minute
-//   );
-  
-//   Duration minGap = Duration(hours: 1);
-//   Duration maxGap = Duration(days: 30);
-//   Duration actualGap = expiryDateTime.difference(pickupDateTime);
-
-//   if (expiryDateTime.isBefore(pickupDateTime)) {
-//     showErrorDialog(context, "Expiry date and time must be after the pickup date and time.");
-//     return false;
-//   }
-
-//   if (actualGap < minGap) {
-//     showErrorDialog(context, "Expiry time must be at least 1 hour after pickup time.");
-//     return false;
-//   }
-
-//   if (actualGap > maxGap) {
-//     showErrorDialog(context, "Expiry time cannot be more than 30 days after pickup time.");
-//     return false;
-//   }
-
-//   if(task == 'update'){
-//     if ((imageUrl.isNotEmpty && imageUrl.trim() != "") && imageFile != null) {
-//     print("❌ Both imageUrl and imageFile are provided. Only one should be used.");
-//     detectedLabels = await detectImageLabels(context, file); 
-//     }else{
-//       if ((imageUrl.isNotEmpty && imageUrl.trim() != "") && imageFile == null) {
-//         detectedLabels = await detectImageUrlLabels(context, imageUrl);
-//       }else{
-//         detectedLabels = await detectImageLabels(context, file); 
-//       }
-//     }
-//   }else{
-//     detectedLabels = await detectImageLabels(context, file);
-//   }
-
-
-
-// if (detectedLabels.isEmpty) {
-//   showErrorDialog(context, "Failed to analyze the image. Please try again.");
-//   return false;
-// }
-
-// bool isMatch = await isCategoryMatch(context, detectedLabels, category);
-
-// if (!isMatch) {
-//   showErrorDialog(context, "The uploaded image does not match the selected category.");
-//   return false;
-// }
-
-// // Step 1️⃣: Check if the title matches any detected labels
-// bool titleMatch = isTitleMatch(title, detectedLabels);
-// if (!titleMatch) {
-//   showErrorDialog(context, "The title should be relevant to the image content. Consider using words that best describe the image.\n\nSuggested keywords: $detectedLabels.");
-//   return false;
-// }
-
-
-// return true;
-// }
-
-// bool isTitleMatch(String title, List<String> detectedLabels) {
-//   String titleLower = title.toLowerCase().trim();
-
-//   for (String label in detectedLabels) {
-//     if (titleLower.contains(label)) {
-//       print("✅ Title matches detected label: $label");
-//       return true;
-//     }
-//   }
-
-//   print("❌ No match found between title and detected labels.");
-//   return false;
-// }
-
-
-// // Modify isCategoryMatch function
-// Future<bool> isCategoryMatch(BuildContext context, List<String> detectedLabels, String categoryName) async {
-//   final firestore = FirebaseFirestore.instance;
-
-//   try {
-//     print(" Fetching category ID for: $categoryName");
-
-//     QuerySnapshot categorySnapshot = await firestore
-//         .collection('category')
-//         .where('category_name', isEqualTo: categoryName)
-//         .get();
-
-//     if (categorySnapshot.docs.isEmpty) {
-//       print(" Error: Category not found in database.");
-//       return false;
-//     }
-
-//     int categoryId = categorySnapshot.docs.first['categoryId'];  
-//     print(" Category ID: $categoryId");
-
-//     print(" Fetching keywords for category ID: $categoryId");
-//     QuerySnapshot keywordSnapshot = await firestore
-//         .collection('category_keywords')
-//         .where('category_id', isEqualTo: categoryId)
-//         .get();
-
-//     if (keywordSnapshot.docs.isEmpty) {
-//       print(" No keywords found for category: $categoryName");
-//       return false;
-//     }
-
-//     List<String> categoryKeywords = keywordSnapshot.docs
-//         .expand((doc) => List<String>.from(doc['keywords']))
-//         .map((e) => e.toLowerCase().trim())
-//         .toList();
-
-//     print("Category Keywords: $categoryKeywords");
-
-//     // Check if any detected label matches the category's keywords
-//     bool isMatch = detectedLabels.any((label) =>
-//         categoryKeywords.any((keyword) => label.contains(keyword)));
-
-//     if (isMatch) {
-//       print(" Match found! Image belongs to category: $categoryName");
-//       return true;
-//     }
-
-//     print(" No match found. Image does not belong to category: $categoryName");
-//     return false;
-//   } catch (e) {
-//     print(" Error while fetching category data: $e");
-//     return false;
-//   }
-// }
-
-
-//   // 6️⃣ Validate Image Against Category
-//   bool isMatch = await detectImageMatchesCategory(context, file, category);
-  
-//   if (!isMatch) {
-//     showErrorDialog(context, "The uploaded image does not match the selected category.");
-//     return false;
-//   }
-
-//   return true;
-// }
-
-// Future<bool> isCategoryMatch(
-//     BuildContext context, List<String> detectedLabels, String categoryName) async {
-//   final firestore = FirebaseFirestore.instance;
-
-//   try {
-//     print("📌 Fetching category ID for: $categoryName");
-
-//     QuerySnapshot categorySnapshot = await firestore
-//         .collection('category')
-//         .where('category_name', isEqualTo: categoryName)
-//         .get();
-
-//     if (categorySnapshot.docs.isEmpty) {
-//       print("❌ Error: Category not found in database.");
-//       showErrorDialog(context, "Category not found in database.");
-//       return false;
-//     }
-
-//     // Extract category_id as an integer
-//     int categoryId = categorySnapshot.docs.first['categoryId'];  
-//     print("✅ Category ID: $categoryId");
-
-//     print("📌 Fetching keywords for category ID: $categoryId");
-//     QuerySnapshot keywordSnapshot = await firestore
-//         .collection('category_keywords')
-//         .where('category_id', isEqualTo: categoryId)
-//         .get();
-
-//     if (keywordSnapshot.docs.isEmpty) {
-//       print("⚠️ No keywords found for category: $categoryName");
-//       showErrorDialog(context, "No keywords found for category: $categoryName");
-//       return false;
-//     }
-
-//     List<String> categoryKeywords = [];
-//     for (var doc in keywordSnapshot.docs) {
-//       categoryKeywords.addAll(
-//         List<String>.from(doc['keywords'])
-//             .map((e) => e.toLowerCase().trim()) // Ensure lowercase & trim spaces
-//       );
-//     }
-
-//     print("✅ Category Keywords: $categoryKeywords");
-
-//     // Check if any detected label matches the category's keywords (allows partial matching)
-//     for (String detectedLabel in detectedLabels) {
-//       if (categoryKeywords.any((keyword) => detectedLabel.contains(keyword))) {
-//         print("🎯 Match found! Image belongs to category: $categoryName");
-//         return true;
-//       } else {
-//         print("❌ No match for: $detectedLabel");
-//       }
-//     }
-
-//     print("⚠️ No match found. Image does not belong to category: $categoryName");
-//     return false;
-//   } catch (e) {
-//     print("❌ Error while fetching category data: $e");
-//     showErrorDialog(context, "Error while fetching category data: $e");
-//     return false;
-//   }
-// }

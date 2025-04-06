@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:donornet/api.dart';
 import 'package:http/http.dart' as http;
 import 'dart:developer' as devtools show log;
 
@@ -14,7 +15,7 @@ class OTPService {
   int _attemptCount = 0;  // Track the number of attempts to prevent brute force
 
   // Brevo API Configuration
-  final String brevoApiKey = "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"; // Replace with your Brevo API Key
+  final String brevoApiKey = APIKey.brevo; // Replace with your Brevo API Key
   final String senderEmail = "donornet5@gmail.com"; // Replace with your Brevo verified sender email
   final String senderName = "DonorNet"; // Replace with the name you want to display
 
