@@ -4,6 +4,7 @@ import 'package:donornet/materials/app_colors.dart';
 import 'package:donornet/materials/access_throught_link.dart';
 import 'package:donornet/utilities/show_dialog.dart';
 import 'package:donornet/views/authentication/login_page.dart';
+import 'package:donornet/views/authentication/termAndConditions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -499,34 +500,40 @@ class _RegisterState extends State<Register> {
                                       },
                                     ),
                                     Expanded(
-                                      child: Text.rich(
-                                        TextSpan(
-                                          children: [
-                                            TextSpan(
-                                              text: "I agree to DonorNet's ",
-                                              style: TextStyle(color: Colors.black), // Default text color
-                                            ),
-                                            TextSpan(
-                                              text: 'Terms and Conditions, Privacy Policy,',
-                                              style: TextStyle(color: AppColors.primaryColor,
-                                              fontWeight: FontWeight.bold
-                                              ), // Change the color of the quoted text
-                                            ),
-                                            TextSpan(
-                                              text: ' and ',
-                                              style: TextStyle(color: Colors.black),
-                                            ),
-                                            TextSpan(
-                                              text: 'End User License Agreement',
-                                              style: TextStyle(color: AppColors.primaryColor,
-                                              fontWeight: FontWeight.bold
+                                      child: GestureDetector(
+                                        onTap: (){
+                                          Navigator.push(context, 
+                                      MaterialPageRoute(builder: (context) => TermsAndConditionsPage()));
+                                        },
+                                        child: Text.rich(
+                                          TextSpan(
+                                            children: [
+                                              TextSpan(
+                                                text: "I agree to DonorNet's ",
+                                                style: TextStyle(color: Colors.black), // Default text color
                                               ),
-                                            ),
-                                            TextSpan(
-                                              text: '.',
-                                              style: TextStyle(color: Colors.black), // Default text color after the quoted part
-                                            ),
-                                          ],
+                                              TextSpan(
+                                                text: 'Terms and Conditions, Privacy Policy,',
+                                                style: TextStyle(color: AppColors.primaryColor,
+                                                fontWeight: FontWeight.bold
+                                                ), // Change the color of the quoted text
+                                              ),
+                                              TextSpan(
+                                                text: ' and ',
+                                                style: TextStyle(color: Colors.black),
+                                              ),
+                                              TextSpan(
+                                                text: 'End User License Agreement',
+                                                style: TextStyle(color: AppColors.primaryColor,
+                                                fontWeight: FontWeight.bold
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: '.',
+                                                style: TextStyle(color: Colors.black), // Default text color after the quoted part
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
