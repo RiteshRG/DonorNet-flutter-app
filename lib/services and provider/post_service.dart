@@ -8,7 +8,7 @@ class PostService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static const int pageSize = 10; // Number of posts per page
   DocumentSnapshot? _lastDocument;
-  final Map<String, Map<String, dynamic>> _userCache = {}; // ✅ Cache to avoid redundant queries
+  final Map<String, Map<String, dynamic>> _userCache = {}; // Cache to avoid redundant queries
 
 
   Future<List<Map<String, dynamic>>> searchPosts(String searchText) async {
@@ -99,7 +99,7 @@ class PostService {
     }
   }
 
-  // ✅ Fetch posts with optional category filtering
+  // Fetch posts with optional category filtering
   Future<List<Map<String, dynamic>>> getAvailablePosts({
     bool loadMore = false,
     List<String>? selectedCategories,
@@ -148,7 +148,7 @@ class PostService {
 
       List<Map<String, dynamic>> posts = [];
 
-      // ✅ Process each post efficiently
+      // Process each post efficiently
       for (var doc in querySnapshot.docs) {
         var data = doc.data() as Map<String, dynamic>;
         data['id'] = doc.id;
@@ -156,14 +156,14 @@ class PostService {
         if (data.containsKey('user_id')) {
           String userId = data['user_id'];
 
-          // ✅ Check Cache before making Firestore calls
+          // Check Cache before making Firestore calls
           if (!_userCache.containsKey(userId)) {
             var userFuture = _firestore.collection('users').doc(userId).get();
             var ratingFuture = UserService().getUserRating(userId);
 
             var results = await Future.wait([userFuture, ratingFuture]);
 
-            // ✅ Proper casting to avoid 'exists' error
+            //Proper casting to avoid 'exists' error
             DocumentSnapshot userSnapshot = results[0] as DocumentSnapshot;
             if (userSnapshot.exists) {
               _userCache[userId] = userSnapshot.data() as Map<String, dynamic>;
@@ -202,7 +202,6 @@ class PostService {
 
     Map<String, dynamic> postData = postSnapshot.data() as Map<String, dynamic>;
 
-    // Fetch user details
     String userId = postData['user_id'];
     DocumentSnapshot userSnapshot =
         await _firestore.collection('users').doc(userId).get();
@@ -214,7 +213,6 @@ class PostService {
 
     Map<String, dynamic> userData = userSnapshot.data() as Map<String, dynamic>;
 
-    // Fetch user rating
     String userRating = await UserService().getUserRating(userId);
 
     // Calculate distance (only if 'location' exists and is a GeoPoint)
@@ -232,8 +230,8 @@ class PostService {
     postDetailsList.add({
       "post": postData,
       "user": userData,
-      "rating": userRating, // ✅ Store user rating
-      "distance": distance, // ✅ Store distance in km (null if invalid)
+      "rating": userRating, 
+      "distance": distance, 
     });
 
   } catch (e) {
@@ -385,10 +383,10 @@ Future<bool> markPostAsClaimed(String postId, String postOwnerId) async {
     // After updating points, update the level
     await updateUserLevel(postOwnerId, updatedPoints);
 
-    devtools.log("✅ Post marked as claimed, points updated, and level updated successfully!");
+    devtools.log("Post marked as claimed, points updated, and level updated successfully!");
     return true;
   } catch (e) {
-    devtools.log("❌ Error updating post status, points, or level: $e");
+    devtools.log(" Error updating post status, points, or level: $e");
     return false;
   }
 }

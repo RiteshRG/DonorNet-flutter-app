@@ -63,12 +63,12 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    // ✅ Listen for user authentication state changes
+    // Listen for user authentication state changes
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
       if (user != null) {
-        devtools.log('************########');
+        devtools.log('########');
         
-        // ✅ Use navigatorKey.currentContext instead of passing context
+        //  Use navigatorKey.currentContext instead of passing context
         BuildContext? currentContext = navigatorKey.currentContext;
         if (currentContext != null && currentContext.mounted) {
           listenForLevelUp(currentContext, user.uid);

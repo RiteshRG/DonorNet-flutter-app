@@ -113,31 +113,6 @@ Future<List<String>> getClaimedPostImages() async {
 
 
 
-  // Upload Profile Picture and Update Firestore
-  // Future<void> updateProfilePicture(File imageFile, Map<String, dynamic> updatedData) async {
-  //   _isLoading = true;
-  //   notifyListeners();
-
-  //   try {
-  //     User? user = _auth.currentUser;
-  //     if (user == null) {
-  //       _errorMessage = "No authenticated user found.";
-  //     } else {
-  //       String filePath = 'profile_pictures/${user.uid}.jpg';
-  //       TaskSnapshot snapshot = await _storage.ref(filePath).putFile(imageFile);
-  //       String downloadURL = await snapshot.ref.getDownloadURL();
-  //       updatedData['profile_image'] = downloadURL;
-  //       await _firestore.collection('users').doc(user.uid).update(updatedData);
-  //       _userData = {...?_userData, ...updatedData};
-  //     }
-  //   } catch (e) {
-  //     _errorMessage = "Error updating profile: ${e.toString()}";
-  //   }
-
-  //   _isLoading = false;
-  //   notifyListeners();
-  // }
-
   // Fetch User Levels
   Future<void> fetchUserLevels(BuildContext context) async {
     _isLoading = true;
@@ -197,34 +172,7 @@ Future<List<String>> getClaimedPostImages() async {
     }
   }
 
-   /// ****Rating****
-  //   Future<void> fetchUserRating(String userId) async {
-  //   try {
-  //     QuerySnapshot ratingSnapshot = await _firestore
-  //         .collection('ratings')
-  //         .where('rated_user_id', isEqualTo: userId)
-  //         .get();
-
-  //     if (ratingSnapshot.docs.isEmpty) {
-  //       _userRating = 0.0; // No ratings found, set to 0
-  //     } else {
-  //       double totalRating = 0;
-  //       int ratingCount = ratingSnapshot.docs.length;
-
-  //       for (var doc in ratingSnapshot.docs) {
-  //         totalRating += (doc['rating'] as num).toDouble();
-  //       }
-
-  //       _userRating = totalRating / ratingCount; // Calculate average rating
-  //     }
-
-  //     notifyListeners(); // Notify UI to update
-  //   } catch (e) {
-  //     debugPrint("Error fetching ratings: $e");
-  //     _userRating = 0.0; // Default to 0 on error
-  //     notifyListeners();
-  //   }
-  // }
+   
 
   Future<void> fetchUserRating(String userId) async {
   double totalRating = 0.0;

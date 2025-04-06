@@ -75,7 +75,7 @@ class UserService {
 
       await _firestore.collection("users").doc(userId).update(updatedData);
     } catch (e) {
-      print("🔥 Error updating user profile: $e");
+      print(" Error updating user profile: $e");
     }
   }
 
@@ -117,7 +117,7 @@ Future<Map<String, dynamic>?> fetchUserDetailsAndLevel(String userId) async {
     int ratingCount = 0;
 
     try {
-      // ✅ Correct collection name ('rating' instead of 'ratings')
+      //  Correct collection name ('rating' instead of 'ratings')
       QuerySnapshot ratingsSnapshot = await _firestore
           .collection('rating') 
           .where('rated_user_id', isEqualTo: userId)
@@ -130,19 +130,19 @@ Future<Map<String, dynamic>?> fetchUserDetailsAndLevel(String userId) async {
         ratingCount++;
       }
 
-      // ✅ Corrected calculation (no need for `ratingCount > 0` check)
+      //  Corrected calculation (no need for `ratingCount > 0` check)
       double averageRating = totalRating / ratingCount;
 
-      return averageRating.toStringAsFixed(1); // ✅ Standardized format (e.g., "4.5")
+      return averageRating.toStringAsFixed(1); // Standardized format (e.g., "4.5")
     } catch (e) {
       devtools.log('Error fetching user rating: $e');
-      return "N/A"; // ✅ Better than returning "0.0" on failure
+      return "N/A"; //  Better than returning "0.0" on failure
     }
   }
 
 
 Future<bool> createPost({
-  required XFile? imageFile, // ✅ Image file to upload
+  required XFile? imageFile, // Image file to upload
   required String? title,
   required String? description,
   required String? category,
@@ -155,7 +155,7 @@ Future<bool> createPost({
 }) async {
   try {
       devtools.log("IN createPost()");
-     // ✅ Fetch category ID
+     // Fetch category ID
     int? categoryId = await getCategoryId(category!, context);
     
     if (categoryId == null) return false;
@@ -168,21 +168,21 @@ Future<bool> createPost({
     devtools.log("userId: ${userId}, categoryId: ${categoryId}");
 
 
-    // ✅ Generate Unique Post ID
+    // Generate Unique Post ID
     String postId = Uuid().v4();
     devtools.log("postId: ${postId},");
 
-    // ✅ Generate qr code
+    // Generate qr code
     String? qrCodeUrl = await generateAndUploadQRCode(postId);
     if(qrCodeUrl == ""){
       return false;
     }
     
 
-    // ✅ Convert LatLng to GeoPoint
+    //  Convert LatLng to GeoPoint
     GeoPoint geoPoint = GeoPoint(location!.latitude, location.longitude);
 
-    // ✅ Create DateTime objects separately
+    // Create DateTime objects separately
     DateTime pickupDateTime = DateTime(
       pickupDate!.year, pickupDate!.month, pickupDate!.day, pickupTime!.hour, pickupTime.minute,
     );
@@ -191,14 +191,14 @@ Future<bool> createPost({
       expiryDate!.year, expiryDate!.month, expiryDate!.day, expiryTime!.hour, expiryTime!.minute,
     );
 
-    // ✅ Convert to Timestamp
+    //  Convert to Timestamp
     Timestamp pickupTimestamp = Timestamp.fromDate(pickupDateTime);
     Timestamp expiryTimestamp = Timestamp.fromDate(expiryDateTime);
 
-    // ✅ Upload Image to Firebase Storage
+    //  Upload Image to Firebase Storage
     String imageUrl = await uploadImageToFirebase(imageFile!, postId);
 
-    // ✅ Insert into Firestore
+    //  Insert into Firestore
     await FirebaseFirestore.instance.collection("posts").doc(postId).set({
       "postId": postId,
       "user_id": userId,
@@ -207,7 +207,7 @@ Future<bool> createPost({
       "category_id": categoryId,
       "pickup_date_time": pickupTimestamp,
       "expiry_date_time": expiryTimestamp,
-      "image_url": imageUrl, // ✅ Store uploaded image URL
+      "image_url": imageUrl, //  Store uploaded image URL
       "qr_code_url": qrCodeUrl,
       "location": geoPoint,
       "status": "available",
@@ -222,23 +222,19 @@ Future<bool> createPost({
   }
 }
 
-// ✅ Function to Upload Image to Firebase Storage
+//  Function to Upload Image to Firebase Storage
 Future<String> uploadImageToFirebase(XFile imageFile, String postId) async {
   try {
     String uniqueFileName = 'post_images/$postId-${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-    // ✅ Reference to Firebase Storage
     Reference storageRef = FirebaseStorage.instance.ref().child(uniqueFileName);
 
-    // ✅ Upload file
     UploadTask uploadTask = storageRef.putFile(File(imageFile.path));
 
-    // ✅ Wait for upload to complete
     TaskSnapshot snapshot = await uploadTask;
 
-    // ✅ Get the download URL
     String downloadUrl = await snapshot.ref.getDownloadURL();
-      devtools.log("✅ Image uploaded successfully: $downloadUrl");
+      devtools.log("Image uploaded successfully: $downloadUrl");
 
     return downloadUrl;
   } catch (e) {
@@ -247,82 +243,11 @@ Future<String> uploadImageToFirebase(XFile imageFile, String postId) async {
   }
 }
 
-// Future<bool> updatePost({
-//   required String postId,
-//   required String oldImageUrl, // ✅ Pass the old image URL from UI
-//   required XFile? imageFile,   // ✅ New image (null means no change)
-//   required String title,
-//   required String description,
-//   required String category,
-//   required DateTime pickupDate,
-//   required TimeOfDay pickupTime,
-//   required DateTime expiryDate,
-//   required TimeOfDay expiryTime,
-//   required LatLng location,
-//   required BuildContext context,
-// }) async {
-//   try {
-
-//     final postRef = FirebaseFirestore.instance.collection("posts").doc(postId);
-
-//     int? categoryId = await getCategoryId(category, context);
-    
-//     // ✅ Convert LatLng to GeoPoint
-//     GeoPoint geoPoint = GeoPoint(location.latitude, location.longitude);
-
-//     // ✅ Convert DateTime and TimeOfDay to Firestore Timestamp
-//     DateTime pickupDateTime = DateTime(
-//       pickupDate.year, pickupDate.month, pickupDate.day, pickupTime.hour, pickupTime.minute,
-//     );
-//     DateTime expiryDateTime = DateTime(
-//       expiryDate.year, expiryDate.month, expiryDate.day, expiryTime.hour, expiryTime.minute,
-//     );
-
-//     Timestamp pickupTimestamp = Timestamp.fromDate(pickupDateTime);
-//     Timestamp expiryTimestamp = Timestamp.fromDate(expiryDateTime);
-
-//     // ✅ Step 1: Check if the user uploaded a new image
-//     String updatedImageUrl = oldImageUrl; // Default: keep old image
-//     // if (imageFile != null) {
-//     //   // ✅ Upload new image
-//     //   updatedImageUrl = await uploadImageToFirebase(imageFile, postId);
-
-//     //   // ✅ Delete old image from Firebase Storage
-//     //   await _deleteFileFromStorage(oldImageUrl);
-//     // }
-
-//     if (imageFile != null) {
-//       devtools.log("🚀 Uploading new image: ${imageFile.path}");
-//        updatedImageUrl = await uploadImageToFirebase(imageFile, postId);
-//        await _deleteFileFromStorage(oldImageUrl);
-     
-//     } else {
-//        devtools.log("⚠️ No new image uploaded, keeping old image: $oldImageUrl");
-//        updatedImageUrl = oldImageUrl; 
-//     }
-
-//     // ✅ Step 2: Update Firestore document
-//     await postRef.update({
-//       "title": title,
-//       "description": description,
-//       "category_id": categoryId, // Fetch category ID
-//       "pickup_date_time": pickupTimestamp,
-//       "expiry_date_time": expiryTimestamp,
-//       "image_url": updatedImageUrl, // ✅ Use updated image URL
-//       "location": geoPoint,
-//     });
-
-//     return true;
-//   } catch (e) {
-//     print("Error updating post: $e");
-//     return false;
-//   }
-// }
 
 Future<bool> updatePost({
   required String postId,
-  required String oldImageUrl, // ✅ Old image URL
-  required XFile? imageFile,   // ✅ New image (null if unchanged)
+  required String oldImageUrl, //  Old image URL
+  required XFile? imageFile,   // New image (null if unchanged)
   required String title,
   required String description,
   required String category,
@@ -334,18 +259,18 @@ Future<bool> updatePost({
   required BuildContext context,
 }) async {
   try {
-    devtools.log("🔄 Updating post: $postId");
+    devtools.log(" Updating post: $postId");
 
     final postRef = FirebaseFirestore.instance.collection("posts").doc(postId);
 
-    // ✅ Fetch Category ID
+    //  Fetch Category ID
     int? categoryId = await getCategoryId(category, context);
     if (categoryId == null) return false;
 
-    // ✅ Convert LatLng to GeoPoint
+    //  Convert LatLng to GeoPoint
     GeoPoint geoPoint = GeoPoint(location.latitude, location.longitude);
 
-    // ✅ Convert DateTime and TimeOfDay to Firestore Timestamp
+    //  Convert DateTime and TimeOfDay to Firestore Timestamp
     DateTime pickupDateTime = DateTime(
       pickupDate.year, pickupDate.month, pickupDate.day, pickupTime.hour, pickupTime.minute,
     );
@@ -356,40 +281,40 @@ Future<bool> updatePost({
     Timestamp pickupTimestamp = Timestamp.fromDate(pickupDateTime);
     Timestamp expiryTimestamp = Timestamp.fromDate(expiryDateTime);
 
-    // ✅ Step 1: Check if the user uploaded a new image
+    //  Step 1: Check if the user uploaded a new image
     String updatedImageUrl = oldImageUrl; // Default: keep old image
 
     if (imageFile != null) {
       devtools.log("🚀 Uploading new image: ${imageFile.path}");
 
-      // ✅ Upload new image
+      // Upload new image
       updatedImageUrl = await uploadImageToFirebase(imageFile, postId);
-      devtools.log("✅ New image uploaded successfully: $updatedImageUrl");
+      devtools.log(" New image uploaded successfully: $updatedImageUrl");
 
-      // ✅ Step 2: Delete old image from Firebase Storage
-      devtools.log("🗑️ Deleting old image: $oldImageUrl");
+      // Step 2: Delete old image from Firebase Storage
+      devtools.log(" Deleting old image: $oldImageUrl");
       await _deleteFileFromStorage(oldImageUrl);
-      devtools.log("✅ Old image deleted successfully.");
+      devtools.log(" Old image deleted successfully.");
     } else {
-      devtools.log("⚠️ No new image uploaded, keeping old image: $oldImageUrl");
+      devtools.log(" No new image uploaded, keeping old image: $oldImageUrl");
     }
 
-    // ✅ Step 3: Update Firestore document
-    devtools.log("📢 Updating Firestore with new image URL: $updatedImageUrl");
+    //  Step 3: Update Firestore document
+    devtools.log(" Updating Firestore with new image URL: $updatedImageUrl");
     await postRef.update({
       "title": title,
       "description": description,
       "category_id": categoryId,
       "pickup_date_time": pickupTimestamp,
       "expiry_date_time": expiryTimestamp,
-      "image_url": updatedImageUrl, // ✅ Use updated image URL
+      "image_url": updatedImageUrl, //  Use updated image URL
       "location": geoPoint,
     });
 
-    devtools.log("✅ Post updated successfully.");
+    devtools.log(" Post updated successfully.");
     return true;
   } catch (e) {
-    devtools.log("❌ Error updating post: $e");
+    devtools.log(" Error updating post: $e");
     return false;
   }
 }
@@ -398,12 +323,12 @@ Future<bool> updatePost({
   Future<String> uploadQRCodeToFirebase(File qrFile, String postId) async {
     try {
       devtools.log("control: uploadQRCodeToFirebase()");
-      // ✅ Firebase Storage reference
+
       Reference storageRef = FirebaseStorage.instance.ref().child("post_qr_codes/$postId.png");
 
       devtools.log("Firebase Storage reference  **Succes**");
 
-      // ✅ Upload QR file
+      // Upload QR file
       UploadTask uploadTask = storageRef.putFile(qrFile);
       devtools.log("uploadTask  **Succes**");
 
@@ -411,7 +336,7 @@ Future<bool> updatePost({
 
       devtools.log("Upload QR file  **Succes**");
 
-      // ✅ Get Download URL
+      // Get Download URL
       String downloadUrl = await snapshot.ref.getDownloadURL();
       return downloadUrl;
       devtools.log("Get Download URL  **Succes**");
@@ -443,75 +368,6 @@ Future<bool> updatePost({
     return null; // Return null if category not found
   }
 
-
-// Future<void> deleteExpiredPostsForUser(BuildContext context) async {
-//   final DateTime now = DateTime.now();
-//   final User? user = FirebaseAuth.instance.currentUser;
-//   final FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-//   if (user == null) {
-//     devtools.log("No user logged in");
-//     return;
-//   }
-
-//   try {
-//     // Fetch all posts by the user (ignoring expiry_date_time condition to avoid Firestore index errors)
-//     final QuerySnapshot snapshot = await firestore
-//         .collection('posts')
-//         .where('user_id', isEqualTo: user.uid)
-//         .get();
-
-//     // Filter expired posts locally
-//     final expiredPosts = snapshot.docs.where((doc) {
-//       final expiryDate = (doc['expiry_date_time'] as Timestamp).toDate();
-//       return expiryDate.isBefore(now);
-//     }).toList();
-
-//     if (expiredPosts.isEmpty) {
-//       devtools.log("No expired posts found.");
-//       return;
-//     }
-
-//     bool anyDeleted = false; // Track if at least one post was deleted
-
-//     for (var doc in expiredPosts) {
-//       final String status = doc['status'];
-//       if (status == "available") {
-//         final String? imageUrl = doc['image_url'];
-//         final String? qrCodeUrl = doc['qr_code_url'];
-//         final String postId = doc.id;
-
-//         // Delete images from Firebase Storage
-//         if (imageUrl != null && imageUrl.isNotEmpty) {
-//           await _deleteFileFromStorage(imageUrl);
-//         }
-//         if (qrCodeUrl != null && qrCodeUrl.isNotEmpty) {
-//           await _deleteFileFromStorage(qrCodeUrl);
-//         }
-
-//         // Delete associated chats
-//         QuerySnapshot chatSnapshot =
-//             await firestore.collection('chats').where('post_id', isEqualTo: postId).get();
-
-//         for (var chatDoc in chatSnapshot.docs) {
-//           await firestore.collection('chats').doc(chatDoc.id).delete();
-//         }
-
-//         // Delete post from Firestore
-//         await firestore.collection('posts').doc(postId).delete();
-//         devtools.log("Deleted expired post and associated chats: $postId");
-//         anyDeleted = true;
-//       }
-//     }
-
-//     if (!anyDeleted) {
-//       devtools.log("No 'available' expired posts to delete.");
-//     }
-//   } catch (error) {
-//     devtools.log("Error deleting expired posts: $error");
-//     showErrorDialog(context, "Failed to delete expired posts.");
-//   }
-// }
 
 Future<void> deleteExpiredPostsForUser(BuildContext context) async {
   final DateTime now = DateTime.now();
@@ -665,59 +521,6 @@ Future<bool> deletePostById(BuildContext context, String postId) async {
     return false; // Deletion failed
   }
 }
-
-
-// Future<bool> deletePostById(BuildContext context, String postId) async {
-//   try {
-//     FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-//     // Fetch post document
-//     DocumentSnapshot doc = await firestore.collection('posts').doc(postId).get();
-
-//     if (!doc.exists) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(content: Text("Post not found."), backgroundColor: Colors.red),
-//       );
-//       return false;
-//     }
-
-//     // Fetch image URLs from the post
-//     String? imageUrl = doc['image_url'];
-//     String? qrCodeUrl = doc['qr_code_url'];
-
-//     // Delete images from Firebase Storage
-//     if (imageUrl != null && imageUrl.isNotEmpty) {
-//       await _deleteFileFromStorage(imageUrl);
-//     }
-//     if (qrCodeUrl != null && qrCodeUrl.isNotEmpty) {
-//       await _deleteFileFromStorage(qrCodeUrl);
-//     }
-
-//     // Delete associated chats
-//     QuerySnapshot chatSnapshot =
-//         await firestore.collection('chats').where('post_id', isEqualTo: postId).get();
-
-//     for (var chatDoc in chatSnapshot.docs) {
-//       await firestore.collection('chats').doc(chatDoc.id).delete();
-//     }
-
-//     // Delete post from Firestore
-//     await firestore.collection('posts').doc(postId).delete();
-
-//     // Show success snackbar
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       SnackBar(content: Text("Post and related chats deleted successfully!"), backgroundColor: Colors.green),
-//     );
-
-//     return true; // Successfully deleted
-//   } catch (error) {
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       SnackBar(content: Text("Failed to delete post: $error"), backgroundColor: Colors.red),
-//     );
-//     debugPrint("Error deleting post: $error");
-//     return false; // Deletion failed
-//   }
-// }
 
 
 // Helper function to delete a file from Firebase Storage

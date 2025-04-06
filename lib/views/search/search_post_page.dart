@@ -402,76 +402,7 @@ class _SearchPostPageState extends State<SearchPostPage> {
           ),
         ],
       ),
-    //   bottomNavigationBar: Container(
-    //     decoration: BoxDecoration(
-    //       color: Colors.white,
-    //       boxShadow: [
-    //         BoxShadow(
-    //           color: Colors.black.withOpacity(0.1),
-    //           spreadRadius: 1,
-    //           blurRadius: 5,
-    //           offset: Offset(0, -2),
-    //         ),
-    //       ],
-    //     ),
-    //     child:BottomNavigationBar(
-    //     type: BottomNavigationBarType.fixed,
-    //     selectedItemColor: AppColors.primaryColor,
-    //     unselectedItemColor:const Color.fromARGB(179, 55, 170, 122),
-    //     currentIndex: currentIndex ?? 0,
-    //       onTap: (index) {
-    //         if(index == 2){
-    //            //Navigator.of(context).pushNamed('addItemPageRoute');
-    //            Navigator.of(context).pushNamedAndRemoveUntil(
-    //             'addItemPageRoute', 
-    //             (Route<dynamic> route) => false,  
-    //           );
-    //         }
-    //         if(index == 3){
-    //            //Navigator.of(context).pushNamed('addItemPageRoute');
-    //            Navigator.of(context).pushNamedAndRemoveUntil(
-    //             'chatPageRoute', 
-    //             (Route<dynamic> route) => false,  
-    //           );
-    //         }
-    //         if(index == 4){
-    //            //Navigator.of(context).pushNamed('myProfilePageRoute');
-    //           Navigator.of(context).pushNamedAndRemoveUntil(
-    //             'myProfilePageRoute', 
-    //             (Route<dynamic> route) => false,  
-    //           );
-    //         }
-    //         if(index == 0){
-    //          Navigator.of(context).pushNamedAndRemoveUntil(
-    //             'homePageRoute', 
-    //             (Route<dynamic> route) => false,  
-    //           );
-    //         }
-
-    //       },
-    //     items: [
-    //       BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-    //       BottomNavigationBarItem(icon: Icon(Icons.location_on), label: ''),
-    //       BottomNavigationBarItem(
-    //         icon: Container(
-    //           padding: EdgeInsets.all(8),
-    //           decoration: BoxDecoration(
-    //             gradient: LinearGradient(
-    //                 colors: [AppColors.primaryColor, AppColors.tertiaryColor], 
-    //                 begin: Alignment.topLeft, 
-    //                 end: Alignment.bottomRight,
-    //             ), 
-    //             shape: BoxShape.circle,
-    //           ),
-    //           child: Icon(Icons.add, color: Colors.white),
-    //         ),
-    //         label: '',
-    //       ),
-    //       BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: ''),
-    //       BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: ''),
-    //     ],
-    //   )),
-    // 
+    
     );
   }
 

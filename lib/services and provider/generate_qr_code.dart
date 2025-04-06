@@ -10,9 +10,9 @@ import 'dart:developer' as devtools show log;
 
 Future<String> generateAndUploadQRCode(String postId) async {
   try {
-    // ✅ Generate QR Code
+    //  Generate QR Code
     final qrValidationResult = QrValidator.validate(
-      data: postId, // ✅ Store only postId
+      data: postId, // Store only postId
       version: QrVersions.auto,
       errorCorrectionLevel: QrErrorCorrectLevel.H,
     );
@@ -34,13 +34,13 @@ Future<String> generateAndUploadQRCode(String postId) async {
     final ByteData byteData = await painter.toImageData(300) as ByteData;
     final Uint8List uint8List = byteData.buffer.asUint8List();
 
-    // ✅ Save QR Code to Temporary Directory
+    // Save QR Code to Temporary Directory
     final tempDir = await getTemporaryDirectory();
     final qrFile = File("${tempDir.path}/$postId-qr.png");
     await qrFile.writeAsBytes(uint8List);
     devtools.log("tempDir: ${tempDir.path}");
 
-    // ✅ Upload QR Code to Firebase Storage
+    //  Upload QR Code to Firebase Storage
     UserService userService = UserService();
     String qrImageUrl = await userService.uploadQRCodeToFirebase(qrFile, postId);
 

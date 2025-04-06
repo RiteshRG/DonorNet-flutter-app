@@ -9,19 +9,19 @@ class OTPService {
   factory OTPService() => _instance;
   OTPService._internal();
 
-  String? _currentOtp; // Stores the current OTP
-  DateTime? _otpGeneratedTime; // Stores the OTP generation time
-  static const int otpExpiryMinutes = 5; // OTP expiry time in minutes
-  int _attemptCount = 0;  // Track the number of attempts to prevent brute force
+  String? _currentOtp; 
+  DateTime? _otpGeneratedTime; 
+  static const int otpExpiryMinutes = 5; 
+  int _attemptCount = 0;  
 
   // Brevo API Configuration
-  final String brevoApiKey = APIKey.brevo; // Replace with your Brevo API Key
-  final String senderEmail = "donornet5@gmail.com"; // Replace with your Brevo verified sender email
-  final String senderName = "DonorNet"; // Replace with the name you want to display
+  final String brevoApiKey = APIKey.brevo; 
+  final String senderEmail = "donornet5@gmail.com"; 
+  final String senderName = "DonorNet"; 
 
    String _generateOtp() {
     final random = Random();
-    return (random.nextInt(900000) + 100000).toString(); // Generates a random 6-digit number
+    return (random.nextInt(900000) + 100000).toString(); 
   }
   bool _isOtpExpired() {
     if (_otpGeneratedTime == null) return true;
@@ -180,7 +180,7 @@ class OTPService {
 
     if (_currentOtp == otp) {
       devtools.log('OTP verified successfully.');
-      _currentOtp = null; // Invalidate the OTP after successful verification
+      _currentOtp = null; 
       _otpGeneratedTime = null;
       _attemptCount = 0;
       return true;
@@ -199,9 +199,9 @@ class OTPService {
   }
   // Method to reset OTP (optional, in case you want a reset mechanism)
     Future<bool> resendOtp(String email) async {
-    _currentOtp = null; // Invalidate the previous OTP
+    _currentOtp = null; 
     _otpGeneratedTime = null;
-    _attemptCount = 0; // Reset attempts
+    _attemptCount = 0; 
     devtools.log('Previous OTP invalidated. Sending a new OTP.');
     return await sendOtp(email);
   }
@@ -214,119 +214,4 @@ class OTPService {
   }
 }
 
-
-
-// import 'dart:async';
-// import 'dart:math';
-// import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:flutter/material.dart';
-// import 'package:flutter_email_sender/flutter_email_sender.dart';
-// import 'dart:developer' as devtools show log;
-
-// //import 'package:cloud_functions/cloud_functions.dart';
-
-// class OTPService {
-//   String? _generatedOtp;
-//   DateTime? _otpSentTime;
-
-//   // Method to generate OTP
-//   String _generateOtp() {
-//     final random = Random();
-//     return (random.nextInt(900000) + 100000).toString(); // Generates a 6-digit OTP
-//   }
-
-//   Future<bool> sendOtp(String email) async {
-//     try {
-//       // Generate OTP
-//       _generatedOtp = _generateOtp();
-//       devtools.log("${_generatedOtp}");
-//        devtools.log("${email}");
-
-
-//       // Set OTP sent time
-//       _otpSentTime = DateTime.now();
-
-//       // Prepare and send the email with the OTP
-//       final Email emailToSend = Email(
-//         body: 'Your OTP is $_generatedOtp. It is valid for 5 minutes.',
-//         subject: 'Your OTP Code',
-//         recipients: [email],
-//         isHTML: false,
-//       );
-
-//       await FlutterEmailSender.send(emailToSend);
-//       devtools.log('OTP sent successfully to $email');
-//       return true;
-//     } catch (e) {
-//       devtools.log('Error while sending OTP: $e');
-//       return false;
-//     }
-//   }
-
-//   Method to check if OTP is expired
-//   bool _isOtpExpired() {
-//     if (_otpSentTime == null) return true;
-
-//     final expiryDuration = Duration(minutes: 5);
-//     final currentTime = DateTime.now();
-
-//     return currentTime.isAfter(_otpSentTime!.add(expiryDuration));
-//   }
-
-//   // Method to verify OTP
-//   Future<bool> verifyOtp(String otp) async {
-//     if (_isOtpExpired()) {
-//       print('OTP has expired');
-//       return false;
-//     }
-
-//     if (_generatedOtp == otp) {
-//       print('OTP verified successfully');
-//       return true;
-//     } else {
-//       print('Invalid OTP');
-//       return false;
-//     }
-//   }
-// }
-
-
-
-
-
-// import 'package:email_otp/email_otp.dart';
-// import 'dart:developer' as devtools show log;
-
-// class OTPService  {
-//   // Method to send OTP
-//   Future<bool> sendOtp(String email) async {
-//      try {
-//       // Configure email OTP settings
-//       EmailOTP.config(
-//         appName: 'YourAppName',
-//         otpType: OTPType.numeric, // Numeric OTP
-//         emailTheme: EmailTheme.v1, // Default theme
-//       );
-
-//       bool isSent = await EmailOTP.sendOTP(email: email);
-
-//       if (isSent) {
-//         devtools.log('OTP sent successfully to $email');
-//       } else {
-//         devtools.log('Failed to send OTP');
-//       }
-
-//       return isSent;
-//     } catch (e) {
-//       devtools.log('Error while sending OTP: $e');
-//       return false;
-//     }
-//   }
-
-//   // Method to verify OTP
-//    Future<bool> verifyOtp(String otp) async{
-//     bool isVerified = await EmailOTP.verifyOTP(otp: otp);
-//     return isVerified;
-//   }
-// }
 
