@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donornet/services%20and%20provider/internet_checker.dart';
 import 'package:donornet/utilities/loading_indicator.dart';
 import 'package:donornet/views/home%20page/drawer.dart';
+import 'package:donornet/views/levels/howToEarnPoints.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:donornet/materials/access_throught_link.dart';
@@ -490,21 +491,27 @@ double calculateProgress() {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.help_outline,
-                  color: const Color.fromARGB(115, 15, 119, 125),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'How to get points?',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,color: AppColors.secondaryColor
+            GestureDetector(
+              onTap: (){
+                 Navigator.push(context, 
+                    MaterialPageRoute(builder: (context) => HowToEarnPage()));
+              },
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.help_outline,
+                    color: const Color.fromARGB(115, 15, 119, 125),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Text(
+                    'How to get points?',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,color: AppColors.secondaryColor
+                    ),
+                  ),
+                ],
+              ),
             ),
             Icon(
               Icons.chevron_right,
