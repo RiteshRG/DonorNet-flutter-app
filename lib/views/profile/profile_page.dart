@@ -313,10 +313,13 @@ class _Profile_pageState extends State<Profile_page> {
           itemBuilder: (context, index) {
             return GestureDetector(
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => UserPostDetailPage( posts[index]['postId'])),
-                );
+               Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UserPostDetailPage(posts[index]['postId']),
+                ),
+                (Route<dynamic> route) => false, 
+              );
               },
               child: Container(
                 decoration: BoxDecoration(

@@ -256,9 +256,11 @@ Widget build(BuildContext context) {
           itemBuilder: (context, index) {
             return GestureDetector(
               onTap: () {
-                Navigator.push(
+
+                Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (context) => PostDetailsPage( posts[index]['postId'])),
+                  MaterialPageRoute(builder: (context) => PostDetailsPage(posts[index]['postId'])),
+                  (Route<dynamic> route) => false, // remove all previous routes
                 );
               },
               child: Container(
