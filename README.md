@@ -1,5 +1,5 @@
 <!-- Project Banner -->
-![DonorNet Banner](screenshots/banner.png) <!-- Replace with your banner image -->
+![DonorNet Banner](banner.png) <!-- Replace with your banner image -->
 
 # DonorNet – Connect and Donate (Flutter Android App)
 
